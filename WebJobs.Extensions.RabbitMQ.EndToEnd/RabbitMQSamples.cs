@@ -8,7 +8,7 @@ using Microsoft.Azure.WebJobs;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace WebJobs.Extensions.RabbitMQ.EndToEnd
+namespace WebJobs.Extensions.RabbitMQ.Samples
 {
     public static class RabbitMQSamples
     {
@@ -17,8 +17,7 @@ namespace WebJobs.Extensions.RabbitMQ.EndToEnd
            [RabbitMQ(
                 Hostname = "localhost",
                 QueueName = "queue",
-                Message = "Hello there"
-            )] out string outputMessage)
+                Message = "Hello there")] out string outputMessage)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -41,33 +40,33 @@ namespace WebJobs.Extensions.RabbitMQ.EndToEnd
                 Console.WriteLine(outputMessage);
             }
         }
-        //public static void QueueTrigger_RabbitMQOutput(
-        //   [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-        //   [RabbitMQ(
-        //        Hostname = "localhost",
-        //        QueueName = "queue",
-        //        Message = "{QueueTrigger}")] out string outputMessage)
-        //{
-        //    var factory = new ConnectionFactory() { HostName = "localhost" };
-        //    using (var connection = factory.CreateConnection())
-        //    using (var channel = connection.CreateModel())
-        //    {
-        //        channel.QueueDeclare(queue: "queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
-        //        var consumer = new EventingBasicConsumer(channel);
-        //        var receivedMessage = string.Empty;
-        //        consumer.Received += (model, ea) =>
-        //        {
-        //            var body = ea.Body;
-        //            receivedMessage = Encoding.UTF8.GetString(body);
-        //            Console.WriteLine("Received {0}", receivedMessage);
-        //        };
+        public static void QueueTrigger_RabbitMQOutput(
+           [QueueTrigger(@"samples-rabbitmq-messages")] string message,
+           [RabbitMQ(
+                Hostname = "localhost",
+                QueueName = "queue",
+                Message = "{QueueTrigger}")] out string outputMessage)
+        {
+            var factory = new ConnectionFactory() { HostName = "localhost" };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.QueueDeclare(queue: "queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
-        //        channel.BasicConsume(queue: "queue", autoAck: true, consumer: consumer);
+                var consumer = new EventingBasicConsumer(channel);
+                var receivedMessage = string.Empty;
+                consumer.Received += (model, ea) =>
+                {
+                    var body = ea.Body;
+                    receivedMessage = Encoding.UTF8.GetString(body);
+                    Console.WriteLine("Received {0}", receivedMessage);
+                };
 
-        //        outputMessage = receivedMessage;
-        //        Console.WriteLine(outputMessage);
-        //    }
-        //}
+                channel.BasicConsume(queue: "queue", autoAck: true, consumer: consumer);
+                outputMessage = receivedMessage;
+                Console.WriteLine(outputMessage);
+            }
+        }
     }
 }

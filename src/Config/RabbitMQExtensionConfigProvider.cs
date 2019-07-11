@@ -62,14 +62,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
-            string hostname = Utility.FirstOrDefault(attribute.Hostname, string.Empty);
-            string queuename = Utility.FirstOrDefault(attribute.QueueName, string.Empty);
+            string hostname = Utility.FirstOrDefault(attribute.Hostname, this.options.Value.Hostname);
+            string queuename = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
 
             var context = new RabbitMQContext
             {
                 Hostname = hostname,
                 QueueName = queuename,
-                Message = Utility.FirstOrDefault(attribute.Message, string.Empty),
+                Message = Utility.FirstOrDefault(attribute.Message, this.options.Value.Message),
             };
 
             return context;

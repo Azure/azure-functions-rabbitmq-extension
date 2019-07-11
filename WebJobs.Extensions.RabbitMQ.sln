@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebJobs.Extensions.RabbitMQ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebJobs.Extensions.RabbitMQ.Tests", "WebJobs.Extensions.RabbitMQ.Tests\WebJobs.Extensions.RabbitMQ.Tests.csproj", "{275A08CC-6C95-4304-92DC-558996A422BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebJobs.Extensions.RabbitMQ.EndToEnd", "WebJobs.Extensions.RabbitMQ.EndToEnd\WebJobs.Extensions.RabbitMQ.EndToEnd.csproj", "{DE817270-C43B-4DE8-947C-A45CDF3B963C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebJobs.Extensions.RabbitMQ.Samples", "WebJobs.Extensions.RabbitMQ.EndToEnd\WebJobs.Extensions.RabbitMQ.Samples.csproj", "{DE817270-C43B-4DE8-947C-A45CDF3B963C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

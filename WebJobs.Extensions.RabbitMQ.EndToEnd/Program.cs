@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace WebJobs.Extensions.RabbitMQ.EndToEnd
+namespace WebJobs.Extensions.RabbitMQ.Samples
 {
     public static class Program
     {
