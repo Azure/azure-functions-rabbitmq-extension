@@ -1,3 +1,6 @@
+# RabbitMQ Binding Support for Azure Functions
+
+WIP
 
 # Contributing
 
