@@ -51,6 +51,15 @@ The above example waits on a timer trigger to fire (every second) before sending
 Trigger binding:
 
 ```C#
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+
 public static void RabbitMQTrigger_String(
     [RabbitMQTrigger("localhost", "queue")] string message,
     ILogger logger
