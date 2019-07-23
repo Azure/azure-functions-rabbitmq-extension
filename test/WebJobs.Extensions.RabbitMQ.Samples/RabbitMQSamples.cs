@@ -51,32 +51,32 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // *Note that any time the queue isn't empty, the trigger will continue to fire.
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
 
-        //public static void QueueTrigger_RabbitMQOutput(
-        //   [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-        //   [RabbitMQ(
-        //        Hostname = "localhost",
-        //        QueueName = "queue",
-        //        Message = "{QueueTrigger}")] out OpenType.Poco outputMessage)
-        //{
-        //    var factory = new ConnectionFactory() { HostName = "localhost" };
-        //    using (var connection = factory.CreateConnection())
-        //    using (var channel = connection.CreateModel())
-        //    {
-        //        channel.QueueDeclare(queue: "queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+        public static void QueueTrigger_RabbitMQOutput(
+           [QueueTrigger(@"samples-rabbitmq-messages")] string message,
+           [RabbitMQ(
+                Hostname = "localhost",
+                QueueName = "queue",
+                Message = "{QueueTrigger}")] out string outputMessage)
+        {
+            var factory = new ConnectionFactory() { HostName = "localhost" };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.QueueDeclare(queue: "queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
-        //        var consumer = new EventingBasicConsumer(channel);
-        //        var receivedMessage = string.Empty;
-        //        consumer.Received += (model, ea) =>
-        //        {
-        //            var body = ea.Body;
-        //            receivedMessage = Encoding.UTF8.GetString(body);
-        //            Console.WriteLine("Received {0}", receivedMessage);
-        //        };
+                var consumer = new EventingBasicConsumer(channel);
+                var receivedMessage = string.Empty;
+                consumer.Received += (model, ea) =>
+                {
+                    var body = ea.Body;
+                    receivedMessage = Encoding.UTF8.GetString(body);
+                    Console.WriteLine("Received {0}", receivedMessage);
+                };
 
-        //        channel.BasicConsume(queue: "queue", autoAck: true, consumer: consumer);
-        //        outputMessage = Newtonsoft.Json.Linq.JToken.Parse(receivedMessage).ToObject<OpenType.Poco>();
-        //        Console.WriteLine(outputMessage);
-        //    }
-        //}
+                channel.BasicConsume(queue: "queue", autoAck: true, consumer: consumer);
+                outputMessage = receivedMessage;
+                Console.WriteLine(outputMessage);
+            }
+        }
     }
 }
