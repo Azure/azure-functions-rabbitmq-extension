@@ -28,9 +28,6 @@ namespace Microsoft.Extensions.Hosting
             builder.AddExtension<RabbitMQExtensionConfigProvider>()
                 .ConfigureOptions<RabbitMQOptions>((config, path, options) =>
                 {
-                    options.Hostname = "localhost";
-                    options.QueueName = "hello";
-
                     IConfigurationSection section = config.GetSection(path);
                     section.Bind(options);
                 });

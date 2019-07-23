@@ -15,43 +15,48 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public class RabbitMQAsyncCollector : IAsyncCollector<string>
     {
-        private readonly RabbitMQContext context;
-        private readonly ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
-        private readonly ConnectionFactory factory;
-        private readonly IConnection connection;
-        private readonly IModel channel;
-        private readonly QueueDeclareOk queue;
+        private readonly RabbitMQContext _context;
+        // private readonly ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
+        private readonly ConnectionFactory _factory;
+        private readonly IConnection _connection;
+        private readonly IModel _channel;
+        private readonly QueueDeclareOk _queue;
+        private readonly IBasicPublishBatch _messages;
 
         public RabbitMQAsyncCollector(RabbitMQContext context)
         {
-            this.context = context;
-            this.factory = new ConnectionFactory() { HostName = context.Hostname };
-            this.connection = this.factory.CreateConnection();
-            this.channel = this.connection.CreateModel();
-            this.queue = CreateQueue(this.channel, this.context);
+            _context = context;
+            _factory = new ConnectionFactory() { HostName = context.Hostname };
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
+            // _queue = CreateQueue(_channel, _context);
+            _messages = _channel.CreateBasicPublishBatch();
         }
 
         public Task AddAsync(string message, CancellationToken cancellationToken = default)
         {
-            message = this.context.Message;
-            this.messages.Enqueue(message);
+            //message = _context.Message;
+            //_messages.Enqueue(message);
+            _messages.Add(exchange: string.Empty, routingKey: _context.QueueName, mandatory: false, properties: null, body: Encoding.UTF8.GetBytes(_context.Message));
 
             return Task.CompletedTask;
         }
 
         public async Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            while (this.messages.TryDequeue(out string message))
-            {
-                await this.PublishAsync(message);
-            }
+            //while (_messages.TryDequeue(out string message))
+            //{
+            //    await this.PublishAsync(message);
+            //}
+            await this.PublishAsync();
         }
 
-        public Task PublishAsync(string message)
+        internal Task PublishAsync()
         {
-            Console.WriteLine(message);
-            var messageBytes = Encoding.UTF8.GetBytes(message);
-            this.channel.BasicPublish(exchange: string.Empty, routingKey: this.context.QueueName, basicProperties: null, body: messageBytes);
+            //var messageBytes = Encoding.UTF8.GetBytes(message);
+            //_channel.BasicPublish(exchange: string.Empty, routingKey: _context.QueueName, basicProperties: null, body: messageBytes);
+
+            _messages.Publish();
             return Task.CompletedTask;
         }
 

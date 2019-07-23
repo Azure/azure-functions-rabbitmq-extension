@@ -51,12 +51,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new InvalidOperationException("Missing hostname");
+                throw new InvalidOperationException("RabbitMQ hostname is missing");
             }
 
             if (string.IsNullOrEmpty(queuename))
             {
-                throw new InvalidOperationException("Missing queuename");
+                throw new InvalidOperationException("RabbitMQ queuename is missing");
             }
         }
 
