@@ -6,7 +6,9 @@ The Azure Functions RabbitMQ Binding extensions allows you to send and receive m
 
 # Samples
 
-Output binding:
+See the repository [wiki](https://github.com/katiecai/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
+
+## Output Binding
 
 ```C#
 using System;
@@ -48,7 +50,7 @@ public static void TimerTrigger_RabbitMQOutput(
 
 The above example waits on a timer trigger to fire (every second) before sending a message to the queue named "queue" connected to the localhost port. The body of the function creates a consumer with a queue of the same name, which receives the message shortly after it's sent by the output binding. The message is then bound to the variable outputMessage.
 
-Trigger binding:
+## Trigger Binding
 
 ```C#
 using System;
