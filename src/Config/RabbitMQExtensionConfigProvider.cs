@@ -42,6 +42,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return new RabbitMQAsyncCollector(this.CreateContext(attr));
             });
+            rule.AddOpenConverter<OpenType.Poco, string>(typeof(PocoToStringConverter<>));
         }
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
@@ -68,11 +69,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             var context = new RabbitMQContext
             {
                 Hostname = hostname,
-                QueueName = queuename,
-                Message = Utility.FirstOrDefault(attribute.Message, this.options.Value.Message),
+                QueueName = queuename
             };
 
             return context;
+        }
+
+        private class PocoToStringConverter<T> : IConverter<T, string>
+        {
+            public string Convert(T input)
+            {
+                return JsonConvert.SerializeObject(input);
+            }
         }
     }
 }

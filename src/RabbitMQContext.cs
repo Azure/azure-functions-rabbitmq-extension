@@ -10,7 +10,5 @@ namespace Microsoft.Azure.WebJobs.Extensions
         public string Hostname { get; set; }
 
         public string QueueName { get; set; }
-
-        public string Message { get; set; }
     }
 }

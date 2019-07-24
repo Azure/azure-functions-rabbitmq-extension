@@ -16,7 +16,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     public class RabbitMQAsyncCollector : IAsyncCollector<string>
     {
         private readonly RabbitMQContext _context;
-        // private readonly ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
@@ -29,33 +28,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _factory = new ConnectionFactory() { HostName = context.Hostname };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
-            // _queue = CreateQueue(_channel, _context);
+            _queue = CreateQueue(_channel, _context);
             _messages = _channel.CreateBasicPublishBatch();
         }
 
         public Task AddAsync(string message, CancellationToken cancellationToken = default)
         {
-            //message = _context.Message;
-            //_messages.Enqueue(message);
-            _messages.Add(exchange: string.Empty, routingKey: _context.QueueName, mandatory: false, properties: null, body: Encoding.UTF8.GetBytes(_context.Message));
+            _messages.Add(exchange: string.Empty, routingKey: _context.QueueName, mandatory: false, properties: null, body: Encoding.UTF8.GetBytes(message));
 
             return Task.CompletedTask;
         }
 
         public async Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            //while (_messages.TryDequeue(out string message))
-            //{
-            //    await this.PublishAsync(message);
-            //}
             await this.PublishAsync();
         }
 
         internal Task PublishAsync()
         {
-            //var messageBytes = Encoding.UTF8.GetBytes(message);
-            //_channel.BasicPublish(exchange: string.Empty, routingKey: _context.QueueName, basicProperties: null, body: messageBytes);
-
             _messages.Publish();
             return Task.CompletedTask;
         }

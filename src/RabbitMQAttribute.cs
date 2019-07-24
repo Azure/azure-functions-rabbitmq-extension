@@ -23,8 +23,5 @@ namespace Microsoft.Azure.WebJobs
         // Settings for creating and sending to/receiving from a queue.
         [AutoResolve]
         public string QueueName { get; set; }
-
-        [AutoResolve]
-        public string Message { get; set; }
     }
 }
