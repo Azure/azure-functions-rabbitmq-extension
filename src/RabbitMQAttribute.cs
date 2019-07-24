@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.Azure.WebJobs.Description;
+using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs
 {
@@ -23,5 +24,10 @@ namespace Microsoft.Azure.WebJobs
         // Settings for creating and sending to/receiving from a queue.
         [AutoResolve]
         public string QueueName { get; set; }
+
+        [AutoResolve]
+        public string Exchange { get; set; }
+
+        public IBasicProperties Properties { get; set; }
     }
 }

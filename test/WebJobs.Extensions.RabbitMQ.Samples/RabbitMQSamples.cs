@@ -13,7 +13,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 {
     public static class RabbitMQSamples
     {
-        public static void TimerTrigger_RabbitMQOutput(
+        public static void TimerTrigger_StringOutput(
            [TimerTrigger("00:01")] TimerInfo timer,
            [RabbitMQ(
                 Hostname = "localhost",
@@ -22,7 +22,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             outputMessage = "Hello world";
         }
 
-        public static void TimerTrigger_RabbitMQOutput(
+        public static void TimerTrigger_PocoOutput(
              [TimerTrigger("00:01")] TimerInfo timer,
              [RabbitMQ(
                   Hostname = "localhost",

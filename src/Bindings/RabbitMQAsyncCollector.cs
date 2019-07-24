@@ -34,7 +34,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task AddAsync(string message, CancellationToken cancellationToken = default)
         {
-            _messages.Add(exchange: string.Empty, routingKey: _context.QueueName, mandatory: false, properties: null, body: Encoding.UTF8.GetBytes(message));
+            _messages.Add(exchange: _context.Exchange, routingKey: _context.QueueName, mandatory: false, properties: _context.Properties, body: Encoding.UTF8.GetBytes(message));
 
             return Task.CompletedTask;
         }

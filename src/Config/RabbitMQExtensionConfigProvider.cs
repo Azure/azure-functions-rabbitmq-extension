@@ -49,6 +49,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             string hostname = Utility.FirstOrDefault(attribute.Hostname, this.options.Value.Hostname);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
+            string exchange = Utility.FirstOrDefault(attribute.Exchange, this.options.Value.Exchange);
+            IBasicProperties properties = attribute.Properties;
 
             if (string.IsNullOrEmpty(hostname))
             {
@@ -59,17 +61,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 throw new InvalidOperationException("RabbitMQ queuename is missing");
             }
+
+            if (exchange == null)
+            {
+                exchange = string.Empty;
+            }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
             string hostname = Utility.FirstOrDefault(attribute.Hostname, this.options.Value.Hostname);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
+            string exchange = Utility.FirstOrDefault(attribute.Exchange, this.options.Value.Exchange);
+            IBasicProperties properties = attribute.Properties;
+
+            if (exchange == null)
+            {
+                exchange = string.Empty;
+            }
 
             var context = new RabbitMQContext
             {
                 Hostname = hostname,
-                QueueName = queuename
+                QueueName = queuename,
+                Exchange = exchange,
+                Properties = properties
             };
 
             return context;
