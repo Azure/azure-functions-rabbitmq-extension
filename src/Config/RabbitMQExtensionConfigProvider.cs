@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Description;
@@ -22,11 +23,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     [Extension("RabbitMQ")]
     internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     {
-        private readonly IOptions<RabbitMQOptions> options;
+        private ILogger _logger;
+        private readonly IOptions<RabbitMQOptions> _options;
+        private readonly ILoggerFactory _loggerFactory;
 
         public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options)
         {
-            this.options = options;
+            _options = options;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -36,20 +39,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
+           // _logger = _loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(""))
+
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(this.ValidateBinding);
-            rule.BindToCollector<string>((attr) =>
+            rule.BindToCollector<byte[]>((attr) =>
             {
                 return new RabbitMQAsyncCollector(this.CreateContext(attr));
             });
-            rule.AddOpenConverter<OpenType.Poco, string>(typeof(PocoToStringConverter<>));
+            rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
+            rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToStringConverter<>));
         }
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
-            string hostname = Utility.FirstOrDefault(attribute.Hostname, this.options.Value.Hostname);
-            string queuename = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, this.options.Value.Exchange);
+            string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
+            string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
+            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange);
             IBasicProperties properties = attribute.Properties;
 
             if (string.IsNullOrEmpty(hostname))
@@ -70,9 +76,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
-            string hostname = Utility.FirstOrDefault(attribute.Hostname, this.options.Value.Hostname);
-            string queuename = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, this.options.Value.Exchange);
+            string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
+            string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
+            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange);
             IBasicProperties properties = attribute.Properties;
 
             if (exchange == null)
@@ -85,17 +91,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Hostname = hostname,
                 QueueName = queuename,
                 Exchange = exchange,
-                Properties = properties
+                Properties = properties,
             };
 
             return context;
         }
 
-        private class PocoToStringConverter<T> : IConverter<T, string>
+        private class PocoToStringConverter<T> : IConverter<T, byte[]>
         {
-            public string Convert(T input)
+            public byte[] Convert(T input)
             {
-                return JsonConvert.SerializeObject(input);
+                string res = JsonConvert.SerializeObject(input);
+                return Encoding.UTF8.GetBytes(res);
             }
         }
     }

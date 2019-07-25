@@ -18,18 +18,22 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             [TimerTrigger("00:01")] TimerInfo timer,
             [RabbitMQ(
                 Hostname = "localhost",
-                QueueName = "queue")] out string outputMessage)
+                QueueName = "queue")] out string outputMessage,
+            ILogger logger)
         {
             outputMessage = "Hello world";
+            logger.LogInformation($"RabbitMQ output binding message: {outputMessage}");
         }
 
         public static void TimerTrigger_PocoOutput(
              [TimerTrigger("00:01")] TimerInfo timer,
              [RabbitMQ(
                   Hostname = "localhost",
-                  QueueName = "queue")] out TestClass outputMessage)
+                  QueueName = "queue")] out TestClass outputMessage,
+             ILogger logger)
         {
             outputMessage = new TestClass(1, 1);
+            logger.LogInformation($"RabbitMQ output binding message: {outputMessage}");
         }
 
         // To run:
@@ -45,9 +49,11 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             [QueueTrigger(@"samples-rabbitmq-messages")] OpenType.Poco message,
             [RabbitMQ(
                 Hostname = "localhost",
-                QueueName = "queue")] out OpenType.Poco outputMessage)
+                QueueName = "queue")] out OpenType.Poco outputMessage,
+            ILogger logger)
         {
             outputMessage = message;
+            logger.LogInformation($"RabbitMQ output binding message: {outputMessage}");
         }
 
         public class TestClass

@@ -8,12 +8,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    public class RabbitMQAsyncCollector : IAsyncCollector<string>
+    public class RabbitMQAsyncCollector : IAsyncCollector<byte[]>
     {
         private readonly RabbitMQContext _context;
         private readonly ConnectionFactory _factory;
@@ -21,6 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly IModel _channel;
         private readonly QueueDeclareOk _queue;
         private readonly IBasicPublishBatch _messages;
+        private readonly ILogger _logger;
 
         public RabbitMQAsyncCollector(RabbitMQContext context)
         {
@@ -32,9 +34,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _messages = _channel.CreateBasicPublishBatch();
         }
 
-        public Task AddAsync(string message, CancellationToken cancellationToken = default)
+        public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
-            _messages.Add(exchange: _context.Exchange, routingKey: _context.QueueName, mandatory: false, properties: _context.Properties, body: Encoding.UTF8.GetBytes(message));
+            _messages.Add(exchange: _context.Exchange, routingKey: _context.QueueName, mandatory: false, properties: _context.Properties, body: message);
 
             return Task.CompletedTask;
         }
