@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host.Bindings;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -14,8 +15,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
     public static class RabbitMQSamples
     {
         public static void TimerTrigger_StringOutput(
-           [TimerTrigger("00:01")] TimerInfo timer,
-           [RabbitMQ(
+            [TimerTrigger("00:01")] TimerInfo timer,
+            [RabbitMQ(
                 Hostname = "localhost",
                 QueueName = "queue")] out string outputMessage)
         {
@@ -29,7 +30,6 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
                   QueueName = "queue")] out TestClass outputMessage)
         {
             outputMessage = new TestClass(1, 1);
-            Console.WriteLine(outputMessage);
         }
 
         // To run:

@@ -18,21 +18,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Creates_Context_Correctly()
         {
-            var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "queue", Message = "hello there" };
+            var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "queue" };
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options));
-            var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue", Message = "hello there" };
+            var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
             RabbitMQContext expectedContext = new RabbitMQContext
             {
                 Hostname = "localhost",
-                QueueName = "queue",
-                Message = "hello there",
+                QueueName = "queue"
             };
 
             Assert.Equal(actualContext.Hostname, expectedContext.Hostname);
             Assert.Equal(actualContext.QueueName, expectedContext.QueueName);
-            Assert.Equal(actualContext.Message, expectedContext.Message);
         }
     }
 }
