@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
@@ -19,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         public void Creates_Context_Correctly()
         {
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "queue" };
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options));
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), new LoggerFactory());
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);

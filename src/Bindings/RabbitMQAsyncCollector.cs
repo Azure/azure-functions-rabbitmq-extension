@@ -22,9 +22,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly IModel _channel;
         private readonly QueueDeclareOk _queue;
         private readonly IBasicPublishBatch _messages;
-        private readonly ILogger _logger;
+        private ILogger _logger;
 
-        public RabbitMQAsyncCollector(RabbitMQContext context)
+        public RabbitMQAsyncCollector(RabbitMQContext context, ILogger logger)
         {
             _context = context;
             _factory = new ConnectionFactory() { HostName = context.Hostname };
@@ -32,11 +32,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _channel = _connection.CreateModel();
             _queue = CreateQueue(_channel, _context);
             _messages = _channel.CreateBasicPublishBatch();
+            _logger = logger;
         }
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
             _messages.Add(exchange: _context.Exchange, routingKey: _context.QueueName, mandatory: false, properties: _context.Properties, body: message);
+            _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
         }
@@ -49,6 +51,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal Task PublishAsync()
         {
             _messages.Publish();
+            _logger.LogDebug($"Publishing messages to queue...");
             return Task.CompletedTask;
         }
 

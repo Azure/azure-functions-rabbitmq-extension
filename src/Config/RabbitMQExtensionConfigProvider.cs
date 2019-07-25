@@ -27,9 +27,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly IOptions<RabbitMQOptions> _options;
         private readonly ILoggerFactory _loggerFactory;
 
-        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options)
+        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, ILoggerFactory loggerFactory)
         {
             _options = options;
+            _loggerFactory = loggerFactory;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -39,13 +40,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-           // _logger = _loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(""))
+            _logger = _loggerFactory.CreateLogger("RabbitMQOutput");
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(this.ValidateBinding);
             rule.BindToCollector<byte[]>((attr) =>
             {
-                return new RabbitMQAsyncCollector(this.CreateContext(attr));
+                return new RabbitMQAsyncCollector(this.CreateContext(attr), _logger);
             });
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToStringConverter<>));
@@ -93,6 +94,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Exchange = exchange,
                 Properties = properties,
             };
+
+            _logger.LogDebug($"Creating context from attributes: {hostname}, {queuename}, {exchange}");
 
             return context;
         }
