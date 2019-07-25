@@ -20,7 +20,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         public void Creates_Context_Correctly()
         {
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "queue" };
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), new LoggerFactory());
+            var loggerFactory = new LoggerFactory();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);

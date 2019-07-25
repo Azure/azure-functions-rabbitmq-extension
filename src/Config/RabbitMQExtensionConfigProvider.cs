@@ -95,8 +95,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
-            _logger.LogDebug($"Creating context from attributes: {hostname}, {queuename}, {exchange}");
-
             return context;
         }
 

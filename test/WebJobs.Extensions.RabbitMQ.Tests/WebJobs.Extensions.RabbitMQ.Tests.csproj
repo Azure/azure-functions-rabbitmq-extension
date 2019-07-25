@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WebJobs.Extensions.RabbitMQ.csproj" />
-    <ProjectReference Include="..\WebJobs.Extensions.RabbitMQ.Samples\WebJobs.Extensions.RabbitMQ.Samples.csproj" />
   </ItemGroup>
 
 </Project>
