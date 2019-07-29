@@ -23,7 +23,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     [Extension("RabbitMQ")]
     internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     {
-        private ILogger _logger;
         private readonly IOptions<RabbitMQOptions> _options;
         private readonly ILoggerFactory _loggerFactory;
 
@@ -40,13 +39,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-            _logger = _loggerFactory.CreateLogger("RabbitMQOutput");
-
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(this.ValidateBinding);
             rule.BindToCollector<byte[]>((attr) =>
             {
-                return new RabbitMQAsyncCollector(this.CreateContext(attr), _logger);
+                return new RabbitMQAsyncCollector(this.CreateContext(attr), _loggerFactory.CreateLogger<RabbitMQAsyncCollector>());
             });
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToStringConverter<>));
