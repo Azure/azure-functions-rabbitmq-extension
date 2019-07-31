@@ -43,6 +43,45 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
         }
 
+        [Theory]
+        [InlineData("localhost", "queue", null, null)]
+        [InlineData(null, "hello", "localhost", null)]
+        [InlineData(null, null, "localhost", "name")]
+        public void Handles_Null_Attributes_And_Options(string attrHostname, string attrQueueName, string optHostname, string optQueueName)
+        {
+            RabbitMQAttribute attr = new RabbitMQAttribute
+            {
+                Hostname = attrHostname,
+                QueueName = attrQueueName,
+            };
+
+            RabbitMQOptions opt = new RabbitMQOptions
+            {
+                Hostname = optHostname,
+                QueueName = optQueueName,
+            };
+
+            var loggerFactory = new LoggerFactory();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), (ILoggerFactory)loggerFactory);
+            var actualContext = config.CreateContext(attr);
+
+            if (optHostname == null && optQueueName == null)
+            {
+                Assert.Equal(actualContext.ResolvedAttribute.Hostname, attrHostname);
+                Assert.Equal(actualContext.ResolvedAttribute.QueueName, attrQueueName);
+            }
+            else if (attrHostname == null && optQueueName == null)
+            {
+                Assert.Equal(actualContext.ResolvedAttribute.Hostname, optHostname);
+                Assert.Equal(actualContext.ResolvedAttribute.QueueName, attrQueueName);
+            }
+            else
+            {
+                Assert.Equal(actualContext.ResolvedAttribute.Hostname, optHostname);
+                Assert.Equal(actualContext.ResolvedAttribute.QueueName, optQueueName);
+            }
+        }
+
         //[Fact]
         //public async Task AddAsync_AddsMessagesToQueue()
         //{
