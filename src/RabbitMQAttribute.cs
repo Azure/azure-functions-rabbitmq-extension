@@ -16,12 +16,16 @@ namespace Microsoft.Azure.WebJobs
 
     public sealed class RabbitMQAttribute : Attribute
     {
+        // <summary>
         // Necessary for creating connections
+        // </summary>
         [AutoResolve]
         public string Hostname { get; set; }
 
+        // <summary>
         // Necessary for sending and receiving messages
         // Settings for creating and sending to/receiving from a queue.
+        // </summary>
         [AutoResolve]
         public string QueueName { get; set; }
 

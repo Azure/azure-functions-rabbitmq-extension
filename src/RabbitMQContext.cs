@@ -7,12 +7,6 @@ namespace Microsoft.Azure.WebJobs.Extensions
 {
     public class RabbitMQContext
     {
-        public string Hostname { get; set; }
-
-        public string QueueName { get; set; }
-
-        public string Exchange { get; set; }
-
-        public IBasicProperties Properties { get; set; }
+        public RabbitMQAttribute ResolvedAttribute { get; set; }
     }
 }

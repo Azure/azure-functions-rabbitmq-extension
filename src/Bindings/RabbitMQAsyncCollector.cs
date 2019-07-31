@@ -27,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger<RabbitMQAsyncCollector> logger)
         {
             _context = context;
-            _factory = new ConnectionFactory() { HostName = context.Hostname };
+            _factory = new ConnectionFactory() { HostName = context.ResolvedAttribute.Hostname };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
             _queue = CreateQueue(_channel, _context);
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
-            _messages.Add(exchange: _context.Exchange, routingKey: _context.QueueName, mandatory: false, properties: _context.Properties, body: message);
+            _messages.Add(exchange: _context.ResolvedAttribute.Exchange, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: _context.ResolvedAttribute.Properties, body: message);
             _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal static QueueDeclareOk CreateQueue(IModel channel, RabbitMQContext context)
         {
-            var response = channel.QueueDeclare(queue: context.QueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            var response = channel.QueueDeclare(queue: context.ResolvedAttribute.QueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             return response;
         }
     }

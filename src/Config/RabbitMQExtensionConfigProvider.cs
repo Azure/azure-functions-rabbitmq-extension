@@ -46,7 +46,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return new RabbitMQAsyncCollector(this.CreateContext(attr), _loggerFactory.CreateLogger<RabbitMQAsyncCollector>());
             });
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
-            rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToStringConverter<>));
+            rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
         }
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
@@ -65,26 +65,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 throw new InvalidOperationException("RabbitMQ queuename is missing");
             }
-
-            if (exchange == null)
-            {
-                exchange = string.Empty;
-            }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
             string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange);
+            string exchange = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? string.Empty;
             IBasicProperties properties = attribute.Properties;
 
-            if (exchange == null)
-            {
-                exchange = string.Empty;
-            }
-
-            var context = new RabbitMQContext
+            var resolvedAttribute = new RabbitMQAttribute
             {
                 Hostname = hostname,
                 QueueName = queuename,
@@ -92,10 +82,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
-            return context;
+            return new RabbitMQContext
+            {
+                ResolvedAttribute = resolvedAttribute,
+            };
         }
 
-        private class PocoToStringConverter<T> : IConverter<T, byte[]>
+        internal class PocoToBytesConverter<T> : IConverter<T, byte[]>
         {
             public byte[] Convert(T input)
             {

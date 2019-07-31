@@ -2,11 +2,13 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -19,20 +21,72 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Creates_Context_Correctly()
         {
-            var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "queue" };
+            var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
-            RabbitMQContext expectedContext = new RabbitMQContext
+
+            RabbitMQAttribute attr = new RabbitMQAttribute
             {
                 Hostname = "localhost",
-                QueueName = "queue"
+                QueueName = "queue",
             };
 
-            Assert.Equal(actualContext.Hostname, expectedContext.Hostname);
-            Assert.Equal(actualContext.QueueName, expectedContext.QueueName);
+            RabbitMQContext expectedContext = new RabbitMQContext
+            {
+                ResolvedAttribute = attr,
+            };
+
+            Assert.Equal(actualContext.ResolvedAttribute.Hostname, expectedContext.ResolvedAttribute.Hostname);
+            Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
+        }
+
+        //[Fact]
+        //public async Task AddAsync_AddsMessagesToQueue()
+        //{
+        //    var attribute = new RabbitMQAttribute
+        //    {
+        //        Hostname = "localhost",
+        //        QueueName = "queue",
+        //    };
+
+        //    var context = new RabbitMQContext
+        //    {
+        //        ResolvedAttribute = attribute,
+        //    };
+
+        //    ILoggerFactory loggerFactory = new LoggerFactory();
+        //    ILogger<RabbitMQAsyncCollector> logger = loggerFactory.CreateLogger<RabbitMQAsyncCollector>());
+        //    var collector = new RabbitMQAsyncCollector(context, logger);
+
+        //    byte[] msg = Encoding.UTF8.GetBytes("hi");
+        //    await collector.AddAsync(msg);
+        //}
+
+        [Fact]
+        public void Converts_String_Correctly()
+        {
+            TestClass sampleObj = new TestClass(1, 1);
+            string res = JsonConvert.SerializeObject(sampleObj);
+            byte[] expectedRes = Encoding.UTF8.GetBytes(res);
+
+            RabbitMQ.RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass> converter = new RabbitMQ.RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass>();
+            byte[] actualRes = converter.Convert(sampleObj);
+
+            Assert.Equal(expectedRes, actualRes);
+        }
+
+        public class TestClass
+        {
+            public int x, y;
+
+            public TestClass(int x, int y)
+            {
+                this.x = x;
+                this.y = y;
+            }
         }
     }
 }
