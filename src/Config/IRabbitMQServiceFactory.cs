@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal interface IRabbitMQServiceFactory
     {
-        IRabbitMQService CreateService(string hostname);
+        IRabbitMQService CreateService(string hostname, string queuename);
     }
 }

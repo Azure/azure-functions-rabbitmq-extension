@@ -21,13 +21,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger<RabbitMQAsyncCollector> logger)
         {
             _context = context;
-            _channel = _context.Service.GetChannel();
-            _queue = _channel.QueueDeclare(queue: _context.ResolvedAttribute.QueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _batch = _channel.CreateBasicPublishBatch();
+            _batch = _context.Service.GetBatch();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        internal RabbitMQContext Context => _context;
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
@@ -46,7 +42,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal Task PublishAsync()
         {
             _batch.Publish();
-            _logger.LogDebug($"Publishing messages to queue. Number of messages: {_queue.MessageCount}");
+            _logger.LogDebug($"Publishing messages to queue.");
             return Task.CompletedTask;
         }
     }

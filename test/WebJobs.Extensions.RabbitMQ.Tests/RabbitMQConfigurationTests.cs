@@ -1,15 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
-using System;
-using System.Collections.Generic;
+
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using RabbitMQ.Client;
 using Xunit;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
@@ -18,13 +17,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
     {
         private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
 
-        // Mock Service for this
         [Fact]
         public void Creates_Context_Correctly()
         {
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), (ILoggerFactory)loggerFactory);
+            var serviceFactory = new DefaultRabbitMQServiceFactory();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), serviceFactory, (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
@@ -44,7 +43,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
         }
 
-        // Mock Service for this
         [Theory]
         [InlineData("localhost", "queue", null, null)]
         [InlineData(null, "hello", "localhost", null)]
@@ -64,7 +62,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             };
 
             var loggerFactory = new LoggerFactory();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), (ILoggerFactory)loggerFactory);
+            var serviceFactory = new DefaultRabbitMQServiceFactory();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), serviceFactory, (ILoggerFactory)loggerFactory);
             var actualContext = config.CreateContext(attr);
 
             if (optHostname == null && optQueueName == null)
@@ -84,29 +83,35 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             }
         }
 
-        // Mock context for this?
-        //[Fact]
-        //public async Task AddAsync_AddsMessagesToQueue()
-        //{
-        //    var attribute = new RabbitMQAttribute
-        //    {
-        //        Hostname = "localhost",
-        //        QueueName = "queue",
-        //    };
+        // Mock service for this
+        [Fact]
+        public async Task AddAsync_AddsMessagesToQueue()
+        {
+            var mockRabbitMQService = new Mock<IRabbitMQService>(MockBehavior.Strict);
+            var mockBatch = new Mock<IBasicPublishBatch>();
+            mockRabbitMQService.Setup(m => m.GetBatch()).Returns(mockBatch.Object);
 
-        //    var context = new RabbitMQContext
-        //    {
-        //        ResolvedAttribute = attribute,
-        //    };
+            var attribute = new RabbitMQAttribute
+            {
+                Hostname = "localhost",
+                QueueName = "queue",
+            };
 
-        //    ILoggerFactory loggerFactory = new LoggerFactory();
-        //    ILogger<RabbitMQAsyncCollector> logger = loggerFactory.CreateLogger<RabbitMQAsyncCollector>();
-        //    var collector = new RabbitMQAsyncCollector(context, logger);
+            var context = new RabbitMQContext
+            {
+                ResolvedAttribute = attribute,
+                Service = mockRabbitMQService.Object
+            };
 
-        //    await collector.AddAsync(Encoding.UTF8.GetBytes("hi"));
+            ILoggerFactory loggerFactory = new LoggerFactory();
+            ILogger<RabbitMQAsyncCollector> logger = loggerFactory.CreateLogger<RabbitMQAsyncCollector>();
+            var collector = new RabbitMQAsyncCollector(context, logger);
 
-        //    Assert.Equal(collector.Context.Queue.MessageCount, (uint)1);
-        //}
+            byte[] body = Encoding.UTF8.GetBytes("hi");
+            await collector.AddAsync(body);
+
+            mockBatch.Verify(m => m.Add(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IBasicProperties>(), body), Times.Exactly(1));
+        }
 
         [Fact]
         public void Converts_String_Correctly()

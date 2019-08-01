@@ -77,7 +77,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
-            IRabbitMQService service = GetService(hostname);
+            IRabbitMQService service = GetService(hostname, queuename);
 
             return new RabbitMQContext
             {
@@ -86,9 +86,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string hostname)
+        internal IRabbitMQService GetService(string hostname, string queuename)
         {
-            return _rabbitMQServiceFactory.CreateService(hostname);
+            return _rabbitMQServiceFactory.CreateService(hostname, queuename);
         }
 
         internal class PocoToBytesConverter<T> : IConverter<T, byte[]>
