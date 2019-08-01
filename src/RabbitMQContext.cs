@@ -8,5 +8,9 @@ namespace Microsoft.Azure.WebJobs.Extensions
     public class RabbitMQContext
     {
         public RabbitMQAttribute ResolvedAttribute { get; set; }
+
+        public QueueDeclareOk Queue { get; set; }
+
+        public IBasicPublishBatch Batch { get; set; }
     }
 }

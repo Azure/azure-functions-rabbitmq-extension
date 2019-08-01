@@ -17,27 +17,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     public class RabbitMQAsyncCollector : IAsyncCollector<byte[]>
     {
         private readonly RabbitMQContext _context;
-        private readonly ConnectionFactory _factory;
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly QueueDeclareOk _queue;
-        private readonly IBasicPublishBatch _messages;
         private ILogger<RabbitMQAsyncCollector> _logger;
 
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger<RabbitMQAsyncCollector> logger)
         {
             _context = context;
-            _factory = new ConnectionFactory() { HostName = context.ResolvedAttribute.Hostname };
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
-            _queue = CreateQueue(_channel, _context);
-            _messages = _channel.CreateBasicPublishBatch();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
-            _messages.Add(exchange: _context.ResolvedAttribute.Exchange, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: _context.ResolvedAttribute.Properties, body: message);
+            _context.Batch.Add(exchange: _context.ResolvedAttribute.Exchange, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: _context.ResolvedAttribute.Properties, body: message);
+            _logger.LogDebug($"Message: {message}, Queue Name: {_context.ResolvedAttribute.QueueName}");
             _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
@@ -50,15 +41,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal Task PublishAsync()
         {
-            _messages.Publish();
-            _logger.LogDebug($"Publishing messages to queue. Number of messages: {_queue.MessageCount}");
+            _context.Batch.Publish();
+            _logger.LogDebug($"Publishing messages to queue. Number of messages: {_context.Queue.MessageCount}");
             return Task.CompletedTask;
-        }
-
-        internal static QueueDeclareOk CreateQueue(IModel channel, RabbitMQContext context)
-        {
-            var response = channel.QueueDeclare(queue: context.ResolvedAttribute.QueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            return response;
         }
     }
 }

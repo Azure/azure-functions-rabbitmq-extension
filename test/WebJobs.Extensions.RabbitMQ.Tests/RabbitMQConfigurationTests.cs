@@ -97,11 +97,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         //    };
 
         //    ILoggerFactory loggerFactory = new LoggerFactory();
-        //    ILogger<RabbitMQAsyncCollector> logger = loggerFactory.CreateLogger<RabbitMQAsyncCollector>());
+        //    ILogger<RabbitMQAsyncCollector> logger = loggerFactory.CreateLogger<RabbitMQAsyncCollector>();
         //    var collector = new RabbitMQAsyncCollector(context, logger);
 
-        //    byte[] msg = Encoding.UTF8.GetBytes("hi");
-        //    await collector.AddAsync(msg);
+        //    await collector.AddAsync(Encoding.UTF8.GetBytes("hi"));
+
+        //    Assert.Equal(collector.Queue.MessageCount, (uint)5);
         //}
 
         [Fact]

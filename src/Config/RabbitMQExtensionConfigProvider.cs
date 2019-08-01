@@ -71,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? string.Empty;
+            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange) ?? string.Empty;
             IBasicProperties properties = attribute.Properties;
 
             var resolvedAttribute = new RabbitMQAttribute
@@ -82,10 +82,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
+            IModel channel = CreateConnectionAndChannel(hostname);
+            QueueDeclareOk queue = channel.QueueDeclare(queue: queuename, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            IBasicPublishBatch messages = channel.CreateBasicPublishBatch();
+
             return new RabbitMQContext
             {
                 ResolvedAttribute = resolvedAttribute,
+                Batch = messages,
+                Queue = queue,
             };
+        }
+
+        internal IModel CreateConnectionAndChannel(string hostname)
+        {
+            ConnectionFactory factory = new ConnectionFactory() { HostName = hostname };
+            IConnection connection = factory.CreateConnection();
+            return connection.CreateModel();
         }
 
         internal class PocoToBytesConverter<T> : IConverter<T, byte[]>
