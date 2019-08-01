@@ -26,25 +26,6 @@ public static void TimerTrigger_StringOutput(
 
 The above example waits on a timer trigger to fire (every second) before sending a message to the queue named "queue" connected to the localhost port. The message we want to send is then bound to the variable outputMessage.
 
-## Trigger Binding
-
-```C#
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
-using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-
-public static void RabbitMQTrigger_String(
-    [RabbitMQTrigger("localhost", "queue")] string message,
-    ILogger logger
-    )
-{
-    logger.LogInformation($"RabbitMQ queue trigger function processed message: {message}");
-}
-```
-
-This function is triggered on a message from the queue "queue" connected to the localhost port. The received message is bound to the variable message and is processed by the function.
-
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
