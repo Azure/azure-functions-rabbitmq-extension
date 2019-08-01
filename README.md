@@ -11,12 +11,8 @@ See the repository [wiki](https://github.com/katiecai/azure-functions-rabbitmq-e
 ## Output Binding
 
 ```C#
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Azure.WebJobs;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 public static void TimerTrigger_StringOutput(
     [TimerTrigger("00:01")] TimerInfo timer,
@@ -33,14 +29,10 @@ The above example waits on a timer trigger to fire (every second) before sending
 ## Trigger Binding
 
 ```C#
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 public static void RabbitMQTrigger_String(
     [RabbitMQTrigger("localhost", "queue")] string message,
