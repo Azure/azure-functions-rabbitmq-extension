@@ -1,16 +1,14 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using RabbitMQ.Client;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 namespace Microsoft.Azure.WebJobs.Extensions
 {
-    public class RabbitMQContext
+    internal class RabbitMQContext
     {
         public RabbitMQAttribute ResolvedAttribute { get; set; }
 
-        public QueueDeclareOk Queue { get; set; }
-
-        public IBasicPublishBatch Batch { get; set; }
+        public IRabbitMQService Service { get; set; }
     }
 }

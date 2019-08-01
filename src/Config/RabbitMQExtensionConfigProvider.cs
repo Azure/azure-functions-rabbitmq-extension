@@ -2,21 +2,14 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
@@ -24,11 +17,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     {
         private readonly IOptions<RabbitMQOptions> _options;
+        private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
         private readonly ILoggerFactory _loggerFactory;
 
-        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, ILoggerFactory loggerFactory)
+        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
         {
             _options = options;
+            _rabbitMQServiceFactory = rabbitMQServiceFactory;
             _loggerFactory = loggerFactory;
         }
 
@@ -82,23 +77,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
-            IModel channel = CreateConnectionAndChannel(hostname);
-            QueueDeclareOk queue = channel.QueueDeclare(queue: queuename, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            IBasicPublishBatch messages = channel.CreateBasicPublishBatch();
+            IRabbitMQService service = GetService(hostname);
 
             return new RabbitMQContext
             {
                 ResolvedAttribute = resolvedAttribute,
-                Batch = messages,
-                Queue = queue,
+                Service = service,
             };
         }
 
-        internal IModel CreateConnectionAndChannel(string hostname)
+        internal IRabbitMQService GetService(string hostname)
         {
-            ConnectionFactory factory = new ConnectionFactory() { HostName = hostname };
-            IConnection connection = factory.CreateConnection();
-            return connection.CreateModel();
+            return _rabbitMQServiceFactory.CreateService(hostname);
         }
 
         internal class PocoToBytesConverter<T> : IConverter<T, byte[]>

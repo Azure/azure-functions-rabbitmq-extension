@@ -18,6 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
     {
         private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
 
+        // Mock Service for this
         [Fact]
         public void Creates_Context_Correctly()
         {
@@ -43,6 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
         }
 
+        // Mock Service for this
         [Theory]
         [InlineData("localhost", "queue", null, null)]
         [InlineData(null, "hello", "localhost", null)]
@@ -82,6 +84,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             }
         }
 
+        // Mock context for this?
         //[Fact]
         //public async Task AddAsync_AddsMessagesToQueue()
         //{
@@ -102,7 +105,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 
         //    await collector.AddAsync(Encoding.UTF8.GetBytes("hi"));
 
-        //    Assert.Equal(collector.Queue.MessageCount, (uint)5);
+        //    Assert.Equal(collector.Context.Queue.MessageCount, (uint)1);
         //}
 
         [Fact]

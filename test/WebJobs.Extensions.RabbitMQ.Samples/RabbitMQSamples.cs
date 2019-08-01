@@ -23,20 +23,20 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
                 QueueName = "queue")] out string outputMessage,
             ILogger logger)
         {
-            outputMessage = "new message";
+            outputMessage = "new";
             logger.LogInformation($"RabbitMQ output binding message: {outputMessage}");
         }
 
-        public static void TimerTrigger_PocoOutput(
-             [TimerTrigger("00:01")] TimerInfo timer,
-             [RabbitMQ(
-                  Hostname = "localhost",
-                  QueueName = "queue")] out TestClass outputMessage,
-             ILogger logger)
-        {
-            outputMessage = new TestClass(1, 1);
-            logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
-        }
+        //public static void TimerTrigger_PocoOutput(
+        //     [TimerTrigger("00:01")] TimerInfo timer,
+        //     [RabbitMQ(
+        //          Hostname = "localhost",
+        //          QueueName = "queue")] out TestClass outputMessage,
+        //     ILogger logger)
+        //{
+        //    outputMessage = new TestClass(1, 1);
+        //    logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
+        //}
 
         //// To run:
         //// 1. Create Azure Storage Account and go to the homepage for that account
@@ -47,18 +47,18 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         //// *Note that any time the queue isn't empty, the trigger will continue to fire.
         //// So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
 
-        public static async Task ProcessMessage_RabbitMQAsyncCollector(
-            [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-            [RabbitMQ(
-                Hostname = "localhost",
-                QueueName = "queue"
-            )] IAsyncCollector<byte[]> messages,
-            ILogger logger)
-        {
-            logger.LogInformation($"Received queue trigger");
-            byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
-            await messages.AddAsync(messageInBytes);
-        }
+        //public static async Task ProcessMessage_RabbitMQAsyncCollector(
+        //    [QueueTrigger(@"samples-rabbitmq-messages")] string message,
+        //    [RabbitMQ(
+        //        Hostname = "localhost",
+        //        QueueName = "queue"
+        //    )] IAsyncCollector<byte[]> messages,
+        //    ILogger logger)
+        //{
+        //    logger.LogInformation($"Received queue trigger");
+        //    byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
+        //    await messages.AddAsync(messageInBytes);
+        //}
 
         //// To run:
         //// 1. Create Azure Storage Account and go to the homepage for that account
@@ -69,16 +69,16 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         //// *Note that any time the queue isn't empty, the trigger will continue to fire.
         //// So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
 
-        public static void QueueTrigger_RabbitMQOutput(
-            [QueueTrigger(@"samples-rabbitmq-messages")] TestClass message,
-            [RabbitMQ(
-                Hostname = "localhost",
-                QueueName = "queue")] out TestClass outputMessage,
-            ILogger logger)
-        {
-            outputMessage = message;
-            logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
-        }
+        //public static void QueueTrigger_RabbitMQOutput(
+        //    [QueueTrigger(@"samples-rabbitmq-messages")] TestClass message,
+        //    [RabbitMQ(
+        //        Hostname = "localhost",
+        //        QueueName = "queue")] out TestClass outputMessage,
+        //    ILogger logger)
+        //{
+        //    outputMessage = message;
+        //    logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
+        //}
 
         public class TestClass
         {

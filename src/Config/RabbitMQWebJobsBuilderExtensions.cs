@@ -32,6 +32,7 @@ namespace Microsoft.Extensions.Hosting
                     section.Bind(options);
                 });
 
+            builder.Services.AddSingleton<IRabbitMQServiceFactory, DefaultRabbitMQServiceFactory>();
             return builder;
         }
 
