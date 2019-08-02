@@ -1,6 +1,35 @@
+|Branch|Status|
+|---|---|
+|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/azure-functions-rabbitmq-extension-ci?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=34&branchName=master)|
+|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/azure-functions-rabbitmq-extension-ci?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=34&branchName=dev)|
+
 # RabbitMQ Binding Support for Azure Functions
 
-WIP
+The Azure Functions RabbitMQ Binding extensions allows you to send and receive messages using the RabbitMQ API but by writing Functions code. The RabbitMQ output binding sends messages to a specific queue. The RabbitMQ trigger fires when it receives a message from a specific queue.
+
+[RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
+
+# Samples
+
+See the repository [wiki](https://github.com/katiecai/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
+
+## Output Binding
+
+```C#
+using Microsoft.Azure.WebJobs;
+using RabbitMQ.Client;
+
+public static void TimerTrigger_StringOutput(
+    [TimerTrigger("00:01")] TimerInfo timer,
+    [RabbitMQ(
+        Hostname = "localhost",
+        QueueName = "queue")] out string outputMessage)
+{
+    outputMessage = "hello"
+}
+```
+
+The above example waits on a timer trigger to fire (every second) before sending a message to the queue named "queue" connected to the localhost port. The message we want to send is then bound to the variable outputMessage.
 
 # Contributing
 
