@@ -22,8 +22,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
-            var serviceFactory = new DefaultRabbitMQServiceFactory();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), serviceFactory, (ILoggerFactory)loggerFactory);
+            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
@@ -62,8 +62,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             };
 
             var loggerFactory = new LoggerFactory();
-            var serviceFactory = new DefaultRabbitMQServiceFactory();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), serviceFactory, (ILoggerFactory)loggerFactory);
+            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var actualContext = config.CreateContext(attr);
 
             if (optHostname == null && optQueueName == null)
@@ -83,7 +83,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             }
         }
 
-        // Mock service for this
         [Fact]
         public async Task AddAsync_AddsMessagesToQueue()
         {
