@@ -20,9 +20,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger<RabbitMQAsyncCollector> logger)
         {
-            _context = context;
-            _batch = _context.Service.GetBatch();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            if (_context.Service == null)
+            {
+                throw new ArgumentNullException("context.service");
+            }
+            _batch = _context.Service.GetBatch();
+          
         }
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
