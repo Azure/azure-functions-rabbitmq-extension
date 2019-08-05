@@ -10,6 +10,10 @@ using Moq;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using Xunit;
+using System;
+using System.Collections.Generic;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
+using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
@@ -23,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), _emptyConfig, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
@@ -63,7 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), _emptyConfig, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var actualContext = config.CreateContext(attr);
 
             if (optHostname == null && optQueueName == null)
@@ -119,10 +123,81 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             string res = JsonConvert.SerializeObject(sampleObj);
             byte[] expectedRes = Encoding.UTF8.GetBytes(res);
 
-            RabbitMQ.RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass> converter = new RabbitMQ.RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass>();
+            RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass> converter = new RabbitMQExtensionConfigProvider.PocoToBytesConverter<TestClass>();
             byte[] actualRes = converter.Convert(sampleObj);
 
             Assert.Equal(expectedRes, actualRes);
+        }
+
+        // For RabbitMQ Trigger
+        [Fact]
+        public void Converts_to_Poco()
+        {
+            TestClass expectedObj = new TestClass(1, 1);
+
+            string objJson = JsonConvert.SerializeObject(expectedObj);
+            byte[] objJsonBytes = Encoding.UTF8.GetBytes(objJson);
+            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, objJsonBytes);
+            RabbitMQExtensionConfigProvider.EventArgsToPocoConverter<TestClass> converter = new RabbitMQExtensionConfigProvider.EventArgsToPocoConverter<TestClass>();
+            TestClass actualObj = converter.Convert(args);
+
+            Assert.Equal(expectedObj.x, actualObj.x);
+            Assert.Equal(expectedObj.y, actualObj.y);
+        }
+
+        [Fact]
+        public void Null_Context_Throws_Error()
+        {
+            var mockProvider = new Mock<RabbitMQTriggerAttributeBindingProvider>();
+            Assert.ThrowsAsync<ArgumentNullException>(() => mockProvider.Object.TryCreateAsync(null));
+        }
+
+        [Fact]
+        public void Creates_Contract_Correctly()
+        {
+            var expectedContract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            expectedContract.Add("ConsumerTag", typeof(string));
+            expectedContract.Add("DeliveryTag", typeof(ulong));
+            expectedContract.Add("Redelivered", typeof(bool));
+            expectedContract.Add("Exchange", typeof(string));
+            expectedContract.Add("RoutingKey", typeof(string));
+            expectedContract.Add("BasicProperties", typeof(IBasicProperties));
+            expectedContract.Add("Body", typeof(byte[]));
+
+            var actualContract = RabbitMQTriggerBinding.CreateBindingDataContract(); 
+
+            foreach (KeyValuePair<string, Type> item in actualContract)
+            {
+                Assert.Equal(expectedContract[item.Key], item.Value);
+            }
+        }
+
+        [Fact]
+        public void Correctly_Populates_Binding_Data()
+        {
+            var data = new Dictionary<string, Object>(StringComparer.OrdinalIgnoreCase);
+            data.Add("ConsumerTag", "ConsumerName");
+            ulong deliveryTag = 1;
+            data.Add("DeliveryTag", deliveryTag);
+            data.Add("Redelivered", false);
+            data.Add("RoutingKey", "QueueName");
+
+            Random rand = new Random();
+            byte[] body = new byte[10];
+            rand.NextBytes(body);
+
+            data.Add("Body", body);
+
+            BasicDeliverEventArgs eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
+            data.Add("Exchange", eventArgs.Exchange);
+            data.Add("BasicProperties", eventArgs.BasicProperties);
+
+            var actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs);
+
+            foreach (KeyValuePair<string, Object> item in actualContract)
+            {
+                Assert.Equal(data[item.Key], item.Value);
+            }
         }
 
         public class TestClass

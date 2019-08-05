@@ -31,10 +31,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Trigger\" />
+    <PackageReference Include="System-Web-Helpers.dll" Version="1.0.0" />
+    <PackageReference Include="System.Json" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

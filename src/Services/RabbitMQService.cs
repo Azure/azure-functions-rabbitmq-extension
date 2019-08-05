@@ -7,19 +7,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
+        private IModel _channel;
         private IBasicPublishBatch _batch;
 
         public RabbitMQService(string hostname, string queuename)
         {
-            _batch = CreateBatch(hostname, queuename);
+            _channel = CreateChannel(hostname, queuename);
+            _batch = CreateBatch(queuename);
         }
 
-        public IBasicPublishBatch CreateBatch(string hostname, string queuename)
+        public IModel CreateChannel(string hostname, string queuename)
         {
             ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = hostname };
             IModel channel = connectionFactory.CreateConnection().CreateModel();
-            channel.QueueDeclare(queue: queuename, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            return channel.CreateBasicPublishBatch();
+
+            return channel;
+        }
+
+        public IBasicPublishBatch CreateBatch(string queuename)
+        {
+            _channel.QueueDeclare(queue: queuename, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            return _channel.CreateBasicPublishBatch();
+        }
+
+        public IModel GetChannel()
+        {
+            return _channel;
         }
 
         public IBasicPublishBatch GetBatch()
