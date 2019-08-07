@@ -10,20 +10,19 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Listeners
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQListener : IListener
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
         private readonly ushort _batchNumber;
+        private readonly IRabbitMQService _service;
 
-        private IRabbitMQService _service;
+        private EventingBasicConsumer _consumer;
         private IModel _channel;
         private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
 
-
-        public EventingBasicConsumer _consumer;
         private string _consumerTag;
         private bool _disposed;
         private bool _started;

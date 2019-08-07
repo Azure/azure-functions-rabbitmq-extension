@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Azure.WebJobs.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,18 +16,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
     {
         private readonly INameResolver _nameResolver;
         private readonly ILogger _logger;
-        private readonly IConfiguration _config;
         private readonly IOptions<RabbitMQOptions> _options;
         private readonly RabbitMQExtensionConfigProvider _provider;
 
         public RabbitMQTriggerAttributeBindingProvider(
-            IConfiguration configuration,
             INameResolver nameResolver,
             IOptions<RabbitMQOptions> options,
             RabbitMQExtensionConfigProvider provider,
             ILoggerFactory loggerFactory)
         {
-            _config = configuration;
             _nameResolver = nameResolver;
             _options = options;
             _provider = provider;

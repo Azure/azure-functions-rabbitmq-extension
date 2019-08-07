@@ -22,16 +22,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     {
         private readonly IOptions<RabbitMQOptions> _options;
-        private readonly IConfiguration _configuration;
         private readonly INameResolver _nameResolver;
         private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
         private readonly ILoggerFactory _loggerFactory;
         private ILogger _logger;
 
-        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, IConfiguration configuration, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
+        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
         {
             _options = options;
-            _configuration = configuration;
+            _nameResolver = nameResolver;
             _rabbitMQServiceFactory = rabbitMQServiceFactory;
             _loggerFactory = loggerFactory;
         }
@@ -56,12 +55,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
             triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
-                    _configuration,
                     _nameResolver,
                     _options,
                     this,
-                    _loggerFactory
-                ));
+                    _loggerFactory));
 
             // Converts BasicDeliverEventArgs to string so user can extract received message.
             triggerRule.AddConverter<BasicDeliverEventArgs, string>(args => Encoding.UTF8.GetString(args.Body))
@@ -79,7 +76,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
                 catch (FormatException fex)
                 {
-                    //Invalid json format
+                    // Invalid json format
                     throw new FormatException(fex.ToString());
                 }
                 catch (Exception ex)
@@ -98,8 +95,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange);
-            IBasicProperties properties = attribute.Properties;
 
             if (string.IsNullOrEmpty(hostname))
             {
@@ -152,10 +147,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal class EventArgsToPocoConverter<T> : IConverter<BasicDeliverEventArgs, T>
         {
+            private readonly LoggerFactory _loggerFactory = new LoggerFactory();
+
             public T Convert(BasicDeliverEventArgs arg)
             {
                 string body = Encoding.UTF8.GetString(arg.Body);
                 JToken jsonObj = null;
+
+                ILogger _logger = _loggerFactory.CreateLogger("PocoConverter");
 
                 try
                 {
@@ -167,7 +166,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _logger.LogError(ex.ToString());
                 }
 
                 return jsonObj.ToObject<T>();

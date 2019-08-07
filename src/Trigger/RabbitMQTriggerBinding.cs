@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Listeners;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -42,6 +41,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
         public IReadOnlyDictionary<string, Type> BindingDataContract
         {
             get { return _bindingDataContract; }
+        }
+
+        public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
+        {
+            BasicDeliverEventArgs message = value as BasicDeliverEventArgs;
+
+            IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
+            return Task.FromResult<ITriggerData>(new TriggerData(null, bindingData));
+        }
+
+        public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException("context");
+            }
+
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _batchNumber));
+        }
+
+        public ParameterDescriptor ToParameterDescriptor()
+        {
+            return new RabbitMQTriggerParameterDescriptor
+            {
+                Hostname = _hostname,
+                QueueName = _queueName,
+            };
         }
 
         internal static IReadOnlyDictionary<string, Type> CreateBindingDataContract()
@@ -85,33 +111,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
                 // some message property getters can throw, based on the
                 // state of the message
             }
-        }
-
-        public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
-        {
-            BasicDeliverEventArgs message = value as BasicDeliverEventArgs;
-
-            IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
-            return Task.FromResult<ITriggerData>(new TriggerData(null, bindingData));
-        }
-
-        public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
-        {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
-
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _batchNumber));
-        }
-
-        public ParameterDescriptor ToParameterDescriptor()
-        {
-            return new RabbitMQTriggerParameterDescriptor
-            {
-                Hostname = _hostname,
-                QueueName = _queueName,
-            };
         }
     }
 }

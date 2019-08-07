@@ -14,13 +14,11 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
     {
         public static async Task Main(string[] args)
         {
-            string filesTestPath = @"c:\temp\files";
-
             // Add or remove types from this list to choose which functions will
             // be indexed by the JobHost.
             // To run some of the other samples included, add their types to this list
             var typeLocator = new SamplesTypeLocator(
-                typeof(RabbitMQTriggerSamples));
+                typeof(RabbitMQSamples));
 
             var builder = new HostBuilder()
                .UseEnvironment("Development")

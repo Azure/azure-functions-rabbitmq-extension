@@ -1,33 +1,32 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
-using Xunit;
-using System;
-using System.Collections.Generic;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
 using RabbitMQ.Client.Events;
+using Xunit;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQConfigurationTests
     {
-        private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
-
         [Fact]
         public void Creates_Context_Correctly()
         {
             var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), _emptyConfig, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
+            var mockNameResolver = new Mock<INameResolver>();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var attribute = new RabbitMQAttribute { Hostname = "localhost", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
@@ -67,7 +66,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), _emptyConfig, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
+            var mockNameResolver = new Mock<INameResolver>();
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
             var actualContext = config.CreateContext(attr);
 
             if (optHostname == null && optQueueName == null)
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Fact]
-        public void Creates_Contract_Correctly()
+        public void Verify_BindingDataContract_Types()
         {
             var expectedContract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
             expectedContract.Add("ConsumerTag", typeof(string));
@@ -173,7 +173,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Fact]
-        public void Correctly_Populates_Binding_Data()
+        public void Verify_BindingDataContract_Values()
         {
             var data = new Dictionary<string, Object>(StringComparer.OrdinalIgnoreCase);
             data.Add("ConsumerTag", "ConsumerName");
