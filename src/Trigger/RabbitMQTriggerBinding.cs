@@ -11,7 +11,7 @@ using Microsoft.Azure.WebJobs.Host.Triggers;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQTriggerBinding : ITriggerBinding
     {
@@ -19,7 +19,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
         private readonly string _queueName;
         private readonly string _hostName;
         private readonly ushort _batchNumber;
-        private readonly IReadOnlyDictionary<string, Type> _bindingDataContract = new Dictionary<string, Type>();
 
         public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ushort batchNumber)
         {
@@ -27,7 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
             _queueName = queueName;
             _hostName = hostname;
             _batchNumber = batchNumber;
-            _bindingDataContract = CreateBindingDataContract();
+            BindingDataContract = CreateBindingDataContract();
         }
 
         public Type TriggerValueType
@@ -38,10 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
             }
         }
 
-        public IReadOnlyDictionary<string, Type> BindingDataContract
-        {
-            get { return _bindingDataContract; }
-        }
+        public IReadOnlyDictionary<string, Type> BindingDataContract { get; } = new Dictionary<string, Type>();
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {

@@ -85,7 +85,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return Task.CompletedTask;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -94,11 +94,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
             }
 
-            await CloseChannel();
-        }
-
-        public Task CloseChannel()
-        {
             _channel.BasicCancel(_consumerTag);
             _channel.Close();
             _started = false;

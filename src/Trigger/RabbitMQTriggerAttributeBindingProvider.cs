@@ -6,11 +6,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
-using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
     {
@@ -23,15 +22,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
             INameResolver nameResolver,
             IOptions<RabbitMQOptions> options,
             RabbitMQExtensionConfigProvider provider,
-            ILoggerFactory loggerFactory)
+            ILogger logger)
         {
-            _nameResolver = nameResolver;
-            _options = options;
-            _provider = provider;
-            _logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
+            _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
+        public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
             if (context == null)
             {
@@ -43,7 +42,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
 
             if (attribute == null)
             {
-                return null;
+                return Task.FromResult<ITriggerBinding>(null);
             }
 
             string queueName = Resolve(attribute.QueueName);
@@ -54,7 +53,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
 
             IRabbitMQService service = _provider.GetService(hostname, queueName);
 
-            return new RabbitMQTriggerBinding(service, hostname, queueName, batchNumber);
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostname, queueName, batchNumber));
         }
 
         private string Resolve(string name)

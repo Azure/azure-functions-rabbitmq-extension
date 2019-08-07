@@ -5,6 +5,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public interface IRabbitMQServiceFactory
     {
-        IRabbitMQService CreateService(string hostname, string queuename);
+        IRabbitMQService CreateService(string hostName, string queueName);
     }
 }

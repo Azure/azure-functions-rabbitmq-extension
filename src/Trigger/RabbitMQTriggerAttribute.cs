@@ -4,7 +4,7 @@
 using System;
 using Microsoft.Azure.WebJobs.Description;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs
 {
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute

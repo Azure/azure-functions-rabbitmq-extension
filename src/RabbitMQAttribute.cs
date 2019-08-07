@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs
         // Necessary for creating connections
         // </summary>
         [AutoResolve]
-        public string Hostname { get; set; }
+        public string HostName { get; set; }
 
         // <summary>
         // Necessary for sending and receiving messages
