@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
@@ -10,10 +11,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private IModel _channel;
         private IBasicPublishBatch _batch;
 
-        public RabbitMQService(string hostname, string queuename)
+        public RabbitMQService(string hostName, string queueName)
         {
-            CreateChannel(hostname);
-            CreateBatch(queuename);
+            string host = hostName ?? throw new ArgumentNullException(nameof(hostName));
+            string queue = queueName ?? throw new ArgumentNullException(nameof(queueName));
+            CreateChannel(host);
+            CreateBatch(queue);
         }
 
         public IModel GetChannel()
@@ -26,15 +29,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _batch;
         }
 
-        internal void CreateChannel(string hostname)
+        internal void CreateChannel(string hostName)
         {
-            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = hostname };
+            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = hostName };
             _channel = connectionFactory.CreateConnection().CreateModel();
         }
 
-        internal void CreateBatch(string queuename)
+        internal void CreateBatch(string queueName)
         {
-            _channel.QueueDeclare(queue: queuename, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             _batch = _channel.CreateBasicPublishBatch();
         }
     }

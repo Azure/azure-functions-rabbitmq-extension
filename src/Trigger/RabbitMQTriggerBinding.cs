@@ -17,7 +17,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
     {
         private readonly IRabbitMQService _service;
         private readonly string _queueName;
-        private readonly string _hostname;
+        private readonly string _hostName;
         private readonly ushort _batchNumber;
         private readonly IReadOnlyDictionary<string, Type> _bindingDataContract = new Dictionary<string, Type>();
 
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
         {
             _service = service;
             _queueName = queueName;
-            _hostname = hostname;
+            _hostName = hostname;
             _batchNumber = batchNumber;
             _bindingDataContract = CreateBindingDataContract();
         }
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
         {
             return new RabbitMQTriggerParameterDescriptor
             {
-                Hostname = _hostname,
+                Hostname = _hostName,
                 QueueName = _queueName,
             };
         }

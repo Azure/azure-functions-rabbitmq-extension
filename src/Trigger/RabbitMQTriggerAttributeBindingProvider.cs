@@ -46,19 +46,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
                 return null;
             }
 
-            string queueName = null;
+            string queueName = Resolve(attribute.QueueName);
 
-            if (attribute.QueueName != null)
-            {
-                queueName = this.Resolve(attribute.QueueName);
-            }
-
-            string hostname = null;
-
-            if (attribute.Hostname != null)
-            {
-                hostname = this.Resolve(attribute.Hostname);
-            }
+            string hostname = Resolve(attribute.Hostname);
 
             ushort batchNumber = attribute.BatchNumber;
 
@@ -69,12 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger
 
         private string Resolve(string name)
         {
-            if (_nameResolver == null)
-            {
-                return name;
-            }
-
-            return _nameResolver.ResolveWholeString(name);
+            return _nameResolver.ResolveWholeString(name) ?? name;
         }
     }
 }
