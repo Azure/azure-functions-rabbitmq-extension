@@ -77,7 +77,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
-        Trigger samples
+        // Trigger samples
         public static void RabbitMQTrigger_String(
              [RabbitMQTrigger("localhost", "queue")] string message,
              string consumerTag,
