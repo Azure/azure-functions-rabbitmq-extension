@@ -10,6 +10,13 @@
     <AssemblyOriginatorKeyFile>PublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
     <Version>0.1.0-beta</Version>
+    <PackageId>Microsoft.AzureWebJobs.Extensions.RabbitMQ</PackageId>
+    <Authors>Microsoft</Authors>
+    <Product>Azure WebJobs RabbitMQ Extension</Product>
+    <Description>This package contains binding extensions for RabbitMQ.</Description>
+    <RepositoryUrl>https://github.com/Azure/azure-functions-rabbitmq-extension</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Microsoft Azure WebJobs AzureFunctions</PackageTags>
   </PropertyGroup>
    
    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' or '$(Configuration)|$(Platform)'=='Debug|Any CPU'">
