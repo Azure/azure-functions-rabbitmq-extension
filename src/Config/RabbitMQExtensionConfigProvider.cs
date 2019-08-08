@@ -6,10 +6,11 @@ using System.Text;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
@@ -17,14 +18,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     {
         private readonly IOptions<RabbitMQOptions> _options;
+        private readonly INameResolver _nameResolver;
         private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
-        private readonly ILoggerFactory _loggerFactory;
+        private ILogger _logger;
 
-        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
+        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
         {
             _options = options;
+            _nameResolver = nameResolver;
             _rabbitMQServiceFactory = rabbitMQServiceFactory;
-            _loggerFactory = loggerFactory;
+            _logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -38,40 +41,50 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             rule.AddValidator(this.ValidateBinding);
             rule.BindToCollector<byte[]>((attr) =>
             {
-                return new RabbitMQAsyncCollector(this.CreateContext(attr), _loggerFactory.CreateLogger<RabbitMQAsyncCollector>());
+                return new RabbitMQAsyncCollector(this.CreateContext(attr), _logger);
             });
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
+
+            var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
+            triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
+                    _nameResolver,
+                    this));
+
+            // Converts BasicDeliverEventArgs to string so user can extract received message.
+            triggerRule.AddConverter<BasicDeliverEventArgs, string>(args => Encoding.UTF8.GetString(args.Body))
+                .AddConverter<BasicDeliverEventArgs, DirectInvokeString>((args) => new DirectInvokeString(null));
+
+            // Convert BasicDeliverEventArgs --> string-- > JSON-- > POCO
+            triggerRule.AddOpenConverter<BasicDeliverEventArgs, OpenType.Poco>(typeof(BasicDeliverEventArgsToPocoConverter<>), _logger);
         }
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
-            string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
-            string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange);
-            IBasicProperties properties = attribute.Properties;
+            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
+            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
 
-            if (string.IsNullOrEmpty(hostname))
+            if (string.IsNullOrEmpty(hostName))
             {
-                throw new InvalidOperationException("RabbitMQ hostname is missing");
+                throw new InvalidOperationException("RabbitMQ host name is missing");
             }
 
-            if (string.IsNullOrEmpty(queuename))
+            if (string.IsNullOrEmpty(queueName))
             {
-                throw new InvalidOperationException("RabbitMQ queuename is missing");
+                throw new InvalidOperationException("RabbitMQ queue name is missing");
             }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
-            string hostname = Utility.FirstOrDefault(attribute.Hostname, _options.Value.Hostname);
+            string hostname = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
             string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange) ?? string.Empty;
             IBasicProperties properties = attribute.Properties;
 
             var resolvedAttribute = new RabbitMQAttribute
             {
-                Hostname = hostname,
+                HostName = hostname,
                 QueueName = queuename,
                 Exchange = exchange,
                 Properties = properties,
@@ -89,15 +102,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal IRabbitMQService GetService(string hostname, string queuename)
         {
             return _rabbitMQServiceFactory.CreateService(hostname, queuename);
-        }
-
-        internal class PocoToBytesConverter<T> : IConverter<T, byte[]>
-        {
-            public byte[] Convert(T input)
-            {
-                string res = JsonConvert.SerializeObject(input);
-                return Encoding.UTF8.GetBytes(res);
-            }
         }
     }
 }

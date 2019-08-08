@@ -7,7 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public class RabbitMQOptions
     {
-        public string Hostname { get; set; }
+        public string HostName { get; set; }
 
         public string QueueName { get; set; }
 

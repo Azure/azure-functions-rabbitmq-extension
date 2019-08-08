@@ -12,13 +12,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQAsyncCollector : IAsyncCollector<byte[]>
     {
         private readonly RabbitMQContext _context;
-        private readonly IModel _channel;
-        private readonly QueueDeclareOk _queue;
         private readonly IBasicPublishBatch _batch;
 
-        private ILogger<RabbitMQAsyncCollector> _logger;
+        private readonly ILogger _logger;
 
-        public RabbitMQAsyncCollector(RabbitMQContext context, ILogger<RabbitMQAsyncCollector> logger)
+        public RabbitMQAsyncCollector(RabbitMQContext context, ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -26,14 +24,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 throw new ArgumentNullException("context.service");
             }
+
             _batch = _context.Service.GetBatch();
-          
         }
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
             _batch.Add(exchange: _context.ResolvedAttribute.Exchange, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: _context.ResolvedAttribute.Properties, body: message);
-            _logger.LogDebug($"Message: {message}, Queue Name: {_context.ResolvedAttribute.QueueName}");
             _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
