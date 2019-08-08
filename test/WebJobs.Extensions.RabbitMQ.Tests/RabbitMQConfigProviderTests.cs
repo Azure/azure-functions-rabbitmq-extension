@@ -1,35 +1,33 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using System.Text;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
-    public class RabbitMQOutputBindingTests
+    public class RabbitMQConfigProviderTests
     {
         [Fact]
         public void Creates_Context_Correctly()
         {
-            var options = new RabbitMQOptions { Hostname = "localhost", QueueName = "hello" };
+            var options = new RabbitMQOptions { HostName = "localhost", QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory);
-            var attribute = new RabbitMQAttribute { HostName = "localhost", QueueName = "queue" };
+            var attribute = new RabbitMQAttribute { HostName = "131.107.174.10", QueueName = "queue" };
 
             var actualContext = config.CreateContext(attribute);
 
             RabbitMQAttribute attr = new RabbitMQAttribute
             {
-                HostName = "localhost",
+                HostName = "131.107.174.10",
                 QueueName = "queue",
             };
 
@@ -56,7 +54,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             RabbitMQOptions opt = new RabbitMQOptions
             {
-                Hostname = optHostname,
+                HostName = optHostname,
                 QueueName = optQueueName,
             };
 
@@ -80,30 +78,6 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             {
                 Assert.Equal(actualContext.ResolvedAttribute.HostName, optHostname);
                 Assert.Equal(actualContext.ResolvedAttribute.QueueName, optQueueName);
-            }
-        }
-
-        [Fact]
-        public void Converts_String_Correctly()
-        {
-            TestClass sampleObj = new TestClass(1, 1);
-            string res = JsonConvert.SerializeObject(sampleObj);
-            byte[] expectedRes = Encoding.UTF8.GetBytes(res);
-
-            PocoToBytesConverter<TestClass> converter = new PocoToBytesConverter<TestClass>();
-            byte[] actualRes = converter.Convert(sampleObj);
-
-            Assert.Equal(expectedRes, actualRes);
-        }
-
-        public class TestClass
-        {
-            public int x, y;
-
-            public TestClass(int x, int y)
-            {
-                this.x = x;
-                this.y = y;
             }
         }
     }

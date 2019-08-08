@@ -10,13 +10,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private IModel _channel;
         private IBasicPublishBatch _batch;
+        private string _hostName;
+        private string _queueName;
 
         public RabbitMQService(string hostName, string queueName)
         {
-            string host = hostName ?? throw new ArgumentNullException(nameof(hostName));
-            string queue = queueName ?? throw new ArgumentNullException(nameof(queueName));
-            CreateChannel(host);
-            CreateBatch(queue);
+            _hostName = hostName ?? throw new ArgumentNullException(nameof(hostName));
+            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+
+            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = _hostName };
+            _channel = connectionFactory.CreateConnection().CreateModel();
+
+            _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _batch = _channel.CreateBasicPublishBatch();
         }
 
         public IModel GetChannel()
@@ -27,18 +33,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public IBasicPublishBatch GetBatch()
         {
             return _batch;
-        }
-
-        internal void CreateChannel(string hostName)
-        {
-            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = hostName };
-            _channel = connectionFactory.CreateConnection().CreateModel();
-        }
-
-        internal void CreateBatch(string queueName)
-        {
-            _channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _batch = _channel.CreateBasicPublishBatch();
         }
     }
 }

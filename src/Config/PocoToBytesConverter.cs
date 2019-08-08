@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -10,6 +11,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         public byte[] Convert(T input)
         {
+            if (input == null)
+            {
+                throw new ArgumentNullException();
+            }
+
             string res = JsonConvert.SerializeObject(input);
             return Encoding.UTF8.GetBytes(res);
         }

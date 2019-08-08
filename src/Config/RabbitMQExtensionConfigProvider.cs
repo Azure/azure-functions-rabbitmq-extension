@@ -63,23 +63,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
-            string hostname = Utility.FirstOrDefault(attribute.HostName, _options.Value.Hostname);
-            string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
+            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
+            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
 
-            if (string.IsNullOrEmpty(hostname))
+            if (string.IsNullOrEmpty(hostName))
             {
-                throw new InvalidOperationException("RabbitMQ hostname is missing");
+                throw new InvalidOperationException("RabbitMQ host name is missing");
             }
 
-            if (string.IsNullOrEmpty(queuename))
+            if (string.IsNullOrEmpty(queueName))
             {
-                throw new InvalidOperationException("RabbitMQ queuename is missing");
+                throw new InvalidOperationException("RabbitMQ queue name is missing");
             }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
-            string hostname = Utility.FirstOrDefault(attribute.HostName, _options.Value.Hostname);
+            string hostname = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queuename = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
             string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange) ?? string.Empty;
             IBasicProperties properties = attribute.Properties;

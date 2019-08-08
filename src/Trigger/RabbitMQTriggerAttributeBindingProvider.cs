@@ -47,13 +47,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string queueName = Resolve(attribute.QueueName);
 
-            string hostname = Resolve(attribute.Hostname);
+            string hostName = Resolve(attribute.HostName);
 
             ushort batchNumber = attribute.BatchNumber;
 
-            IRabbitMQService service = _provider.GetService(hostname, queueName);
+            IRabbitMQService service = _provider.GetService(hostName, queueName);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostname, queueName, batchNumber));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber));
         }
 
         private string Resolve(string name)

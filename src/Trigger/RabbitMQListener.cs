@@ -57,10 +57,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _channel.BasicQos(0, _batchNumber, false);
             _consumer = new EventingBasicConsumer(_channel);
 
-            // TODO:
-            // Figure out whether batching is necessary/makes sense for this implementation
-            // RabbitMQ only has batching functionality for unacknowledged messages for congestion control purposes
-            // Right now trigger has a default option of one message per batch
             _consumer.Received += (model, ea) =>
             {
                 if (_batchNumber == 1)

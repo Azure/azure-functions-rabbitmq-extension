@@ -27,13 +27,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 jsonObj = JToken.Parse(body);
             }
-            catch (FormatException fex)
-            {
-                throw new FormatException(fex.ToString());
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex.ToString());
+                _logger?.LogError(ex, $"Failed converting BasicDeliverEventArgs body to Poco");
+                return default(T);
             }
 
             return jsonObj.ToObject<T>();

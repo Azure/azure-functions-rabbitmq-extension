@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 
@@ -14,7 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public override string GetTriggerReason(IDictionary<string, string> arguments)
         {
-            return string.Format("RabbitMQ message detected from queue: {0}", this.QueueName);
+            return string.Format("RabbitMQ message detected from queue: {0} at {1}", this.QueueName, DateTime.Now);
         }
     }
 }
