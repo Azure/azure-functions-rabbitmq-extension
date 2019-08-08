@@ -14,20 +14,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
     {
         private readonly INameResolver _nameResolver;
-        private readonly ILogger _logger;
-        private readonly IOptions<RabbitMQOptions> _options;
         private readonly RabbitMQExtensionConfigProvider _provider;
 
         public RabbitMQTriggerAttributeBindingProvider(
             INameResolver nameResolver,
-            IOptions<RabbitMQOptions> options,
-            RabbitMQExtensionConfigProvider provider,
-            ILogger logger)
+            RabbitMQExtensionConfigProvider provider)
         {
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)

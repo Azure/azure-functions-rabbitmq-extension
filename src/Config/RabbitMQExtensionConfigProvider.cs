@@ -49,9 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
             triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
                     _nameResolver,
-                    _options,
-                    this,
-                    _logger));
+                    this));
 
             // Converts BasicDeliverEventArgs to string so user can extract received message.
             triggerRule.AddConverter<BasicDeliverEventArgs, string>(args => Encoding.UTF8.GetString(args.Body))
