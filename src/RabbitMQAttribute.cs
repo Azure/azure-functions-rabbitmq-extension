@@ -30,6 +30,15 @@ namespace Microsoft.Azure.WebJobs
         public string QueueName { get; set; }
 
         [AutoResolve]
+        public string UserName { get; set; }
+
+        [AutoResolve]
+        public string Password { get; set; }
+
+        // Optional
+        public int Port { get; set; }
+
+        [AutoResolve]
         public string Exchange { get; set; }
 
         public IBasicProperties Properties { get; set; }

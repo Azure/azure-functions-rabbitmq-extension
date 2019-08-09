@@ -13,7 +13,6 @@ namespace Microsoft.Azure.WebJobs
         {
             this.HostName = hostName;
             this.QueueName = queueName;
-            this.BatchNumber = 1;
         }
 
         public RabbitMQTriggerAttribute(string hostName, string queueName, ushort batchNumber)
@@ -23,9 +22,35 @@ namespace Microsoft.Azure.WebJobs
             this.BatchNumber = batchNumber;
         }
 
+        public RabbitMQTriggerAttribute(string hostName, string queueName, string userName, string password, int port)
+        {
+            this.HostName = hostName;
+            this.QueueName = queueName;
+            this.UserName = userName;
+            this.Password = password;
+            this.Port = port;
+            this.BatchNumber = 1;
+        }
+
+        public RabbitMQTriggerAttribute(string hostName, string queueName, string userName, string password, int port, ushort batchNumber)
+        {
+            this.HostName = hostName;
+            this.QueueName = queueName;
+            this.UserName = userName;
+            this.Password = password;
+            this.Port = port;
+            this.BatchNumber = batchNumber;
+        }
+
         public string HostName { get; }
 
         public string QueueName { get; }
+
+        public string UserName { get; }
+
+        public string Password { get; }
+
+        public int Port { get; }
 
         public ushort BatchNumber { get; }
     }

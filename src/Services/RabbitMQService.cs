@@ -12,13 +12,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private IBasicPublishBatch _batch;
         private string _hostName;
         private string _queueName;
+        private string _userName;
+        private string _password;
+        private int _port;
 
-        public RabbitMQService(string hostName, string queueName)
+        public RabbitMQService(string hostName, string queueName, string userName, string password, int port)
         {
             _hostName = hostName ?? throw new ArgumentNullException(nameof(hostName));
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+            _userName = userName ?? "guest";
+            _password = password ?? "guest";
+            _port = port;
 
-            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = _hostName };
+            ConnectionFactory connectionFactory = new ConnectionFactory()
+            {
+                HostName = _hostName,
+                UserName = _userName,
+                Password = _password,
+            };
+
+            // Only set port if it's specified by the user
+            if (_port != 0)
+            {
+                connectionFactory.Port = _port;
+            }
+
             _channel = connectionFactory.CreateConnection().CreateModel();
 
             _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
