@@ -10,28 +10,45 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private IModel _channel;
         private IBasicPublishBatch _batch;
+        private string _connectionString;
         private string _hostName;
         private string _queueName;
         private string _userName;
         private string _password;
         private int _port;
 
-        public RabbitMQService(string hostName, string queueName, string userName, string password, int port)
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
-            _hostName = hostName ?? throw new ArgumentNullException(nameof(hostName));
+            _connectionString = connectionString;
+            _hostName = hostName;
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
-            _userName = userName ?? "guest";
-            _password = password ?? "guest";
+            _userName = userName;
+            _password = password;
             _port = port;
 
-            ConnectionFactory connectionFactory = new ConnectionFactory()
-            {
-                HostName = _hostName,
-                UserName = _userName,
-                Password = _password,
-            };
+            ConnectionFactory connectionFactory = new ConnectionFactory();
 
-            // Only set port if it's specified by the user
+            // Only set these if specified by user. Otherwise, API will use default parameters.
+            if (!string.IsNullOrEmpty(_connectionString))
+            {
+                connectionFactory.Uri = new Uri(_connectionString);
+            }
+
+            if (!string.IsNullOrEmpty(_hostName))
+            {
+                connectionFactory.HostName = _hostName;
+            }
+
+            if (!string.IsNullOrEmpty(_userName))
+            {
+                connectionFactory.UserName = _userName;
+            }
+
+            if (!string.IsNullOrEmpty(_password))
+            {
+                connectionFactory.Password = _password;
+            }
+
             if (_port != 0)
             {
                 connectionFactory.Port = _port;

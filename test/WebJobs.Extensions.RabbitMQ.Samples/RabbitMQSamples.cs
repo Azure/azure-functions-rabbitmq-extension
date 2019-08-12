@@ -1,5 +1,5 @@
-﻿//// Copyright (c) .NET Foundation. All rights reserved.
-//// Licensed under the MIT License. See License.txt in the project root for license information.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         public static void TimerTrigger_StringOutput(
             [TimerTrigger("00:01")] TimerInfo timer,
             [RabbitMQ(
-                HostName = "localhost",
+                ConnectionStringSetting = "amqp://guest:guest@localhost:5672/",
                 QueueName = "queue")] out string outputMessage,
             ILogger logger)
         {
@@ -76,7 +76,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         // Trigger samples
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("localhost", "queue")] string message,
+             [RabbitMQTrigger("amqp://guest:guest@localhost:5672/", "queue")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -85,21 +85,21 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("localhost", "queue")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("localhost", "queue", 1)] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger("localhost", "queue")] TestClass pocObj,
+            [RabbitMQTrigger("localhost", "queue", 1)] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("localhost", "queue")] string inputMessage,
+            [RabbitMQTrigger("localhost", "queue", 1)] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,

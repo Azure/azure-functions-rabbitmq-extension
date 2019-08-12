@@ -61,35 +61,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
+            string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
-            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
-            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
+            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
-            if (string.IsNullOrEmpty(hostName))
+            if (string.IsNullOrEmpty(connectionString) && !hostName.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new InvalidOperationException("RabbitMQ host name is missing");
-            }
-
-            if (string.IsNullOrEmpty(queueName))
-            {
-                throw new InvalidOperationException("RabbitMQ queue name is missing");
-            }
-
-            if ((string.IsNullOrEmpty(userName) && hostName != "localhost") ||
-                (string.IsNullOrEmpty(password) && hostName != "localhost"))
-            {
-                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
+                string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName) ?? throw new InvalidOperationException("RabbitMQ username is missing");
+                string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password) ?? throw new InvalidOperationException("RabbitMQ password is missing");
             }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
+            string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
             string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange) ?? string.Empty;
-            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName) ?? "guest";
-            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password) ?? "guest";
+            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
+            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = 0;
 
             if (attribute.Port != 0)
@@ -103,8 +93,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             IBasicProperties properties = attribute.Properties;
 
-            var resolvedAttribute = new RabbitMQAttribute
+            RabbitMQAttribute resolvedAttribute;
+            IRabbitMQService service;
+
+            resolvedAttribute = new RabbitMQAttribute
             {
+                ConnectionStringSetting = connectionString,
                 HostName = hostName,
                 QueueName = queueName,
                 Exchange = exchange,
@@ -114,7 +108,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Properties = properties,
             };
 
-            IRabbitMQService service = GetService(hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port);
 
             return new RabbitMQContext
             {
@@ -123,9 +117,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
-            return _rabbitMQServiceFactory.CreateService(hostName, queueName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port);
         }
     }
 }

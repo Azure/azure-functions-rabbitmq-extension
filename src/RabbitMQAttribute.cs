@@ -38,6 +38,8 @@ namespace Microsoft.Azure.WebJobs
         // Optional
         public int Port { get; set; }
 
+        public string ConnectionStringSetting { get; set; }
+
         [AutoResolve]
         public string Exchange { get; set; }
 
