@@ -59,6 +59,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _consumer.Received += (model, ea) =>
             {
+                // Requeues unacknowledged messages.
+                _channel.BasicNack(ea.DeliveryTag, true, true);
                 if (_batchNumber == 1)
                 {
                     _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ea }, cancellationToken);
