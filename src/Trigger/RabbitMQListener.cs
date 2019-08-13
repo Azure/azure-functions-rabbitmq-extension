@@ -59,8 +59,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _consumer.Received += (model, ea) =>
             {
-                // Requeues unacknowledged messages.
-                _channel.BasicNack(ea.DeliveryTag, true, true);
+                // Acknowledges messages
+                _channel.BasicAck(ea.DeliveryTag, true);
                 if (_batchNumber == 1)
                 {
                     _executor.TryExecuteAsync(new TriggeredFunctionData() { TriggerValue = ea }, cancellationToken);
@@ -76,7 +76,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
             };
 
-            _consumerTag = _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: _consumer);
+            _consumerTag = _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: _consumer);
 
             _started = true;
 
