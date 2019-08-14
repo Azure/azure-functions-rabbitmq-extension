@@ -74,7 +74,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
-        // Trigger samples
+        //// Trigger samples
         public static void RabbitMQTrigger_String(
              [RabbitMQTrigger("amqp://guest:guest@localhost:5672/", "queue")] string message,
              string consumerTag,
@@ -85,21 +85,21 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("localhost", "queue", 1)] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("queue")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger("localhost", "queue", 1)] TestClass pocObj,
+            [RabbitMQTrigger("queue")] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("localhost", "queue", 1)] string inputMessage,
+            [RabbitMQTrigger("queue")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -59,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _consumer.Received += (model, ea) =>
             {
-                // Acknowledges messages
+                Console.WriteLine(" [x] Received {0}", Encoding.UTF8.GetString(ea.Body));
                 _channel.BasicAck(ea.DeliveryTag, true);
                 if (_batchNumber == 1)
                 {
