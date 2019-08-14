@@ -26,9 +26,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         public static void TimerTrigger_PocoOutput(
              [TimerTrigger("00:01")] TimerInfo timer,
-             [RabbitMQ(
-                  HostName = "localhost",
-                  QueueName = "queue")] out TestClass outputMessage,
+             [RabbitMQ(HostName = "localhost", QueueName = "queue")] out TestClass outputMessage,
              ILogger logger)
         {
             outputMessage = new TestClass(1, 1);
@@ -45,9 +43,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
         public static async Task ProcessMessage_RabbitMQAsyncCollector(
             [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-            [RabbitMQ(
-                HostName = "localhost",
-                QueueName = "queue")] IAsyncCollector<byte[]> messages,
+            [RabbitMQ(QueueName = "queue")] IAsyncCollector<byte[]> messages,
             ILogger logger)
         {
             logger.LogInformation($"Received queue trigger");
@@ -65,16 +61,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
         public static void QueueTrigger_RabbitMQOutput(
             [QueueTrigger(@"samples-rabbitmq-messages")] TestClass message,
-            [RabbitMQ(
-                HostName = "localhost",
-                QueueName = "queue")] out TestClass outputMessage,
+            [RabbitMQ(QueueName = "queue")] out TestClass outputMessage,
             ILogger logger)
         {
             outputMessage = message;
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
-        //// Trigger samples
+        // Trigger samples
         public static void RabbitMQTrigger_String(
              [RabbitMQTrigger("amqp://guest:guest@localhost:5672/", "queue")] string message,
              string consumerTag,

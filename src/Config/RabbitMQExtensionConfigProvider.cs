@@ -65,7 +65,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
-            if (string.IsNullOrEmpty(connectionString) && !hostName.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(hostName) && string.IsNullOrEmpty(connectionString) && !hostName.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
             {
                 string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName) ?? throw new InvalidOperationException("RabbitMQ username is missing");
                 string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password) ?? throw new InvalidOperationException("RabbitMQ password is missing");
