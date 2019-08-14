@@ -60,7 +60,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _consumer.Received += (model, ea) =>
             {
-                Console.WriteLine(" [x] Received {0}", Encoding.UTF8.GetString(ea.Body));
                 _channel.BasicAck(ea.DeliveryTag, true);
                 if (_batchNumber == 1)
                 {
