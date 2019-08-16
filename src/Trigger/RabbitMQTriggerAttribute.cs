@@ -9,24 +9,39 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-        public RabbitMQTriggerAttribute(string hostName, string queueName)
+        public RabbitMQTriggerAttribute(string connectionStringSetting, string queueName)
         {
-            this.HostName = hostName;
-            this.QueueName = queueName;
-            this.BatchNumber = 1;
+            ConnectionStringSetting = connectionStringSetting;
+            QueueName = queueName;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string queueName, ushort batchNumber)
+        public RabbitMQTriggerAttribute(string queueName)
         {
-            this.HostName = hostName;
-            this.QueueName = queueName;
-            this.BatchNumber = batchNumber;
+            QueueName = queueName;
         }
+
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
+        {
+            HostName = hostName;
+            UserNameSetting = userNameSetting;
+            PasswordSetting = passwordSetting;
+            Port = port;
+            QueueName = queueName;
+        }
+
+        [ConnectionString]
+        public string ConnectionStringSetting { get;  }
 
         public string HostName { get; }
 
         public string QueueName { get; }
 
-        public ushort BatchNumber { get; }
+        [AppSetting]
+        public string UserNameSetting { get; }
+
+        [AppSetting]
+        public string PasswordSetting { get; }
+
+        public int Port { get; }
     }
 }

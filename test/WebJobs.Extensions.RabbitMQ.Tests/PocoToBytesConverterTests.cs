@@ -34,8 +34,8 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             public TestClass(int x, int y)
             {
-                this.x = x;
-                this.y = y;
+                x = x;
+                y = y;
             }
         }
     }
