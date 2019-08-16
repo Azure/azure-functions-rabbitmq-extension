@@ -328,3 +328,6 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# App Settings
+test/WebJobs.Extensions.RabbitMQ.Tests/UtilityTests.cs

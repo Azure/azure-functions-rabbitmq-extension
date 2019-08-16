@@ -16,7 +16,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Creates_Context_Correctly()
         {
-            var options = new RabbitMQOptions { HostName = "localhost", QueueName = "hello" };
+            var options = new RabbitMQOptions { HostName = Constants.LocalHost, QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
@@ -41,9 +41,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Theory]
-        [InlineData("localhost", "queue", null, null)]
-        [InlineData(null, "hello", "localhost", null)]
-        [InlineData(null, null, "localhost", "name")]
+        [InlineData(Constants.LocalHost, "queue", null, null)]
+        [InlineData(null, "hello", Constants.LocalHost, null)]
+        [InlineData(null, null, Constants.LocalHost, "name")]
         public void Handles_Null_Attributes_And_Options(string attrHostname, string attrQueueName, string optHostname, string optQueueName)
         {
             RabbitMQAttribute attr = new RabbitMQAttribute

@@ -28,6 +28,7 @@ namespace Microsoft.Extensions.Hosting
             builder.AddExtension<RabbitMQExtensionConfigProvider>()
                 .ConfigureOptions<RabbitMQOptions>((config, path, options) =>
                 {
+                    options.ConnectionString = config.GetConnectionString("RabbitMQ");
                     IConfigurationSection section = config.GetSection(path);
                     section.Bind(options);
                 });

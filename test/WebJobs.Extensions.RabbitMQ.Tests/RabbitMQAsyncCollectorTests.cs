@@ -21,7 +21,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             var mockRabbitMQService = new Mock<IRabbitMQService>(MockBehavior.Strict);
             var mockBatch = new Mock<IBasicPublishBatch>();
-            mockRabbitMQService.Setup(m => m.GetBatch()).Returns(mockBatch.Object);
+            mockRabbitMQService.Setup(m => m.BasicPublishBatch).Returns(mockBatch.Object);
 
             var attribute = new RabbitMQAttribute
             {

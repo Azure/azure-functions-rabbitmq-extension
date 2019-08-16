@@ -13,11 +13,9 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
     public static class RabbitMQSamples
     {
         // Output samples
-        public static void TimerTrigger_StringOutput(
+        public static void TimerTrigger_ConnectionString_StringOutput(
             [TimerTrigger("00:01")] TimerInfo timer,
-            [RabbitMQ(
-                HostName = "localhost",
-                QueueName = "queue")] out string outputMessage,
+            [RabbitMQ(QueueName = "queue")] out string outputMessage,
             ILogger logger)
         {
             outputMessage = "new";
@@ -26,9 +24,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         public static void TimerTrigger_PocoOutput(
              [TimerTrigger("00:01")] TimerInfo timer,
-             [RabbitMQ(
-                  HostName = "localhost",
-                  QueueName = "queue")] out TestClass outputMessage,
+             [RabbitMQ(HostName = "localhost", QueueName = "queue")] out TestClass outputMessage,
              ILogger logger)
         {
             outputMessage = new TestClass(1, 1);
@@ -45,9 +41,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
         public static async Task ProcessMessage_RabbitMQAsyncCollector(
             [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-            [RabbitMQ(
-                HostName = "localhost",
-                QueueName = "queue")] IAsyncCollector<byte[]> messages,
+            [RabbitMQ(QueueName = "queue")] IAsyncCollector<byte[]> messages,
             ILogger logger)
         {
             logger.LogInformation($"Received queue trigger");
@@ -65,9 +59,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
         public static void QueueTrigger_RabbitMQOutput(
             [QueueTrigger(@"samples-rabbitmq-messages")] TestClass message,
-            [RabbitMQ(
-                HostName = "localhost",
-                QueueName = "queue")] out TestClass outputMessage,
+            [RabbitMQ(QueueName = "queue")] out TestClass outputMessage,
             ILogger logger)
         {
             outputMessage = message;
@@ -75,8 +67,9 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         // Trigger samples
+        // Defaults to localhost if HostName is not specified
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("localhost", "queue")] string message,
+             [RabbitMQTrigger("queue")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -85,21 +78,21 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("localhost", "queue")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("queue")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger("localhost", "queue")] TestClass pocObj,
+            [RabbitMQTrigger("queue")] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("localhost", "queue")] string inputMessage,
+            [RabbitMQTrigger("queue")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,
@@ -111,13 +104,13 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         public class TestClass
         {
-            private readonly int x;
-            private readonly int y;
+            private readonly int _x;
+            private readonly int _y;
 
             public TestClass(int x, int y)
             {
-                this.x = x;
-                this.y = y;
+                _x = x;
+                _y = y;
             }
         }
     }

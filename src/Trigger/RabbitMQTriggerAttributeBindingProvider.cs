@@ -39,13 +39,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string queueName = Resolve(attribute.QueueName);
+            string connectionString = Resolve(attribute.ConnectionStringSetting);
 
-            string hostName = Resolve(attribute.HostName);
+            string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
-            ushort batchNumber = attribute.BatchNumber;
+            string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
 
-            IRabbitMQService service = _provider.GetService(hostName, queueName);
+            string userName = Resolve(attribute.UserNameSetting);
+
+            string password = Resolve(attribute.PasswordSetting);
+
+            int port = attribute.Port;
+
+            if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
+            {
+                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
+            }
+
+            // If there's no specified batch number, default to 1
+            ushort batchNumber = 1;
+
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber));
         }
