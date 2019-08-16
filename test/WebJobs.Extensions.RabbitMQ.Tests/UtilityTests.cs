@@ -8,24 +8,19 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 {
     public class UtilityTests
     {
-        [Fact]
-        public void InvalidCredentials_ReturnsFalse()
+        [Theory]
+        [InlineData("52.175.195.81", "", "")]
+        [InlineData("52.175.195.81", "user", "PASSWORD")]
+        public void ValidateCredentials(string hostName, string userName, string password)
         {
-            string host = "52.175.195.81";
-            string userName = "";
-            string password = "";
-
-            Assert.False(Utility.ValidateUserNamePassword(userName, password, host));
-        }
-
-        [Fact]
-        public void ValidCredentials_ReturnsTrue()
-        {
-            string host = "52.175.195.81";
-            string userName = "user";
-            string password = "PASSWORD";
-
-            Assert.True(Utility.ValidateUserNamePassword(userName, password, host));
+            if (String.IsNullOrEmpty(userName))
+            {
+                Assert.False(Utility.ValidateUserNamePassword(userName, password, hostName));
+            } 
+            else
+            {
+                Assert.True(Utility.ValidateUserNamePassword(userName, password, hostName));
+            }
         }
     }
 }

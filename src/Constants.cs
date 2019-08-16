@@ -6,6 +6,6 @@ namespace Microsoft.Azure.WebJobs.Extensions
 {
     internal static class Constants
     {
-        public const string Localhost = "localhost";
+        public const string LocalHost = "localhost";
     }
 }

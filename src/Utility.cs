@@ -28,7 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
 
         internal static bool ValidateUserNamePassword(string userName, string password, string hostName)
         {
-            if (!hostName.Equals("localhost", StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)))
+            if (!hostName.Equals(Constants.LocalHost, StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)))
             {
                 return false;
             }

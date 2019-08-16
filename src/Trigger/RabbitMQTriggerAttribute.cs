@@ -9,9 +9,9 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-        public RabbitMQTriggerAttribute(string connectionString, string queueName)
+        public RabbitMQTriggerAttribute(string connectionStringSetting, string queueName)
         {
-            ConnectionStringSetting = connectionString;
+            ConnectionStringSetting = connectionStringSetting;
             QueueName = queueName;
         }
 
@@ -20,11 +20,11 @@ namespace Microsoft.Azure.WebJobs
             QueueName = queueName;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string userName, string password, int port, string queueName)
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
         {
             HostName = hostName;
-            UserName = userName;
-            Password = password;
+            UserNameSetting = userNameSetting;
+            PasswordSetting = passwordSetting;
             Port = port;
             QueueName = queueName;
         }
@@ -37,10 +37,10 @@ namespace Microsoft.Azure.WebJobs
         public string QueueName { get; }
 
         [AppSetting]
-        public string UserName { get; }
+        public string UserNameSetting { get; }
 
         [AppSetting]
-        public string Password { get; }
+        public string PasswordSetting { get; }
 
         public int Port { get; }
     }

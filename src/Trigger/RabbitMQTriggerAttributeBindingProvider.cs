@@ -43,11 +43,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
-            string hostName = Resolve(attribute.HostName) ?? Constants.Localhost;
+            string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
 
-            string userName = Resolve(attribute.UserName);
+            string userName = Resolve(attribute.UserNameSetting);
 
-            string password = Resolve(attribute.Password);
+            string password = Resolve(attribute.PasswordSetting);
 
             int port = attribute.Port;
 

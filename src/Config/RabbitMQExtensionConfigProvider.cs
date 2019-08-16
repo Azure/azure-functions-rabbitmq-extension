@@ -63,7 +63,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
-            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.Localhost;
+            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
             _logger.LogInformation("Setting hostName to localhost since it was not specified");
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 

@@ -18,7 +18,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private int _port;
 
         public IModel Model => _model;
-        public IBasicPublishBatch Batch => _batch;
+
+        public IBasicPublishBatch BasicPublishBatch => _batch;
 
         public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
@@ -37,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _batch = _model.CreateBasicPublishBatch();
         }
 
-        public ConnectionFactory CreateConnectionFactory()
+        internal ConnectionFactory CreateConnectionFactory()
         {
             ConnectionFactory connectionFactory = new ConnectionFactory();
 
