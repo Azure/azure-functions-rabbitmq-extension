@@ -8,7 +8,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private IModel _channel;
+        private IModel _model;
         private IBasicPublishBatch _batch;
         private string _connectionString;
         private string _hostName;
@@ -16,6 +16,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _userName;
         private string _password;
         private int _port;
+
+        public IModel Model => _model;
+        public IBasicPublishBatch Batch => _batch;
 
         public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
@@ -26,6 +29,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _password = password;
             _port = port;
 
+            ConnectionFactory connectionFactory = CreateConnectionFactory();
+
+            _model = connectionFactory.CreateConnection().CreateModel();
+
+            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _batch = _model.CreateBasicPublishBatch();
+        }
+
+        public ConnectionFactory CreateConnectionFactory()
+        {
             ConnectionFactory connectionFactory = new ConnectionFactory();
 
             // Only set these if specified by user. Otherwise, API will use default parameters.
@@ -54,20 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 connectionFactory.Port = _port;
             }
 
-            _channel = connectionFactory.CreateConnection().CreateModel();
-
-            _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _batch = _channel.CreateBasicPublishBatch();
-        }
-
-        public IModel GetChannel()
-        {
-            return _channel;
-        }
-
-        public IBasicPublishBatch GetBatch()
-        {
-            return _batch;
+            return connectionFactory;
         }
     }
 }

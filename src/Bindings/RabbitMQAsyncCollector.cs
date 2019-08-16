@@ -25,12 +25,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context.service");
             }
 
-            _batch = _context.Service.GetBatch();
+            _batch = _context.Service.Batch;
         }
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
-            _batch.Add(exchange: _context.ResolvedAttribute.Exchange, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: _context.ResolvedAttribute.Properties, body: message);
+            _batch.Add(exchange: "", routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
             _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public async Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await this.PublishAsync();
+            await PublishAsync();
         }
 
         internal Task PublishAsync()

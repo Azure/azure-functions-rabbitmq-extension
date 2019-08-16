@@ -13,11 +13,9 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
     public static class RabbitMQSamples
     {
         // Output samples
-        public static void TimerTrigger_StringOutput(
+        public static void TimerTrigger_ConnectionString_StringOutput(
             [TimerTrigger("00:01")] TimerInfo timer,
-            [RabbitMQ(
-                ConnectionStringSetting = "amqp://guest:guest@localhost:5672/",
-                QueueName = "queue")] out string outputMessage,
+            [RabbitMQ(QueueName = "queue")] out string outputMessage,
             ILogger logger)
         {
             outputMessage = "new";
@@ -69,8 +67,9 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         // Trigger samples
+        // Defaults to localhost if HostName is not specified
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("amqp://guest:guest@localhost:5672/", "queue")] string message,
+             [RabbitMQTrigger("queue")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -105,13 +104,13 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         public class TestClass
         {
-            private readonly int x;
-            private readonly int y;
+            private readonly int _x;
+            private readonly int _y;
 
             public TestClass(int x, int y)
             {
-                this.x = x;
-                this.y = y;
+                _x = x;
+                _y = y;
             }
         }
     }

@@ -32,16 +32,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Initialize(ExtensionConfigContext context)
         {
+
             if (context == null)
             {
                 throw new ArgumentNullException("context");
             }
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
-            rule.AddValidator(this.ValidateBinding);
+            rule.AddValidator(ValidateBinding);
             rule.BindToCollector<byte[]>((attr) =>
             {
-                return new RabbitMQAsyncCollector(this.CreateContext(attr), _logger);
+                return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
@@ -62,13 +63,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
         {
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
-            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
+            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.Localhost;
+            _logger.LogInformation("Setting hostName to localhost since it was not specified");
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
-            if (!string.IsNullOrEmpty(hostName) && string.IsNullOrEmpty(connectionString) && !hostName.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
+            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
+            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
+
+            if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
-                string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName) ?? throw new InvalidOperationException("RabbitMQ username is missing");
-                string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password) ?? throw new InvalidOperationException("RabbitMQ password is missing");
+                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
         }
 
@@ -77,21 +81,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string exchange = Utility.FirstOrDefault(attribute.Exchange, _options.Value.Exchange) ?? string.Empty;
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
-            int port = 0;
+            int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
 
-            if (attribute.Port != 0)
-            {
-                port = attribute.Port;
-            }
-            else if (_options.Value.Port != 0)
-            {
-                port = _options.Value.Port;
-            }
-
-            IBasicProperties properties = attribute.Properties;
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -101,11 +94,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 ConnectionStringSetting = connectionString,
                 HostName = hostName,
                 QueueName = queueName,
-                Exchange = exchange,
                 UserName = userName,
                 Password = password,
                 Port = port,
-                Properties = properties,
             };
 
             service = GetService(connectionString, hostName, queueName, userName, password, port);
