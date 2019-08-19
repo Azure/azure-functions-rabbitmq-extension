@@ -8,31 +8,67 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private IModel _channel;
+        private IModel _model;
         private IBasicPublishBatch _batch;
+        private string _connectionString;
         private string _hostName;
         private string _queueName;
+        private string _userName;
+        private string _password;
+        private int _port;
 
-        public RabbitMQService(string hostName, string queueName)
+        public IModel Model => _model;
+
+        public IBasicPublishBatch BasicPublishBatch => _batch;
+
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
-            _hostName = hostName ?? throw new ArgumentNullException(nameof(hostName));
+            _connectionString = connectionString;
+            _hostName = hostName;
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+            _userName = userName;
+            _password = password;
+            _port = port;
 
-            ConnectionFactory connectionFactory = new ConnectionFactory() { HostName = _hostName };
-            _channel = connectionFactory.CreateConnection().CreateModel();
+            ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
 
-            _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _batch = _channel.CreateBasicPublishBatch();
+            _model = connectionFactory.CreateConnection().CreateModel();
+
+            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _batch = _model.CreateBasicPublishBatch();
         }
 
-        public IModel GetChannel()
+        internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
         {
-            return _channel;
-        }
+            ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        public IBasicPublishBatch GetBatch()
-        {
-            return _batch;
+            // Only set these if specified by user. Otherwise, API will use default parameters.
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                connectionFactory.Uri = new Uri(connectionString);
+            }
+
+            if (!string.IsNullOrEmpty(hostName))
+            {
+                connectionFactory.HostName = hostName;
+            }
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                connectionFactory.UserName = userName;
+            }
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                connectionFactory.Password = password;
+            }
+
+            if (port != 0)
+            {
+                connectionFactory.Port = port;
+            }
+
+            return connectionFactory;
         }
     }
 }
