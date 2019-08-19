@@ -13,6 +13,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
     public static class RabbitMQSamples
     {
         // Output samples
+        // To run this sample with a specified amqp connection string, create a file called "appsettings.json" in the same directory.
+        // In the file, add:
+        // {
+        //      "connectionStrings": {
+        //          "rabbitMQ": "your connection string here"
+        //      }
+        // }
+        // Or, if you already have an appsettings.json, add rabbitMQ and your connection string to the connection strings property.
         public static void TimerTrigger_ConnectionString_StringOutput(
             [TimerTrigger("00:01")] TimerInfo timer,
             [RabbitMQ(QueueName = "queue")] out string outputMessage,
@@ -67,7 +75,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         // Trigger samples
-        // Defaults to localhost if HostName is not specified
+        // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
              [RabbitMQTrigger("queue")] string message,
              string consumerTag,
