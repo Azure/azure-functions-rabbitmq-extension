@@ -11,21 +11,18 @@ The Azure Functions RabbitMQ Binding extensions allows you to send and receive m
 
 # Samples
 
-See the repository [wiki](https://github.com/katiecai/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
-
-## Output Binding
+See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
 
 ```C#
-using Microsoft.Azure.WebJobs;
-using RabbitMQ.Client;
-
-public static void TimerTrigger_StringOutput(
-    [TimerTrigger("00:01")] TimerInfo timer,
+public static void RabbitMQTrigger_RabbitMQOutput(
+    [RabbitMQTrigger("queue")] string inputMessage,
     [RabbitMQ(
-        Hostname = "localhost",
-        QueueName = "queue")] out string outputMessage)
+        HostName = "localhost",
+        QueueName = "hello")] out string outputMessage,
+    ILogger logger)
 {
-    outputMessage = "hello"
+    outputMessage = inputMessage;
+    logger.LogInformation($"RabittMQ output binding function sent message: {outputMessage}");
 }
 ```
 
