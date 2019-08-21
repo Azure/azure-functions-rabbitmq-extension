@@ -15,9 +15,9 @@ See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-exte
 
 ```C#
 public static void RabbitMQTrigger_RabbitMQOutput(
-    [RabbitMQTrigger("queue")] string inputMessage,
+    [RabbitMQTrigger("amqp://guest:guest@localhost:5672", "queue")] string inputMessage,
     [RabbitMQ(
-        HostName = "localhost",
+        ConnectionStringSetting = "amqp://guest:guest@tada:5672",
         QueueName = "hello")] out string outputMessage,
     ILogger logger)
 {
