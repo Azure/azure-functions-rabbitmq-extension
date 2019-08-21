@@ -15,9 +15,9 @@ See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-exte
 
 ```C#
 public static void RabbitMQTrigger_RabbitMQOutput(
-    [RabbitMQTrigger("amqp://guest:guest@localhost:5672", "queue")] string inputMessage,
+    [RabbitMQTrigger("RabbitMQConnection", "queue")] string inputMessage,
     [RabbitMQ(
-        ConnectionStringSetting = "amqp://guest:guest@tada:5672",
+        ConnectionStringSetting = "RabbitMQConnection2",
         QueueName = "hello")] out string outputMessage,
     ILogger logger)
 {
@@ -26,7 +26,7 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 }
 ```
 
-The above example waits on a timer trigger to fire (every second) before sending a message to the queue named "queue" connected to the localhost port. The message we want to send is then bound to the variable outputMessage.
+The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection" (this is configured in the appsettings.json file). The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection2".
 
 # Contributing
 
