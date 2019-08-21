@@ -17,7 +17,7 @@ See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-exte
 public static void RabbitMQTrigger_RabbitMQOutput(
     [RabbitMQTrigger("RabbitMQConnection", "queue")] string inputMessage,
     [RabbitMQ(
-        ConnectionStringSetting = "RabbitMQConnection2",
+        ConnectionStringSetting = "RabbitMQConnection",
         QueueName = "hello")] out string outputMessage,
     ILogger logger)
 {
@@ -26,7 +26,7 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 }
 ```
 
-The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection2". When running locally, add the connection string setting to appsettings.json file. When running in Azure, add this setting as [ConnectionString ](https://azure.microsoft.com/en-us/blog/windows-azure-web-sites-how-application-strings-and-connection-strings-work/) for your app.
+The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to appsettings.json file. When running in Azure, add this setting as [ConnectionString ](https://azure.microsoft.com/en-us/blog/windows-azure-web-sites-how-application-strings-and-connection-strings-work/) for your app.
 
 # Contributing
 
