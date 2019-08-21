@@ -11,25 +11,22 @@ The Azure Functions RabbitMQ Binding extensions allows you to send and receive m
 
 # Samples
 
-See the repository [wiki](https://github.com/katiecai/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
-
-## Output Binding
+See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
 
 ```C#
-using Microsoft.Azure.WebJobs;
-using RabbitMQ.Client;
-
-public static void TimerTrigger_StringOutput(
-    [TimerTrigger("00:01")] TimerInfo timer,
+public static void RabbitMQTrigger_RabbitMQOutput(
+    [RabbitMQTrigger("RabbitMQConnection", "queue")] string inputMessage,
     [RabbitMQ(
-        Hostname = "localhost",
-        QueueName = "queue")] out string outputMessage)
+        ConnectionStringSetting = "RabbitMQConnection",
+        QueueName = "hello")] out string outputMessage,
+    ILogger logger)
 {
-    outputMessage = "hello"
+    outputMessage = inputMessage;
+    logger.LogInformation($"RabittMQ output binding function sent message: {outputMessage}");
 }
 ```
 
-The above example waits on a timer trigger to fire (every second) before sending a message to the queue named "queue" connected to the localhost port. The message we want to send is then bound to the variable outputMessage.
+The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to appsettings.json file. When running in Azure, add this setting as [ConnectionString ](https://azure.microsoft.com/en-us/blog/windows-azure-web-sites-how-application-strings-and-connection-strings-work/) for your app.
 
 # Contributing
 
