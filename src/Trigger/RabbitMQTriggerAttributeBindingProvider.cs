@@ -15,13 +15,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly INameResolver _nameResolver;
         private readonly RabbitMQExtensionConfigProvider _provider;
+        private readonly IOptions<RabbitMQOptions> _options;
 
         public RabbitMQTriggerAttributeBindingProvider(
             INameResolver nameResolver,
-            RabbitMQExtensionConfigProvider provider)
+            RabbitMQExtensionConfigProvider provider,
+            IOptions<RabbitMQOptions> options)
         {
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _options = options;
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -39,7 +42,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string connectionString = Resolve(attribute.ConnectionStringSetting);
+            string connectionString = Resolve(attribute.ConnectionStringSetting) ?? _options.Value.ConnectionString;
 
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
