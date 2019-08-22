@@ -105,7 +105,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return Task.CompletedTask;
         }
 
-        private void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
+        internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
         {
             _model.BasicAck(ea.DeliveryTag, false);
 
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
         }
 
-        private void RepublishMessages(BasicDeliverEventArgs ea)
+        internal void RepublishMessages(BasicDeliverEventArgs ea)
         {
             int requeueCount = Convert.ToInt32(ea.BasicProperties.Headers["requeueCount"]);
             // Redelivered again

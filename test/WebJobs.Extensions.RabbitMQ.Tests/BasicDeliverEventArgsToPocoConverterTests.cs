@@ -29,21 +29,6 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(expectedObj.y, actualObj.y);
         }
 
-        [Fact]
-        public void InvalidFormat_Returns_DefaultObject()
-        {
-            string str = "wrong format";
-            byte[] strBytes = Encoding.UTF8.GetBytes(str);
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, strBytes);
-
-            ILoggerFactory loggerFactory = new LoggerFactory();
-            ILogger logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
-            BasicDeliverEventArgsToPocoConverter<TestClass> converter = new BasicDeliverEventArgsToPocoConverter<TestClass>(logger);
-            TestClass actualObj = converter.Convert(args);
-
-            Assert.Equal(default, actualObj);
-        }
-
         public class TestClass
         {
             public int x, y;
