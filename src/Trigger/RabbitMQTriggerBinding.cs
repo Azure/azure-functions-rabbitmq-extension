@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -19,13 +20,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly string _queueName;
         private readonly string _hostName;
         private readonly ushort _batchNumber;
+        private readonly ILogger _logger;
 
-        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ushort batchNumber)
+        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ushort batchNumber, ILogger logger)
         {
             _service = service;
             _queueName = queueName;
             _hostName = hostname;
             _batchNumber = batchNumber;
+            _logger = logger;
             BindingDataContract = CreateBindingDataContract();
         }
 
@@ -54,7 +57,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _batchNumber));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _batchNumber, _logger));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
