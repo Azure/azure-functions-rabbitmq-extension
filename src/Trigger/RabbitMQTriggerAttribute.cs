@@ -37,10 +37,10 @@ namespace Microsoft.Azure.WebJobs
         public string QueueName { get; }
 
         [AppSetting]
-        public string UserNameSetting { get; }
+        public string UserNameSetting { get; set; }
 
         [AppSetting]
-        public string PasswordSetting { get; }
+        public string PasswordSetting { get; set; }
 
         public int Port { get; }
     }
