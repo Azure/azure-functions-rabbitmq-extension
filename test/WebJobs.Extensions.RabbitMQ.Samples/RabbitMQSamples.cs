@@ -77,7 +77,16 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // Trigger samples
         // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQ")] string message,
+             [RabbitMQTrigger(connectionStringSetting: "rabbitMQTest", "queue")] string message,
+             string consumerTag,
+             ILogger logger)
+        {
+            logger.LogInformation($"RabbitMQ queue trigger function processed message consumer tag: {consumerTag}");
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message}");
+        }
+
+        public static void RabbitMQTrigger_String_NoConnectionString(
+             [RabbitMQTrigger(hostName: "localhost", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
              string consumerTag,
              ILogger logger)
         {

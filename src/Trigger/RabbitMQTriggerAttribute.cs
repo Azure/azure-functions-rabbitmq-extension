@@ -30,17 +30,17 @@ namespace Microsoft.Azure.WebJobs
         }
 
         [ConnectionString]
-        public string ConnectionStringSetting { get; set; }
+        public string ConnectionStringSetting { get; }
 
         public string HostName { get; }
 
         public string QueueName { get; }
 
         [AppSetting]
-        public string UserNameSetting { get; set; }
+        public string UserNameSetting { get; }
 
         [AppSetting]
-        public string PasswordSetting { get; set; }
+        public string PasswordSetting { get; }
 
         public int Port { get; }
     }
