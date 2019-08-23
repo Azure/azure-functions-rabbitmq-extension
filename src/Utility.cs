@@ -3,6 +3,8 @@
 
 using System;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions
 {
@@ -34,6 +36,22 @@ namespace Microsoft.Azure.WebJobs.Extensions
             }
 
             return true;
+        }
+
+        internal static string SetConnectionString(string attributeConnectionString, string optionsConnectionString, ILogger logger, IConfiguration configuration)
+        {
+            string connectionString;
+            try
+            {
+                connectionString = configuration.GetConnectionStringOrSetting(attributeConnectionString);
+            }
+            catch (Exception e)
+            {
+                logger.LogError("Error: {0}", e);
+                connectionString = optionsConnectionString;
+            }
+
+            return connectionString;
         }
     }
 }

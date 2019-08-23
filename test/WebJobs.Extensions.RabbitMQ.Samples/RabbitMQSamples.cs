@@ -86,7 +86,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_String_NoConnectionString(
-             [RabbitMQTrigger(hostName: "localhost", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
+             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
              string consumerTag,
              ILogger logger)
         {

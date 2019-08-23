@@ -49,16 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string connectionString = _options.Value.ConnectionString;
-
-            try
-            {
-                connectionString = _configuration.GetConnectionStringOrSetting(attribute.ConnectionStringSetting);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Error: {0}", e);
-            }
+            string connectionString = Utility.SetConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _logger, _configuration);
 
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
