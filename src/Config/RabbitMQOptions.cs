@@ -12,13 +12,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public string QueueName { get; set; }
 
-        [AppSetting]
         public string UserName { get; set; }
 
-        [AppSetting]
         public string Password { get; set; }
 
-        [ConnectionString]
         public string ConnectionString { get; set; }
 
         public int Port { get; set; }
