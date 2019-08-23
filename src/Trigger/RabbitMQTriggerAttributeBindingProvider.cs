@@ -49,8 +49,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-
-            //string connectionString = _configuration.GetConnectionStringOrSetting(attribute.ConnectionStringSetting) ?? _options.Value.ConnectionString;
             string connectionString = _options.Value.ConnectionString;
 
             try
