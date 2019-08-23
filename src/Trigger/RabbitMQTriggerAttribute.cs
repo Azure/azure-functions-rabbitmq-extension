@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs
         }
 
         [ConnectionString]
-        public string ConnectionStringSetting { get;  }
+        public string ConnectionStringSetting { get; set; }
 
         public string HostName { get; }
 
