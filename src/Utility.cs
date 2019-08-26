@@ -38,20 +38,16 @@ namespace Microsoft.Azure.WebJobs.Extensions
             return true;
         }
 
-        internal static string SetConnectionString(string attributeConnectionString, string optionsConnectionString, ILogger logger, IConfiguration configuration)
+        internal static string ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, IConfiguration configuration)
         {
-            string connectionString;
             try
             {
-                connectionString = configuration.GetConnectionStringOrSetting(attributeConnectionString);
+                return configuration.GetConnectionStringOrSetting(attributeConnectionString);
             }
             catch (Exception e)
             {
-                logger.LogError("Error: {0}", e);
-                connectionString = optionsConnectionString;
             }
-
-            return connectionString;
+            return optionsConnectionString;
         }
     }
 }
