@@ -38,11 +38,15 @@ namespace Microsoft.Azure.WebJobs.Extensions
             return true;
         }
 
-        internal static string ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, IConfiguration configuration)
+        internal static string ResolveConnectionString(string attributeConnectionStringKey, string optionsConnectionString, IConfiguration configuration)
         {
             try
             {
-                return configuration.GetConnectionStringOrSetting(attributeConnectionString);
+                string resolvedString = configuration.GetConnectionStringOrSetting(attributeConnectionStringKey);
+                if (!string.IsNullOrEmpty(resolvedString))
+                {
+                    return resolvedString;
+                }
             }
             catch (Exception e)
             {

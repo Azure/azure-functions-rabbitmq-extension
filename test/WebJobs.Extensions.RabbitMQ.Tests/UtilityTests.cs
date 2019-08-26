@@ -9,7 +9,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 {
     public class UtilityTests
     {
-        private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
+        private IConfiguration _emptyConfig = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
         [Theory]
         [InlineData("11.111.111.11", "", "")]
@@ -27,9 +27,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Theory]
-        [InlineData("", "hello")]
-        [InlineData("rabbitMQTest", "hello")]
-        public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString)
+        [InlineData("", "hello", "hello")]
+        [InlineData("rabbitMQTest", "hello", "amqp://guest:guest@tada:5672")]
+        public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, string e)
         {
             string resolvedString = Utility.ResolveConnectionString(attributeConnectionString, optionsConnectionString, _emptyConfig);
 

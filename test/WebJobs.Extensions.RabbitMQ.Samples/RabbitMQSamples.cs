@@ -89,8 +89,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
              string consumerTag,
              ILogger logger)
         {
-            logger.LogInformation($"RabbitMQ queue trigger function processed message consumer tag: {consumerTag}");
-            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message}");
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message} and consumer tag: {consumerTag}");
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
