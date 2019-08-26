@@ -30,15 +30,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, string expectedResolvedString)
         {
             string resolvedString = Utility.ResolveConnectionString(attributeConnectionString, optionsConnectionString, _emptyConfig);
-
-            if (string.IsNullOrEmpty(attributeConnectionString))
-            {
-                Assert.Equal(expectedResolvedString, resolvedString);
-            }
-            else
-            {
-                Assert.Equal(expectedResolvedString, resolvedString);
-            }
+            Assert.Equal(expectedResolvedString, resolvedString);
         }
     }
 }
