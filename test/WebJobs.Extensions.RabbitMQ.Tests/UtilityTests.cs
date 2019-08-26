@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Azure.WebJobs.Extensions;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -9,7 +7,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 {
     public class UtilityTests
     {
-        private IConfiguration _emptyConfig = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        private IConfiguration _emptyConfig = new ConfigurationBuilder().AddJsonFile("testappsettings.json").Build();
 
         [Theory]
         [InlineData("11.111.111.11", "", "")]
