@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -21,13 +22,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly INameResolver _nameResolver;
         private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
         private ILogger _logger;
+        private readonly IConfiguration _configuration;
 
-        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory)
+        public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             _options = options;
             _nameResolver = nameResolver;
             _rabbitMQServiceFactory = rabbitMQServiceFactory;
             _logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
+            _configuration = configuration;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -51,7 +54,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
                     _nameResolver,
                     this,
-                    _options));
+                    _options,
+                    _configuration));
 
             // Converts BasicDeliverEventArgs to string so user can extract received message.
             triggerRule.AddConverter<BasicDeliverEventArgs, string>(args => Encoding.UTF8.GetString(args.Body))
