@@ -29,17 +29,17 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Theory]
         [InlineData("", "hello", "hello")]
         [InlineData("rabbitMQTest", "hello", "amqp://guest:guest@tada:5672")]
-        public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, string e)
+        public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, string expectedResolvedString)
         {
             string resolvedString = Utility.ResolveConnectionString(attributeConnectionString, optionsConnectionString, _emptyConfig);
 
             if (string.IsNullOrEmpty(attributeConnectionString))
             {
-                Assert.Equal("hello", resolvedString);
+                Assert.Equal(expectedResolvedString, resolvedString);
             }
             else
             {
-                Assert.Equal("amqp://guest:guest@tada:5672", resolvedString);
+                Assert.Equal(expectedResolvedString, resolvedString);
             }
         }
     }
