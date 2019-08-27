@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Azure.WebJobs.Logging;
