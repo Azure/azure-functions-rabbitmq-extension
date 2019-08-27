@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -16,15 +17,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly INameResolver _nameResolver;
         private readonly RabbitMQExtensionConfigProvider _provider;
         private readonly ILogger _logger;
+        private readonly IOptions<RabbitMQOptions> _options;
+        private readonly IConfiguration _configuration;
 
         public RabbitMQTriggerAttributeBindingProvider(
             INameResolver nameResolver,
             RabbitMQExtensionConfigProvider provider,
-            ILogger logger)
+            ILogger logger,
+            IOptions<RabbitMQOptions> options,
+            IConfiguration configuration)
         {
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _options = options;
+            _configuration = configuration;
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -42,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string connectionString = Resolve(attribute.ConnectionStringSetting);
+            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _configuration);
 
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 

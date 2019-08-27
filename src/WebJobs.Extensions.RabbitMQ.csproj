@@ -9,8 +9,8 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>PublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
-	<Version>0.2.0$(VersionSuffix)-beta</Version>
-	<PackageId>Microsoft.AzureWebJobs.Extensions.RabbitMQ</PackageId>
+    <Version>0.2.0$(VersionSuffix)-beta</Version>
+    <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
     <Authors>Microsoft</Authors>
     <Product>Azure WebJobs RabbitMQ Extension</Product>
     <Description>This package contains binding extensions for RabbitMQ.</Description>

@@ -1,0 +1,5 @@
+{
+    "connectionStrings": {
+        "rabbitMQTest": "amqp://guest:guest@tada:5672"
+    }
+}

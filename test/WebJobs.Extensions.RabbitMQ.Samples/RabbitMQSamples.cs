@@ -23,7 +23,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // Or, if you already have an appsettings.json, add rabbitMQ and your connection string to the connection strings property.
         public static void TimerTrigger_ConnectionString_StringOutput(
             [TimerTrigger("00:01")] TimerInfo timer,
-            [RabbitMQ(QueueName = "queue")] out string outputMessage,
+            [RabbitMQ(ConnectionStringSetting = "rabbitMQTest", QueueName = "queue")] out string outputMessage,
             ILogger logger)
         {
             outputMessage = "new";
@@ -77,12 +77,19 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // Trigger samples
         // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("queue")] string message,
+             [RabbitMQTrigger(connectionStringSetting: "rabbitMQTest", "queue")] string message,
              string consumerTag,
              ILogger logger)
         {
-            logger.LogInformation($"RabbitMQ queue trigger function processed message consumer tag: {consumerTag}");
-            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message}");
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message} and consumer tag: {consumerTag}");
+        }
+
+        public static void RabbitMQTrigger_String_NoConnectionString(
+             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
+             string consumerTag,
+             ILogger logger)
+        {
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message} and consumer tag: {consumerTag}");
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
