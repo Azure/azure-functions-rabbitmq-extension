@@ -37,6 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _queueName = queueName;
             _batchNumber = batchNumber;
             _logger = logger;
+            _model = _service.Model;
         }
 
         public void Cancel()
@@ -57,7 +58,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            _model = _service.Model;
             _model.BasicQos(0, _batchNumber, false);
             _consumer = new EventingBasicConsumer(_model);
 
