@@ -47,25 +47,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 connectionFactory.Uri = new Uri(connectionString);
             }
-
-            if (!string.IsNullOrEmpty(hostName))
+            else
             {
-                connectionFactory.HostName = hostName;
-            }
+                if (!string.IsNullOrEmpty(hostName))
+                {
+                    connectionFactory.HostName = hostName;
+                }
 
-            if (!string.IsNullOrEmpty(userName))
-            {
-                connectionFactory.UserName = userName;
-            }
+                if (!string.IsNullOrEmpty(userName))
+                {
+                    connectionFactory.UserName = userName;
+                }
 
-            if (!string.IsNullOrEmpty(password))
-            {
-                connectionFactory.Password = password;
-            }
+                if (!string.IsNullOrEmpty(password))
+                {
+                    connectionFactory.Password = password;
+                }
 
-            if (port != 0)
-            {
-                connectionFactory.Port = port;
+                if (port != 0)
+                {
+                    connectionFactory.Port = port;
+                }
             }
 
             return connectionFactory;
