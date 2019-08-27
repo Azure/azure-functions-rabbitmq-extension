@@ -10,16 +10,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly IModel _model;
 
-        public IModel IModel => _model;
+        public IModel Model => _model;
 
         public RabbitMQModel(IModel model)
         {
             _model = model;
-        }
-
-        public IModel GetIModel()
-        {
-            return _model;
         }
 
         public IBasicPublishBatch CreateBasicPublishBatch()

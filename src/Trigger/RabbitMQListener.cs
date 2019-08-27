@@ -23,7 +23,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly ILogger _logger;
 
         private EventingBasicConsumer _consumer;
-        private IRabbitMQModel _model;
+        private IRabbitMQModel _rabbitMQModel;
         private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
 
         private string _consumerTag;
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _queueName = queueName;
             _batchNumber = batchNumber;
             _logger = logger;
-            _model = _service.Model;
+            _rabbitMQModel = _service.Model;
         }
 
         public void Cancel()
@@ -58,8 +58,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            _model.BasicQos(0, _batchNumber, false);
-            _consumer = new EventingBasicConsumer(_model.GetIModel());
+            _rabbitMQModel.BasicQos(0, _batchNumber, false);
+            _consumer = new EventingBasicConsumer(_rabbitMQModel.Model);
 
             _consumer.Received += async (model, ea) =>
             {
@@ -67,7 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
                 if (result.Succeeded)
                 {
-                    _model.BasicAck(ea.DeliveryTag, true);
+                    _rabbitMQModel.BasicAck(ea.DeliveryTag, true);
                 }
                 else
                 {
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
             };
 
-            _consumerTag = _model.BasicConsume(queue: _queueName, autoAck: false, consumer: _consumer);
+            _consumerTag = _rabbitMQModel.BasicConsume(queue: _queueName, autoAck: false, consumer: _consumer);
 
             _started = true;
 
@@ -98,8 +98,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
             }
 
-            _model.BasicCancel(_consumerTag);
-            _model.Close();
+            _rabbitMQModel.BasicCancel(_consumerTag);
+            _rabbitMQModel.Close();
             _started = false;
             _disposed = true;
             return Task.CompletedTask;
@@ -107,15 +107,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
         {
-            _model.BasicAck(ea.DeliveryTag, false);
+            _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
 
             if (ea.BasicProperties.Headers == null) {
                 ea.BasicProperties.Headers = new Dictionary<string, object>();
             }
 
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
-            _logger.LogInformation("Republishing message");
-            _model.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+            _logger.LogDebug("Republishing message");
+            _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
         }
 
         internal void RepublishMessages(BasicDeliverEventArgs ea)
@@ -127,14 +127,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             if (Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]) < 5)
             {
-                _model.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but resend
-                _logger.LogInformation("Republishing message");
-                _model.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+                _rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but resend
+                _logger.LogDebug("Republishing message");
+                _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
             }
             else
             {
                 // Add message to dead letter exchange
-                _model.BasicReject(ea.DeliveryTag, false);
+                _logger.LogDebug("Requeue count exceeded: rejecting message");
+                _rabbitMQModel.BasicReject(ea.DeliveryTag, false);
             }
         }
 

@@ -16,34 +16,39 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQListenerTests
     {
+        private readonly Mock<ITriggeredFunctionExecutor> _mockExecutor;
+        private readonly Mock<IRabbitMQService> _mockService;
+        private readonly Mock<ILogger> _mockLogger;
+        private readonly Mock<IRabbitMQModel> _mockModel;
+
+        public RabbitMQListenerTests()
+        {
+            _mockExecutor = new Mock<ITriggeredFunctionExecutor>();
+            _mockService = new Mock<IRabbitMQService>();
+            _mockLogger = new Mock<ILogger>();
+            _mockModel = new Mock<IRabbitMQModel>();
+        }
+
         [Fact]
         public void CreatesHeadersAndRepublishes()
         {
-            var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
-            var mockService = new Mock<IRabbitMQService>();
-            var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IRabbitMQModel>();
-            mockService.Setup(m => m.Model).Returns(mockModel.Object);
+            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
 
-            RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object);
 
             var properties = new BasicProperties();
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.CreateHeadersAndRepublish(args);
 
-            mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
         }
 
         [Fact]
         public void RepublishesMessages()
         {
-            var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
-            var mockService = new Mock<IRabbitMQService>();
-            var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IRabbitMQModel>();
-            mockService.Setup(m => m.Model).Returns(mockModel.Object);
-            RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
+            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object);
 
             var properties = new BasicProperties();
             properties.Headers = new Dictionary<string, object>();
@@ -51,19 +56,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
-            mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
         }
 
         [Fact]
         public void RejectsStaleMessages()
         {
-            var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
-            var mockService = new Mock<IRabbitMQService>();
-            var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IRabbitMQModel>();
-            mockService.Setup(m => m.Model).Returns(mockModel.Object);
-            RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
+            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object);
 
             var properties = new BasicProperties();
             properties.Headers = new Dictionary<string, object>();
@@ -71,7 +72,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
-            mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
         }
     }
 }
