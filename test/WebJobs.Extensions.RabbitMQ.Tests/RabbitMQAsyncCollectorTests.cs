@@ -25,7 +25,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             var attribute = new RabbitMQAttribute
             {
-                HostName = "localhost",
+                HostName = Constants.LocalHost,
                 QueueName = "queue",
             };
 
@@ -36,7 +36,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             };
 
             ILoggerFactory loggerFactory = new LoggerFactory();
-            ILogger logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
+            ILogger logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(Constants.RabbitMQ));
             var collector = new RabbitMQAsyncCollector(context, logger);
 
             byte[] body = Encoding.UTF8.GetBytes("hi");

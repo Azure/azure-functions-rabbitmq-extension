@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
@@ -30,7 +33,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Fact]
-        public void InvalidFormat_Returns_DefaultObject()
+        public void InvalidFormat_Throws_JsonException()
         {
             string str = "wrong format";
             byte[] strBytes = Encoding.UTF8.GetBytes(str);
@@ -39,9 +42,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             ILoggerFactory loggerFactory = new LoggerFactory();
             ILogger logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
             BasicDeliverEventArgsToPocoConverter<TestClass> converter = new BasicDeliverEventArgsToPocoConverter<TestClass>(logger);
-            TestClass actualObj = converter.Convert(args);
-
-            Assert.Equal(default, actualObj);
+            Assert.Throws<JsonReaderException>(() => converter.Convert(args));
         }
 
         public class TestClass

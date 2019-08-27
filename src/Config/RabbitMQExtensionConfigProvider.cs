@@ -54,6 +54,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
                     _nameResolver,
                     this,
+                    _logger,
                     _options,
                     _configuration));
 

@@ -21,17 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public T Convert(BasicDeliverEventArgs arg)
         {
             string body = Encoding.UTF8.GetString(arg.Body);
-            JToken jsonObj = null;
-
-            try
-            {
-                jsonObj = JToken.Parse(body);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"Failed converting BasicDeliverEventArgs body to Poco");
-                return default(T);
-            }
+            JToken jsonObj = JToken.Parse(body);
 
             return jsonObj.ToObject<T>();
         }

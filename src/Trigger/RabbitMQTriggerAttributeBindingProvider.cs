@@ -16,17 +16,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly INameResolver _nameResolver;
         private readonly RabbitMQExtensionConfigProvider _provider;
+        private readonly ILogger _logger;
         private readonly IOptions<RabbitMQOptions> _options;
         private readonly IConfiguration _configuration;
 
         public RabbitMQTriggerAttributeBindingProvider(
             INameResolver nameResolver,
             RabbitMQExtensionConfigProvider provider,
+            ILogger logger,
             IOptions<RabbitMQOptions> options,
             IConfiguration configuration)
         {
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options;
             _configuration = configuration;
         }
@@ -68,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber, _logger));
         }
 
         private string Resolve(string name)
