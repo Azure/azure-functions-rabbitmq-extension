@@ -20,7 +20,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
             var mockService = new Mock<IRabbitMQService>();
             var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IModel>();
+            var mockModel = new Mock<IRabbitMQModel>();
             mockService.Setup(m => m.Model).Returns(mockModel.Object);
 
             RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
@@ -30,8 +30,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             listener.CreateHeadersAndRepublish(args);
 
             mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            // Cannot verify the below call because it's an extension method :(
-            // mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
         }
 
         [Fact]
@@ -40,7 +39,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
             var mockService = new Mock<IRabbitMQService>();
             var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IModel>();
+            var mockModel = new Mock<IRabbitMQModel>();
             mockService.Setup(m => m.Model).Returns(mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
 
@@ -51,8 +50,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             listener.RepublishMessages(args);
 
             mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            // Cannot verify the below call because it's an extension method :(
-            // mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
         }
 
         [Fact]
@@ -61,7 +59,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
             var mockService = new Mock<IRabbitMQService>();
             var mockLogger = new Mock<ILogger>();
-            var mockModel = new Mock<IModel>();
+            var mockModel = new Mock<IRabbitMQModel>();
             mockService.Setup(m => m.Model).Returns(mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", 1, mockLogger.Object);
 
@@ -72,8 +70,6 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             listener.RepublishMessages(args);
 
             mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
-            // Cannot verify the below call because it's an extension method :(
-            // mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
         }
     }
 }

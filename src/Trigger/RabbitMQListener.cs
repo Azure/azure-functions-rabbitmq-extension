@@ -23,7 +23,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly ILogger _logger;
 
         private EventingBasicConsumer _consumer;
-        private IModel _model;
+        private IRabbitMQModel _model;
         private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
 
         private string _consumerTag;
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             _model.BasicQos(0, _batchNumber, false);
-            _consumer = new EventingBasicConsumer(_model);
+            _consumer = new EventingBasicConsumer(_model.GetIModel());
 
             _consumer.Received += async (model, ea) =>
             {
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
                 else
                 {
-                    if (ea.BasicProperties.Headers == null || !ea.BasicProperties.Headers.ContainsKey("requeueCount"))
+                    if (ea.BasicProperties.Headers == null || !ea.BasicProperties.Headers.ContainsKey(Constants.RequeueCount))
                     {
                         CreateHeadersAndRepublish(ea);
                     }
@@ -113,28 +113,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 ea.BasicProperties.Headers = new Dictionary<string, object>();
             }
 
-            ea.BasicProperties.Headers["requeueCount"] = 0;
-            _logger.LogInformation("Republishing message {0}", Encoding.UTF8.GetString(ea.Body));
+            ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
+            _logger.LogInformation("Republishing message");
             _model.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
         }
 
         internal void RepublishMessages(BasicDeliverEventArgs ea)
         {
-            int requeueCount = Convert.ToInt32(ea.BasicProperties.Headers["requeueCount"]);
+            int requeueCount = Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]);
             // Redelivered again
             requeueCount++;
-            ea.BasicProperties.Headers["requeueCount"] = requeueCount;
+            ea.BasicProperties.Headers[Constants.RequeueCount] = requeueCount;
 
-            if (Convert.ToInt32(ea.BasicProperties.Headers["requeueCount"]) < 5)
+            if (Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]) < 5)
             {
                 _model.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but resend
-                _logger.LogInformation("Republishing message {0}", Encoding.UTF8.GetString(ea.Body));
+                _logger.LogInformation("Republishing message");
                 _model.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
             }
             else
             {
                 // Add message to dead letter exchange
-                _logger.LogInformation("Adding message '{0}' to dead letter exchange", Encoding.UTF8.GetString(ea.Body));
                 _model.BasicReject(ea.DeliveryTag, false);
             }
         }
