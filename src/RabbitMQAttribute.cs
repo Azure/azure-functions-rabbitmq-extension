@@ -40,5 +40,7 @@ namespace Microsoft.Azure.WebJobs
 
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
+
+        public string DeadLetterExchangeName { get; set; }
     }
 }

@@ -77,7 +77,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // Trigger samples
         // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("queue")] string message,
+             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -85,7 +85,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_String_NoConnectionString(
-             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
+             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue", deadLetterExchangeName: "dlxName")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -93,21 +93,21 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("queue")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("queue", "dlxName")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger("queue")] TestClass pocObj,
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("queue")] string inputMessage,
+            [RabbitMQTrigger("queue", "dlxName")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,

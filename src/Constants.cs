@@ -5,5 +5,6 @@
         public const string LocalHost = "localhost";
         public const string RabbitMQ = "RabbitMQ";
         public const string RequeueCount = "requeueCount";
+        public const string DeadLetterExchangeKey = "x-dead-letter-exchange";
     }
 }

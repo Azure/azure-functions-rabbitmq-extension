@@ -26,6 +26,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         void BasicCancel(string consumerTag);
 
+        void ExchangeDeclare(string exchange, string type);
+
         void Close();
     }
 }

@@ -90,6 +90,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            string deadLetterExchangeName = Utility.FirstOrDefault(attribute.DeadLetterExchangeName, _options.Value.DeadLetterExchangeName);
 
 
             RabbitMQAttribute resolvedAttribute;
@@ -103,9 +104,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 UserName = userName,
                 Password = password,
                 Port = port,
+                DeadLetterExchangeName = deadLetterExchangeName,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
 
             return new RabbitMQContext
             {
@@ -114,9 +116,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
         }
     }
 }
