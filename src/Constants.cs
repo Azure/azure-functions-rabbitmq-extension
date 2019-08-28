@@ -6,5 +6,6 @@
         public const string RabbitMQ = "RabbitMQ";
         public const string RequeueCount = "requeueCount";
         public const string DeadLetterExchangeKey = "x-dead-letter-exchange";
+        public const string DefaultDLXSetting = "direct";
     }
 }

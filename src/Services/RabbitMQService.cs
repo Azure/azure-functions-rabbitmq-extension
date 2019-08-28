@@ -38,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             IModel model = connectionFactory.CreateConnection().CreateModel();
             _model = new RabbitMQModel(model);
 
-            _model.ExchangeDeclare(_deadLetterExchangeName, "direct");
+            _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
             Dictionary<string, object> args = new Dictionary<string, object>();
             args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
 

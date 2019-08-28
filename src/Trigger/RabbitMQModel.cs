@@ -57,9 +57,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model.BasicCancel(consumerTag);
         }
 
-        public void ExchangeDeclare(string exchange, string type)
+        public void ExchangeDeclare(string exchange, string exchangeType)
         {
-            _model.ExchangeDeclare(exchange, type);
+            _model.ExchangeDeclare(exchange, exchangeType);
         }
 
         public void Close()
