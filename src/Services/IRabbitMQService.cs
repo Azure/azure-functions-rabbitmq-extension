@@ -10,5 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         IRabbitMQModel Model { get; }
 
         IBasicPublishBatch BasicPublishBatch { get; }
+
+        QueueDeclareOk QueueInfo { get; }
     }
 }

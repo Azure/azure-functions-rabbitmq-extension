@@ -3,18 +3,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
+using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    internal sealed class RabbitMQListener : IListener
+    internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
@@ -24,6 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         private EventingBasicConsumer _consumer;
         private IRabbitMQModel _rabbitMQModel;
+        private QueueDeclareOk _queueInfo;
         private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
 
         private string _consumerTag;
@@ -38,6 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _batchNumber = batchNumber;
             _logger = logger;
             _rabbitMQModel = _service.Model;
+            _queueInfo = _service.QueueInfo;
         }
 
         public void Cancel()
@@ -109,7 +113,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
 
-            if (ea.BasicProperties.Headers == null) {
+            if (ea.BasicProperties.Headers == null)
+            {
                 ea.BasicProperties.Headers = new Dictionary<string, object>();
             }
 
@@ -139,12 +144,77 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
         }
 
+        public string Id
+        {
+            get
+            {
+                return $"RabbitMQTrigger-{_queueName}".ToLower();
+            }
+        }
+
         private void ThrowIfDisposed()
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException(null);
             }
+        }
+
+        async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
+        {
+            return await GetMetricsAsync();
+        }
+
+        public async Task<RabbitMQTriggerMetrics> GetMetricsAsync()
+        {
+            return new RabbitMQTriggerMetrics
+            {
+                QueueLength = _queueInfo.MessageCount,
+            };
+        }
+
+        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
+        {
+            ScaleStatus status = new ScaleStatus
+            {
+                Vote = ScaleVote.None,
+            };
+
+            const int NumberOfSamplesToConsider = 5;
+
+            List<RabbitMQTriggerMetrics> metrics = (context as ScaleStatusContext<RabbitMQTriggerMetrics>)?.Metrics?.ToList();
+
+            if (metrics == null || metrics.Count < NumberOfSamplesToConsider)
+            {
+                return status;
+            }
+
+            long latestQueueLength = metrics.Last().QueueLength;
+
+            if (latestQueueLength > context.WorkerCount * 1000)
+            {
+                status.Vote = ScaleVote.ScaleOut;
+                _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({context.WorkerCount}) * 1000");
+                _logger.LogInformation($"Length of queue ({_queueInfo.QueueName}, {latestQueueLength}) is too high relative to the number of instances ({context.WorkerCount}).");
+                return status;
+            }
+
+            bool queueIsIdle = metrics.All(p => p.QueueLength == 0);
+
+            if (queueIsIdle)
+            {
+                status.Vote = ScaleVote.ScaleIn;
+                _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is idle");
+                return status;
+            }
+
+            _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is steady");
+            return status;
+        }
+
+        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
+        {
+            return ((IScaleMonitor)this).GetScaleStatus(context);
         }
     }
 }

@@ -16,10 +16,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _userName;
         private string _password;
         private int _port;
+        private QueueDeclareOk _queueInfo;
 
         public IRabbitMQModel Model => _model;
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
+
+        public QueueDeclareOk QueueInfo => _queueInfo;
 
         public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
@@ -35,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             IModel model = connectionFactory.CreateConnection().CreateModel();
             _model = new RabbitMQModel(model);
 
-            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _queueInfo =_model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             _batch = _model.CreateBasicPublishBatch();
         }
 
