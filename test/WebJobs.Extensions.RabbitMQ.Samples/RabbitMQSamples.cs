@@ -110,7 +110,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 
         // This sample waits on messages from the poison queue created by the above sample.
         // It should process it correctly since it's configured to be of type string.
-        public static void RabbitMQTrigger_JsonToPOCO_DeadLetter(
+        public static void RabbitMQTrigger_Process_PoisonQueue(
             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison")] string res,
             ILogger logger)
         {
