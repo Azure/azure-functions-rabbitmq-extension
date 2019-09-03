@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string password = Resolve(attribute.PasswordSetting);
 
-            string deadLetterExchangeName = Resolve(attribute.DeadLetterExchangeName) ?? throw new InvalidOperationException("Dead letter exchange name missing");
+            string deadLetterExchangeName = Resolve(attribute.DeadLetterExchangeName) ?? string.Empty;
 
             int port = attribute.Port;
 

@@ -99,6 +99,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
+        // This sample should fail when running a console app that sends out a message incorrectly formatted.
+        // It should add the message to the dead letter exchange called "dlxName"
         public static void RabbitMQTrigger_JsonToPOCO(
             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] TestClass pocObj,
             ILogger logger)
@@ -106,13 +108,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
+        // This sample waits on messages from the poison queue created by the above sample.
+        // It should process it correctly since it's configured to be of type string.
         public static void RabbitMQTrigger_JsonToPOCO_DeadLetter(
             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison")] string res,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {res}");
         }
-
 
         public static void RabbitMQTrigger_RabbitMQOutput(
             [RabbitMQTrigger("queue", "dlxName")] string inputMessage,
@@ -122,7 +125,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             ILogger logger)
         {
             outputMessage = inputMessage;
-            logger.LogInformation($"RabittMQ output binding function sent message: {outputMessage}");
+            logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
         }
 
         public class TestClass
