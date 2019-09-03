@@ -106,8 +106,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
-        public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison", "dlxName")] string res,
+        public static void RabbitMQTrigger_JsonToPOCO_DeadLetter(
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison")] string res,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {res}");

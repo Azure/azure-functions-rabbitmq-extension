@@ -114,6 +114,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
+
             _logger.LogDebug("Republishing message");
             _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
         }
