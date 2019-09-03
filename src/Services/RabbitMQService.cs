@@ -38,9 +38,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             IModel model = connectionFactory.CreateConnection().CreateModel();
             _model = new RabbitMQModel(model);
 
+            // Create dead letter queue
+            string deadLetterQueueName = string.Format("{0}-poison", _queueName);
+            _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
             _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
+            _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
+
             Dictionary<string, object> args = new Dictionary<string, object>();
             args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
+            args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
 
             _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
             _batch = _model.CreateBasicPublishBatch();

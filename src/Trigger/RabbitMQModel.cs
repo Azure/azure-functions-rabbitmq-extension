@@ -27,6 +27,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _model.QueueDeclare(queue, durable, exclusive, autoDelete, arguments);
         }
 
+        public void QueueBind(string queue, string exchange, string routingKey, IDictionary<string, object> args)
+        {
+            _model.QueueBind(queue, exchange, routingKey, args);
+        }
+
         public void BasicQos(uint prefetchSize, ushort prefetchCount, bool global)
         {
             _model.BasicQos(prefetchSize, prefetchCount, global);
