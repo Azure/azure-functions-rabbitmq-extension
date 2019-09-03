@@ -41,7 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             Dictionary<string, object> args = new Dictionary<string, object>();
 
             // Create dead letter queue
-            if (_deadLetterExchangeName != "")
+            if (!string.IsNullOrEmpty(_deadLetterExchangeName))
             {
                 string deadLetterQueueName = string.Format("{0}-poison", _queueName);
                 _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
