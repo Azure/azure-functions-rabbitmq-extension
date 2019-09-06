@@ -123,14 +123,46 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
         }
 
-        internal string ResolveConnectionString(string attributeConnectionString)
+        internal int ResolvePortNumber(int port)
         {
-            if (!string.IsNullOrEmpty(attributeConnectionString))
+            if (port != 0)
             {
-                return attributeConnectionString;
+                return port;
             }
 
-            return _options.Value.ConnectionString;
+            return _options.Value.Port;
+        }
+
+        internal string ResolveAttribute(string attribute, string attributeName)
+        {
+            if (!string.IsNullOrEmpty(attribute))
+            {
+                return attribute;
+            }
+
+
+            string resolvedAttribute = string.Empty;
+            attributeName = attributeName.ToLower();
+
+            switch (attributeName)
+            {
+                case "hostname":
+                    resolvedAttribute = _options.Value.HostName;
+                    break;
+                case "queuename":
+                    resolvedAttribute = _options.Value.QueueName;
+                    break;
+                case "username":
+                    resolvedAttribute = _options.Value.UserName;
+                    break;
+                case "password":
+                    resolvedAttribute = _options.Value.Password;
+                    break;
+                default:
+                    break;
+            }
+
+            return resolvedAttribute;
         }
     }
 }

@@ -1,7 +1,5 @@
-﻿using RabbitMQ.Client;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings
 {
@@ -21,8 +19,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings
                 throw new ArgumentNullException(nameof(attribute));
             }
 
-            string resolvedConnectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, string.Empty, string.Empty, string.Empty, string.Empty, 0, string.Empty);
+            string resolvedConnectionString = _configProvider.ResolveAttribute(attribute.ConnectionStringSetting, "connectionStringSetting");
+            string resolvedHostName = _configProvider.ResolveAttribute(attribute.HostName, "hostName");
+            string resolvedQueueName = _configProvider.ResolveAttribute(attribute.QueueName, "queueName");
+            string resolvedUserName = _configProvider.ResolveAttribute(attribute.UserName, "userName");
+            string resolvedPassword = _configProvider.ResolveAttribute(attribute.Password, "password");
+            int resolvedPort = _configProvider.ResolvePortNumber(attribute.Port);
+
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedQueueName, resolvedUserName, resolvedPassword, resolvedPort, string.Empty);
 
             return service.Model;
         }
