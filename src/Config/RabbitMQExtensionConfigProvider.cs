@@ -4,6 +4,7 @@
 using System;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
@@ -47,6 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
+            rule.BindToInput<IRabbitMQModel>(new RabbitMQClientBuilder(this));
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
 
@@ -71,7 +73,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
             _logger.LogInformation("Setting hostName to localhost since it was not specified");
-            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
+            //string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
@@ -119,6 +122,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
         {
             return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+        }
+
+        internal string ResolveConnectionString(string attributeConnectionString)
+        {
+            if (!string.IsNullOrEmpty(attributeConnectionString))
+            {
+                return attributeConnectionString;
+            }
+
+            return _options.Value.ConnectionString;
         }
     }
 }
