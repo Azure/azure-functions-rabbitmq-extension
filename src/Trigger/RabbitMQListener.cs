@@ -173,7 +173,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
+        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
+        {
+            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+        }
+
+        private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)
         {
             ScaleStatus status = new ScaleStatus
             {
@@ -182,20 +187,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             const int NumberOfSamplesToConsider = 5;
 
-            List<RabbitMQTriggerMetrics> metrics = (context as ScaleStatusContext<RabbitMQTriggerMetrics>)?.Metrics?.ToList();
-
-            if (metrics == null || metrics.Count < NumberOfSamplesToConsider)
+            if (metrics == null || metrics.Length < NumberOfSamplesToConsider)
             {
                 return status;
             }
 
             long latestQueueLength = metrics.Last().QueueLength;
 
-            if (latestQueueLength > context.WorkerCount * 1000)
+            if (latestQueueLength > workerCount * 1000)
             {
                 status.Vote = ScaleVote.ScaleOut;
-                _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({context.WorkerCount}) * 1000");
-                _logger.LogInformation($"Length of queue ({_queueInfo.QueueName}, {latestQueueLength}) is too high relative to the number of instances ({context.WorkerCount}).");
+                _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
+                _logger.LogInformation($"Length of queue ({_queueInfo.QueueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
                 return status;
             }
 
@@ -210,11 +213,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is steady");
             return status;
-        }
-
-        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
-        {
-            return ((IScaleMonitor)this).GetScaleStatus(context);
         }
     }
 }
