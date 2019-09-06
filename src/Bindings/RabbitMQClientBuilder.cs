@@ -1,10 +1,11 @@
-﻿using System;
+﻿using RabbitMQ.Client;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings
 {
-    internal class RabbitMQClientBuilder : IConverter<RabbitMQAttribute, IRabbitMQModel>
+    internal class RabbitMQClientBuilder : IConverter<RabbitMQAttribute, IModel>
     {
         private readonly RabbitMQExtensionConfigProvider _configProvider;
 
@@ -13,7 +14,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings
             _configProvider = configProvider;
         }
 
-        IRabbitMQModel IConverter<RabbitMQAttribute, IRabbitMQModel>.Convert(RabbitMQAttribute attribute)
+        IModel IConverter<RabbitMQAttribute, IModel>.Convert(RabbitMQAttribute attribute)
         {
             if (attribute == null)
             {

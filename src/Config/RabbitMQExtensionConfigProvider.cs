@@ -48,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
-            rule.BindToInput<IRabbitMQModel>(new RabbitMQClientBuilder(this));
+            rule.BindToInput<IModel>(new RabbitMQClientBuilder(this));
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
 
@@ -74,7 +74,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
             _logger.LogInformation("Setting hostName to localhost since it was not specified");
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            //string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
 
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);

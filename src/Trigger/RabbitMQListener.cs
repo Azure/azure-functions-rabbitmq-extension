@@ -37,7 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _queueName = queueName;
             _batchNumber = batchNumber;
             _logger = logger;
-            _rabbitMQModel = _service.Model;
+            _rabbitMQModel = _service.RabbitMQModel;
         }
 
         public void Cancel()
