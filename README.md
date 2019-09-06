@@ -9,6 +9,8 @@ The Azure Functions RabbitMQ Binding extensions allows you to send and receive m
 
 [RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
 
+To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), or [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python). If you would like a way to handle messages that error, check out our [guide to configuring a dead letter exchange](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Configuring-a-Dead-Letter-Exchange-and-Queue).
+
 # Samples
 
 See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
@@ -26,7 +28,19 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 }
 ```
 
-The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to appsettings.json file. When running in Azure, add this setting as [ConnectionString ](https://azure.microsoft.com/en-us/blog/windows-azure-web-sites-how-application-strings-and-connection-strings-work/) for your app.
+The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
+
+
+## Properties
+
+|Property Name|Description|Example|
+|--|--|--|
+|ConnectionStringSetting|The connection string for the RabbitMQ queue|`amqp://user:password@url:port`|
+|QueueName|The name of the source or destination queue|`myQueue`|
+|DeadLetterExchangeName|The name of the deadletter exchange for poison queue patterns|`dtxExchange`|
+|HostName|(optional if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
+|UserName|(optional if using ConnectionStringSetting) User name to access queue|`user`|
+|Password|(optional if using ConnectionStringSetting) Password to access queue|`password1`|
 
 # Contributing
 
