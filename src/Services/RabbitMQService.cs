@@ -25,20 +25,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
             _connectionString = connectionString;
             _hostName = hostName;
-            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
             _userName = userName;
             _password = password;
             _port = port;
-            _deadLetterExchangeName = deadLetterExchangeName;
 
             ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
 
             _model = connectionFactory.CreateConnection().CreateModel();
+        }
+
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+            : this(connectionString, hostName, userName, password, port)
+        {
             _rabbitMQModel = new RabbitMQModel(_model);
+
+            _deadLetterExchangeName = deadLetterExchangeName;
+            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
             Dictionary<string, object> args = new Dictionary<string, object>();
 

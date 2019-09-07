@@ -4,7 +4,6 @@
 using System;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
@@ -48,7 +47,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
-            rule.BindToInput<IModel>(new RabbitMQClientBuilder(this));
+            rule.BindToInput<IModel>(new RabbitMQClientBuilder(this, _options));
             rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
 
@@ -123,46 +122,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
         }
 
-        internal int ResolvePortNumber(int port)
+        // Overloaded method used only for getting the RabbitMQ client
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
         {
-            if (port != 0)
-            {
-                return port;
-            }
-
-            return _options.Value.Port;
-        }
-
-        internal string ResolveAttribute(string attribute, string attributeName)
-        {
-            if (!string.IsNullOrEmpty(attribute))
-            {
-                return attribute;
-            }
-
-
-            string resolvedAttribute = string.Empty;
-            attributeName = attributeName.ToLower();
-
-            switch (attributeName)
-            {
-                case "hostname":
-                    resolvedAttribute = _options.Value.HostName;
-                    break;
-                case "queuename":
-                    resolvedAttribute = _options.Value.QueueName;
-                    break;
-                case "username":
-                    resolvedAttribute = _options.Value.UserName;
-                    break;
-                case "password":
-                    resolvedAttribute = _options.Value.Password;
-                    break;
-                default:
-                    break;
-            }
-
-            return resolvedAttribute;
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port);
         }
     }
 }

@@ -1,34 +1,49 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using System;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Bindings
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQClientBuilder : IConverter<RabbitMQAttribute, IModel>
     {
         private readonly RabbitMQExtensionConfigProvider _configProvider;
+        private readonly IOptions<RabbitMQOptions> _options;
 
-        public RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider)
+        public RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider, IOptions<RabbitMQOptions> options)
         {
             _configProvider = configProvider;
+            _options = options;
         }
 
-        IModel IConverter<RabbitMQAttribute, IModel>.Convert(RabbitMQAttribute attribute)
+        public IModel Convert(RabbitMQAttribute attribute)
         {
             if (attribute == null)
             {
                 throw new ArgumentNullException(nameof(attribute));
             }
 
-            string resolvedConnectionString = _configProvider.ResolveAttribute(attribute.ConnectionStringSetting, "connectionStringSetting");
-            string resolvedHostName = _configProvider.ResolveAttribute(attribute.HostName, "hostName");
-            string resolvedQueueName = _configProvider.ResolveAttribute(attribute.QueueName, "queueName");
-            string resolvedUserName = _configProvider.ResolveAttribute(attribute.UserName, "userName");
-            string resolvedPassword = _configProvider.ResolveAttribute(attribute.Password, "password");
-            int resolvedPort = _configProvider.ResolvePortNumber(attribute.Port);
+            string resolvedConnectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
+            string resolvedHostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
+            string resolvedUserName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
+            string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
+            int resolvedPort = ResolvePortNumber(attribute.Port);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedQueueName, resolvedUserName, resolvedPassword, resolvedPort, string.Empty);
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
 
             return service.Model;
+        }
+
+        internal int ResolvePortNumber(int port)
+        {
+            if (port != 0)
+            {
+                return port;
+            }
+
+            return _options.Value.Port;
         }
     }
 }
