@@ -4,8 +4,10 @@
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace WebJobs.Extensions.RabbitMQ.Samples
@@ -74,6 +76,16 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
+        // Example that binds to client
+        public static void BindToClient(
+            [TimerTrigger("01:00", RunOnStartup = true)] TimerInfo timer,
+            [RabbitMQ(ConnectionStringSetting = "rabbitMQ")] IModel client,
+            ILogger logger)
+        {
+            QueueDeclareOk queue = client.QueueDeclare("hello", false, false, false, null);
+            logger.LogInformation("Opening connection and creating queue!");
+        }
+
         // Trigger samples
         // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
@@ -125,6 +137,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             ILogger logger)
         {
             outputMessage = inputMessage;
+            logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
             logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
         }
 

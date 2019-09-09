@@ -9,7 +9,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private IRabbitMQModel _model;
+        private IRabbitMQModel _rabbitMQModel;
+        private IModel _model;
         private IBasicPublishBatch _batch;
         private string _connectionString;
         private string _hostName;
@@ -19,24 +20,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private int _port;
         private string _deadLetterExchangeName;
 
-        public IRabbitMQModel Model => _model;
+        public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+        public IModel Model => _model;
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
             _connectionString = connectionString;
             _hostName = hostName;
-            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
             _userName = userName;
             _password = password;
             _port = port;
-            _deadLetterExchangeName = deadLetterExchangeName;
 
             ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
 
-            IModel model = connectionFactory.CreateConnection().CreateModel();
-            _model = new RabbitMQModel(model);
+            _model = connectionFactory.CreateConnection().CreateModel();
+        }
+
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+            : this(connectionString, hostName, userName, password, port)
+        {
+            _rabbitMQModel = new RabbitMQModel(_model);
+
+            _deadLetterExchangeName = deadLetterExchangeName;
+            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
             Dictionary<string, object> args = new Dictionary<string, object>();
 
