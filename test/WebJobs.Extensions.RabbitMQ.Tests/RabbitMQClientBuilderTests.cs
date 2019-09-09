@@ -41,7 +41,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
         }
     }
 }

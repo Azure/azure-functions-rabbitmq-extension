@@ -29,21 +29,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string resolvedHostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string resolvedUserName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
-            int resolvedPort = ResolvePortNumber(attribute.Port);
+            int resolvedPort = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
 
             IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
 
             return service.Model;
-        }
-
-        internal int ResolvePortNumber(int port)
-        {
-            if (port != 0)
-            {
-                return port;
-            }
-
-            return _options.Value.Port;
         }
     }
 }
