@@ -3,12 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
+using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -23,6 +25,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly ushort _batchNumber;
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
+        private readonly FunctionDescriptor _functionDescriptor;
+        private readonly string _functionId;
 
         private EventingBasicConsumer _consumer;
         private IRabbitMQModel _rabbitMQModel;
@@ -33,7 +37,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private bool _disposed;
         private bool _started;
 
-        public RabbitMQListener(ITriggeredFunctionExecutor executor, IRabbitMQService service, string queueName, ushort batchNumber, ILogger logger)
+        public RabbitMQListener(
+            ITriggeredFunctionExecutor executor,
+            IRabbitMQService service,
+            string queueName,
+            ushort batchNumber,
+            ILogger logger,
+            FunctionDescriptor functionDescriptor)
         {
             _executor = executor;
             _service = service;
@@ -42,6 +52,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _logger = logger;
             _rabbitMQModel = _service.Model;
             _queueInfo = _service.QueueInfo;
+            _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
+            _functionId = functionDescriptor.Id;
         }
 
         public void Cancel()
@@ -148,7 +160,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             get
             {
-                return $"RabbitMQTrigger-{_queueName}".ToLower();
+                return $"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower();
             }
         }
 
@@ -170,7 +182,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return new RabbitMQTriggerMetrics
             {
                 QueueLength = _queueInfo.MessageCount,
+                TimeStamp = DateTime.UtcNow
             };
+        }
+
+        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
+        {
+            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
         }
 
         public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
@@ -211,8 +229,50 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return status;
             }
 
+            bool queueLengthIncreasing =
+                IsTrueForLast(
+                    metrics,
+                    NumberOfSamplesToConsider,
+                    (prev, next) => prev.QueueLength < next.QueueLength) && metrics[0].QueueLength > 0;
+
+            if (queueLengthIncreasing)
+            {
+                status.Vote = ScaleVote.ScaleOut;
+                _logger.LogInformation($"Queue length is increasing for '{_queueInfo.QueueName}'");
+                return status;
+            }
+
+            bool queueLengthDecreasing =
+                IsTrueForLast(
+                    metrics,
+                    NumberOfSamplesToConsider,
+                    (prev, next) => prev.QueueLength > next.QueueLength);
+
+            if (queueLengthDecreasing)
+            {
+                status.Vote = ScaleVote.ScaleIn;
+                _logger.LogInformation($"Queue length is decreasing for '{_queueInfo.QueueName}'");
+            }
+
             _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is steady");
             return status;
+        }
+
+        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
+        {
+            Debug.Assert(count > 1, "count must be greater than 1.");
+            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
+
+            // Walks through the list from left to right starting at len(samples) - count.
+            for (int i = samples.Count - count; i < samples.Count - 1; i++)
+            {
+                if (!predicate(samples[i], samples[i + 1]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
