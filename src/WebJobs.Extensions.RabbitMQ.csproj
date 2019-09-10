@@ -18,7 +18,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>Microsoft Azure WebJobs AzureFunctions</PackageTags>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageLicenseExpression>MS-PL</PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Azure/azure-functions-rabbitmq-extension/wiki</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
