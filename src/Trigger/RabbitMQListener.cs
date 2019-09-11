@@ -50,10 +50,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _queueName = queueName;
             _batchNumber = batchNumber;
             _logger = logger;
+            _rabbitMQModel = _service.RabbitMQModel;
             _queueInfo = _service.QueueInfo;
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
-            _rabbitMQModel = _service.RabbitMQModel;
         }
 
         public void Cancel()
@@ -131,7 +131,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
-
             _logger.LogDebug("Republishing message");
             _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
         }
