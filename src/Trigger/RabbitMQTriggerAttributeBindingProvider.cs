@@ -63,13 +63,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             int port = attribute.Port;
 
+            ushort batchNumber = attribute.BatchNumber;
+
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
 
             // If there's no specified batch number, default to 1
-            ushort batchNumber = 1;
+            if (batchNumber == 0)
+            {
+                batchNumber = 1;
+            }
 
             IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
 

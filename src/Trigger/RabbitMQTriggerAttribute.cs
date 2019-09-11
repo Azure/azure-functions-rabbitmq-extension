@@ -9,21 +9,23 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-        public RabbitMQTriggerAttribute(string connectionStringSetting, string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string connectionStringSetting, string queueName, string deadLetterExchangeName = "", ushort batchNumber = 1)
         {
             ConnectionStringSetting = connectionStringSetting;
             QueueName = queueName;
             DeadLetterExchangeName = deadLetterExchangeName;
+            BatchNumber = batchNumber;
         }
 
 
-        public RabbitMQTriggerAttribute(string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string queueName, string deadLetterExchangeName = "", ushort batchNumber = 1)
         {
             QueueName = queueName;
             DeadLetterExchangeName = deadLetterExchangeName;
+            BatchNumber = batchNumber;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName = "", ushort batchNumber = 1)
         {
             HostName = hostName;
             UserNameSetting = userNameSetting;
@@ -31,6 +33,7 @@ namespace Microsoft.Azure.WebJobs
             Port = port;
             QueueName = queueName;
             DeadLetterExchangeName = deadLetterExchangeName;
+            BatchNumber = batchNumber;
         }
 
         [ConnectionString]
@@ -47,6 +50,8 @@ namespace Microsoft.Azure.WebJobs
         public string PasswordSetting { get; }
 
         public int Port { get; }
+
+        public ushort BatchNumber { get; }
 
         public string DeadLetterExchangeName { get; }
     }

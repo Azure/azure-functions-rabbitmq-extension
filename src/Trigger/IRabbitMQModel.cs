@@ -12,6 +12,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         IBasicPublishBatch CreateBasicPublishBatch();
 
+        QueueDeclareOk QueueDeclarePassive(string queue);
         QueueDeclareOk QueueDeclare(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object> arguments);
 
         void QueueBind(string queue, string exchange, string routingKey, IDictionary<string, object> arguments);

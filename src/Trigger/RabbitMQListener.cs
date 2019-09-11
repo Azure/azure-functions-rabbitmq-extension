@@ -83,7 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
                 if (result.Succeeded)
                 {
-                    _rabbitMQModel.BasicAck(ea.DeliveryTag, true);
+                    _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
                 }
                 else
                 {
@@ -179,10 +179,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public async Task<RabbitMQTriggerMetrics> GetMetricsAsync()
         {
+            QueueDeclareOk queueInfo = _rabbitMQModel.QueueDeclarePassive(_queueName);
             return new RabbitMQTriggerMetrics
             {
-                QueueLength = _queueInfo.MessageCount,
-                TimeStamp = DateTime.UtcNow
+                QueueLength = queueInfo.MessageCount,
+                TimeStamp = DateTime.UtcNow,
             };
         }
 

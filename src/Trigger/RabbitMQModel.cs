@@ -22,6 +22,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _model.CreateBasicPublishBatch();
         }
 
+        public QueueDeclareOk QueueDeclarePassive(string queue)
+        {
+            return _model.QueueDeclarePassive(queue);
+        }
+
         public QueueDeclareOk QueueDeclare(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object> arguments)
         {
             return _model.QueueDeclare(queue, durable, exclusive, autoDelete, arguments);
