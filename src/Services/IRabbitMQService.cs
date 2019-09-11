@@ -7,7 +7,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public interface IRabbitMQService
     {
-        IRabbitMQModel Model { get; }
+        IRabbitMQModel RabbitMQModel { get; }
+
+        IModel Model { get; }
 
         IBasicPublishBatch BasicPublishBatch { get; }
 

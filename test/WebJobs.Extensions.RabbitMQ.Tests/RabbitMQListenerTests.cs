@@ -44,7 +44,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void CreatesHeadersAndRepublishes()
         {
-            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
+            _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
 
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
 
@@ -59,7 +59,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void RepublishesMessages()
         {
-            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
+            _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
 
             var properties = new BasicProperties();
@@ -75,7 +75,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void RejectsStaleMessages()
         {
-            _mockService.Setup(m => m.Model).Returns(_mockModel.Object);
+            _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
 
             var properties = new BasicProperties();

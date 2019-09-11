@@ -4,8 +4,10 @@
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace WebJobs.Extensions.RabbitMQ.Samples
@@ -74,10 +76,20 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
+        // Example that binds to client
+        public static void BindToClient(
+            [TimerTrigger("01:00", RunOnStartup = true)] TimerInfo timer,
+            [RabbitMQ(ConnectionStringSetting = "rabbitMQ")] IModel client,
+            ILogger logger)
+        {
+            QueueDeclareOk queue = client.QueueDeclare("hello", false, false, false, null);
+            logger.LogInformation("Opening connection and creating queue!");
+        }
+
         // Trigger samples
         // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger("queue")] string message,
+             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -85,7 +97,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_String_NoConnectionString(
-             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue")] string message,
+             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue", deadLetterExchangeName: "dlxName")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -93,28 +105,40 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("queue")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("queue", "dlxName")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
         }
 
+        // This sample should fail when running a console app that sends out a message incorrectly formatted.
+        // It should add the message to the dead letter exchange called "dlxName"
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger("queue")] TestClass pocObj,
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
+        // This sample waits on messages from the poison queue created by the above sample.
+        // It should process it correctly since it's configured to be of type string.
+        public static void RabbitMQTrigger_Process_PoisonQueue(
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison")] string res,
+            ILogger logger)
+        {
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {res}");
+        }
+
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("queue")] string inputMessage,
+            [RabbitMQTrigger("queue", "dlxName")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,
             ILogger logger)
         {
             outputMessage = inputMessage;
-            logger.LogInformation($"RabittMQ output binding function sent message: {outputMessage}");
+            logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
+            logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
         }
 
         public class TestClass

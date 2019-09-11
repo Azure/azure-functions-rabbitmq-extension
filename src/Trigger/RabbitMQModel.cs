@@ -27,6 +27,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return _model.QueueDeclare(queue, durable, exclusive, autoDelete, arguments);
         }
 
+        public void QueueBind(string queue, string exchange, string routingKey, IDictionary<string, object> args)
+        {
+            _model.QueueBind(queue, exchange, routingKey, args);
+        }
+
         public void BasicQos(uint prefetchSize, ushort prefetchCount, bool global)
         {
             _model.BasicQos(prefetchSize, prefetchCount, global);
@@ -55,6 +60,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public void BasicCancel(string consumerTag)
         {
             _model.BasicCancel(consumerTag);
+        }
+
+        public void ExchangeDeclare(string exchange, string exchangeType)
+        {
+            _model.ExchangeDeclare(exchange, exchangeType);
         }
 
         public void Close()

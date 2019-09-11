@@ -14,6 +14,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         QueueDeclareOk QueueDeclare(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object> arguments);
 
+        void QueueBind(string queue, string exchange, string routingKey, IDictionary<string, object> arguments);
+
         void BasicQos(uint prefetchSize, ushort prefetchCount, bool global);
 
         string BasicConsume(string queue, bool autoAck, IBasicConsumer consumer);
@@ -25,6 +27,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         void BasicPublish(string exchange, string routingKey, IBasicProperties basicProperties, byte[] body);
 
         void BasicCancel(string consumerTag);
+
+        void ExchangeDeclare(string exchange, string exchangeType);
 
         void Close();
     }
