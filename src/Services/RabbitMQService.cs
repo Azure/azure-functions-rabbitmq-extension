@@ -18,15 +18,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _userName;
         private string _password;
         private int _port;
-        private QueueDeclareOk _queueInfo;
         private string _deadLetterExchangeName;
 
         public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+
         public IModel Model => _model;
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
-
-        public QueueDeclareOk QueueInfo => _queueInfo;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
@@ -63,7 +61,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
             }
 
-            _queueInfo =_model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
+            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
             _batch = _model.CreateBasicPublishBatch();
         }
 

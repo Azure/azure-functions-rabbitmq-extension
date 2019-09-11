@@ -35,8 +35,10 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockModel = new Mock<IRabbitMQModel>();
             _mockDescriptor = new Mock<FunctionDescriptor>();
 
+            _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
+
             QueueDeclareOk queueInfo = new QueueDeclareOk("blah", 5, 1);
-            _mockService.Setup(m => m.QueueInfo).Returns(queueInfo);
+            _mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
 
             _testListener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" });
         }

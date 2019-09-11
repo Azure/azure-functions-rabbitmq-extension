@@ -30,7 +30,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         private EventingBasicConsumer _consumer;
         private IRabbitMQModel _rabbitMQModel;
-        private QueueDeclareOk _queueInfo;
         private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
 
         private string _consumerTag;
@@ -51,7 +50,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _batchNumber = batchNumber;
             _logger = logger;
             _rabbitMQModel = _service.RabbitMQModel;
-            _queueInfo = _service.QueueInfo;
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
         }
@@ -217,7 +215,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 status.Vote = ScaleVote.ScaleOut;
                 _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
-                _logger.LogInformation($"Length of queue ({_queueInfo.QueueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
+                _logger.LogInformation($"Length of queue ({_queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
                 return status;
             }
 
@@ -226,7 +224,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueIsIdle)
             {
                 status.Vote = ScaleVote.ScaleIn;
-                _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is idle");
+                _logger.LogInformation($"Queue '{_queueName}' is idle");
                 return status;
             }
 
@@ -239,7 +237,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueLengthIncreasing)
             {
                 status.Vote = ScaleVote.ScaleOut;
-                _logger.LogInformation($"Queue length is increasing for '{_queueInfo.QueueName}'");
+                _logger.LogInformation($"Queue length is increasing for '{_queueName}'");
                 return status;
             }
 
@@ -252,10 +250,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueLengthDecreasing)
             {
                 status.Vote = ScaleVote.ScaleIn;
-                _logger.LogInformation($"Queue length is decreasing for '{_queueInfo.QueueName}'");
+                _logger.LogInformation($"Queue length is decreasing for '{_queueName}'");
             }
 
-            _logger.LogInformation($"Queue '{_queueInfo.QueueName}' is steady");
+            _logger.LogInformation($"Queue '{_queueName}' is steady");
             return status;
         }
 
