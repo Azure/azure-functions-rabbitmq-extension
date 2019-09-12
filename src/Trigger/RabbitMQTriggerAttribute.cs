@@ -21,7 +21,16 @@ namespace Microsoft.Azure.WebJobs
             DeadLetterExchangeName = deadLetterExchangeName;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
+        {
+            HostName = hostName;
+            UserNameSetting = userNameSetting;
+            PasswordSetting = passwordSetting;
+            Port = port;
+            QueueName = queueName;
+        }
+
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName)
         {
             HostName = hostName;
             UserNameSetting = userNameSetting;
