@@ -15,12 +15,6 @@ namespace Microsoft.Azure.WebJobs
             QueueName = queueName;
         }
 
-        public RabbitMQTriggerAttribute(string queueName, string deadLetterExchangeName)
-        {
-            QueueName = queueName;
-            DeadLetterExchangeName = deadLetterExchangeName;
-        }
-
         public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
         {
             HostName = hostName;
@@ -28,16 +22,6 @@ namespace Microsoft.Azure.WebJobs
             PasswordSetting = passwordSetting;
             Port = port;
             QueueName = queueName;
-        }
-
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName)
-        {
-            HostName = hostName;
-            UserNameSetting = userNameSetting;
-            PasswordSetting = passwordSetting;
-            Port = port;
-            QueueName = queueName;
-            DeadLetterExchangeName = deadLetterExchangeName;
         }
 
         [ConnectionString]
@@ -55,6 +39,6 @@ namespace Microsoft.Azure.WebJobs
 
         public int Port { get; set; }
 
-        public string DeadLetterExchangeName { get; }
+        public string DeadLetterExchangeName { get; set; }
     }
 }
