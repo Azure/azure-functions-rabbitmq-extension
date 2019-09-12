@@ -22,7 +22,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
-        private readonly ushort _batchNumber;
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
         private readonly FunctionDescriptor _functionDescriptor;
@@ -40,14 +39,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             ITriggeredFunctionExecutor executor,
             IRabbitMQService service,
             string queueName,
-            ushort batchNumber,
             ILogger logger,
             FunctionDescriptor functionDescriptor)
         {
             _executor = executor;
             _service = service;
             _queueName = queueName;
-            _batchNumber = batchNumber;
             _logger = logger;
             _rabbitMQModel = _service.RabbitMQModel;
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
@@ -72,7 +69,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            _rabbitMQModel.BasicQos(0, _batchNumber, false);
+            // TODO: Add prefetch params as part of RabbitMQOptions
+            _rabbitMQModel.BasicQos(0, 30, false);
             _consumer = new EventingBasicConsumer(_rabbitMQModel.Model);
 
             _consumer.Received += async (model, ea) =>
@@ -175,14 +173,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return await GetMetricsAsync();
         }
 
-        public async Task<RabbitMQTriggerMetrics> GetMetricsAsync()
+        public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
         {
             QueueDeclareOk queueInfo = _rabbitMQModel.QueueDeclarePassive(_queueName);
-            return new RabbitMQTriggerMetrics
+            RabbitMQTriggerMetrics metrics = new RabbitMQTriggerMetrics
             {
                 QueueLength = queueInfo.MessageCount,
                 TimeStamp = DateTime.UtcNow,
             };
+
+            return Task.FromResult(metrics);
         }
 
         ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)

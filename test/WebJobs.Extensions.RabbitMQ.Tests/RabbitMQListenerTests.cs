@@ -40,7 +40,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             QueueDeclareOk queueInfo = new QueueDeclareOk("blah", 5, 1);
             _mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
 
-            _testListener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" });
+            _testListener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" });
         }
 
         [Fact]
@@ -48,7 +48,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
 
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object);
 
             var properties = new BasicProperties();
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
@@ -62,7 +62,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         public void RepublishesMessages()
         {
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object);
 
             var properties = new BasicProperties();
             properties.Headers = new Dictionary<string, object>();
@@ -78,7 +78,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         public void RejectsStaleMessages()
         {
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", 1, _mockLogger.Object, _mockDescriptor.Object);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object);
 
             var properties = new BasicProperties();
             properties.Headers = new Dictionary<string, object>();
@@ -98,7 +98,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public async Task GetMetrics_ReturnsExpectedResult()
         {
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "listener_test_queue", 1, _mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" });
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "listener_test_queue", _mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" });
             var metrics = await listener.GetMetricsAsync();
 
             Assert.Equal((uint)5, metrics.QueueLength);
