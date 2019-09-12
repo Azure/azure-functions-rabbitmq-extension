@@ -104,7 +104,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("queue", DeadLetterExchangeName = "dlxName")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "queue", "dlxName")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
@@ -129,7 +129,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("queue", DeadLetterExchangeName = "dlxName")] string inputMessage,
+            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "queue", "dlxName")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,
