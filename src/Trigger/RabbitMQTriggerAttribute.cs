@@ -9,45 +9,36 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-        public RabbitMQTriggerAttribute(string connectionStringSetting, string queueName, string deadLetterExchangeName = "")
-        {
-            ConnectionStringSetting = connectionStringSetting;
-            QueueName = queueName;
-            DeadLetterExchangeName = deadLetterExchangeName;
-        }
 
-
-        public RabbitMQTriggerAttribute(string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string queueName)
         {
             QueueName = queueName;
-            DeadLetterExchangeName = deadLetterExchangeName;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, string deadLetterExchangeName = "")
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
         {
             HostName = hostName;
             UserNameSetting = userNameSetting;
             PasswordSetting = passwordSetting;
             Port = port;
             QueueName = queueName;
-            DeadLetterExchangeName = deadLetterExchangeName;
         }
 
         [ConnectionString]
-        public string ConnectionStringSetting { get; }
+        public string ConnectionStringSetting { get; set; }
 
-        public string HostName { get; }
+        public string HostName { get; set; }
 
         public string QueueName { get; }
 
         [AppSetting]
-        public string UserNameSetting { get; }
+        public string UserNameSetting { get; set; }
 
         [AppSetting]
-        public string PasswordSetting { get; }
+        public string PasswordSetting { get; set; }
 
-        public int Port { get; }
+        public int Port { get; set; }
 
-        public string DeadLetterExchangeName { get; }
+        public string DeadLetterExchangeName { get; set; }
     }
 }

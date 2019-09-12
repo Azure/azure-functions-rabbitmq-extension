@@ -87,9 +87,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         // Trigger samples
-        // Defaults to localhost if HostName is not specified and connection string is not set in appsettings.json
         public static void RabbitMQTrigger_String(
-             [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] string message,
+             [RabbitMQTrigger("new_test_queue", ConnectionStringSetting = "rabbitMQ")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -97,7 +96,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_String_NoConnectionString(
-             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue", deadLetterExchangeName: "dlxName")] string message,
+             [RabbitMQTrigger(hostName: "RabbitMQHostName", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue", DeadLetterExchangeName = "dlxName")] string message,
              string consumerTag,
              ILogger logger)
         {
@@ -105,7 +104,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         }
 
         public static void RabbitMQTrigger_BasicDeliverEventArgs(
-            [RabbitMQTrigger("queue", "dlxName")] BasicDeliverEventArgs args,
+            [RabbitMQTrigger("queue", DeadLetterExchangeName = "dlxName")] BasicDeliverEventArgs args,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
@@ -114,7 +113,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // This sample should fail when running a console app that sends out a message incorrectly formatted.
         // It should add the message to the dead letter exchange called "dlxName"
         public static void RabbitMQTrigger_JsonToPOCO(
-            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue", "dlxName")] TestClass pocObj,
+            [RabbitMQTrigger("new_test_queue", DeadLetterExchangeName = "dlxName", ConnectionStringSetting = "rabbitMQ")] TestClass pocObj,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
@@ -123,14 +122,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // This sample waits on messages from the poison queue created by the above sample.
         // It should process it correctly since it's configured to be of type string.
         public static void RabbitMQTrigger_Process_PoisonQueue(
-            [RabbitMQTrigger(connectionStringSetting: "rabbitMQ", "new_test_queue-poison")] string res,
+            [RabbitMQTrigger("new_test_queue-poison", ConnectionStringSetting = "rabbitMQ")] string res,
             ILogger logger)
         {
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {res}");
         }
 
         public static void RabbitMQTrigger_RabbitMQOutput(
-            [RabbitMQTrigger("queue", "dlxName")] string inputMessage,
+            [RabbitMQTrigger("queue", DeadLetterExchangeName = "dlxName")] string inputMessage,
             [RabbitMQ(
                 HostName = "localhost",
                 QueueName = "hello")] out string outputMessage,
