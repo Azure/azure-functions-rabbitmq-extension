@@ -17,7 +17,7 @@ See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-exte
 
 ```C#
 public static void RabbitMQTrigger_RabbitMQOutput(
-    [RabbitMQTrigger("RabbitMQConnection", "queue")] string inputMessage,
+    [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQConnection")] string inputMessage,
     [RabbitMQ(
         ConnectionStringSetting = "RabbitMQConnection",
         QueueName = "hello")] out string outputMessage,
