@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "order",
+      "type": "RabbitMQTrigger",
+      "direction": "in",
+      "queueName": "orders",
+      "connection": "RabbitMQConnection"
+    }
+  ]
+}
