@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
@@ -36,6 +37,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
 
             _model = connectionFactory.CreateConnection().CreateModel();
+        }
+
+        public RabbitMQService(string connectionString, string hostName, string exchangeName, string xMatch, string arguments, string userName, string password, int port)
+            : this(connectionString, hostName, userName, password, port)
+        {
+            var result = _model.QueueDeclare();
+            _queueName = result.QueueName;
+
+            var compiledArguments = new Dictionary<string, object>();
+            if (!string.IsNullOrWhiteSpace(xMatch))
+            {
+                compiledArguments.Add("x-match", xMatch);
+            }
+
+            if (!string.IsNullOrWhiteSpace(arguments))
+            {
+                var argumentObject = JObject.Parse(arguments);
+
+                foreach (var argument in argumentObject)
+                {
+                    compiledArguments.Add(argument.Key, argument.Value.ToString());
+                }
+            }
+
+            _model.QueueBind(result.QueueName, exchangeName, string.Empty, compiledArguments);
+            _rabbitMQModel = new RabbitMQModel(_model);
         }
 
         public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)

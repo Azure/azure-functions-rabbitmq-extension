@@ -90,9 +90,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
+            string exchangeName = Utility.FirstOrDefault(attribute.ExchangeName, _options.Value.ExchangeName);
+            string xMatch = Utility.FirstOrDefault(attribute.XMatch, _options.Value.XMatch);
+            string arguments = Utility.FirstOrDefault(attribute.Arguments, _options.Value.Arguments);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
             string deadLetterExchangeName = Utility.FirstOrDefault(attribute.DeadLetterExchangeName, _options.Value.DeadLetterExchangeName);
-
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -106,9 +108,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Password = password,
                 Port = port,
                 DeadLetterExchangeName = deadLetterExchangeName,
+                XMatch = xMatch,
+                ExchangeName = exchangeName,
+                Arguments = arguments,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            service = string.IsNullOrWhiteSpace(exchangeName) ?
+                GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName) :
+                GetService(connectionString, hostName, exchangeName, xMatch, arguments, userName, password, port);
 
             return new RabbitMQContext
             {
@@ -120,6 +127,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
         {
             return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+        }
+
+        internal IRabbitMQService GetService(string connectionString, string hostName, string exchangeName, string xMatch, string arguments, string userName, string password, int port)
+        {
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, exchangeName, xMatch, arguments, userName, password, port);
         }
 
         // Overloaded method used only for getting the RabbitMQ client

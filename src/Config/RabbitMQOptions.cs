@@ -21,5 +21,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+
+        public string ExchangeName { get; set; }
+
+        public string XMatch { get; set; }
+
+        public string Arguments { get; set; }
     }
 }

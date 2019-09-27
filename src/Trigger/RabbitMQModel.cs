@@ -39,6 +39,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public string BasicConsume(string queue, bool autoAck, IBasicConsumer consumer)
         {
+            if (string.IsNullOrEmpty(queue))
+            {
+                queue = string.Empty;
+            }
+
             return _model.BasicConsume(queue, autoAck, consumer);
         }
 

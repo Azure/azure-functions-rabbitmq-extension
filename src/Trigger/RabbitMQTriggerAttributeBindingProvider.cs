@@ -51,7 +51,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _configuration);
 
-            string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+            string exchange = Resolve(attribute.ExchangeName);
+
+            string queueName = Resolve(attribute.QueueName);
+
+            if (string.IsNullOrWhiteSpace(queueName) && string.IsNullOrWhiteSpace(exchange))
+            {
+                if (string.IsNullOrWhiteSpace(queueName))
+                {
+                    throw new InvalidOperationException("RabbitMQ queue name is missing");
+                }
+
+                throw new InvalidOperationException("RabbitMQ exchange name is missing");
+            }
 
             string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
 
@@ -59,9 +71,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string password = Resolve(attribute.PasswordSetting);
 
+            string xMatch = Resolve(attribute.XMatch);
+
             string deadLetterExchangeName = Resolve(attribute.DeadLetterExchangeName) ?? string.Empty;
 
             int port = attribute.Port;
+
+            string arguments = Resolve(attribute.Arguments);
 
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
@@ -71,7 +87,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             // If there's no specified batch number, default to 1
             ushort batchNumber = 1;
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            var service = string.IsNullOrWhiteSpace(queueName) ? _provider.GetService(connectionString, hostName, exchange, xMatch, arguments, userName, password, port) : _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber, _logger));
         }

@@ -15,6 +15,13 @@ namespace Microsoft.Azure.WebJobs
             QueueName = queueName;
         }
 
+        public RabbitMQTriggerAttribute(string exchangeName, string xMatch, string arguments)
+        {
+            ExchangeName = exchangeName;
+            XMatch = xMatch;
+            Arguments = arguments;
+        }
+
         public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
         {
             HostName = hostName;
@@ -40,5 +47,11 @@ namespace Microsoft.Azure.WebJobs
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+
+        public string ExchangeName { get; set; }
+
+        public string XMatch { get; set; }
+
+        public string Arguments { get; set; }
     }
 }
