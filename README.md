@@ -15,6 +15,8 @@ To get started with developing with this extension, make sure you first [set up 
 
 See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
 
+## Queue Trigger and Output
+
 ```C#
 public static void RabbitMQTrigger_RabbitMQOutput(
     [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQConnection")] string inputMessage,
@@ -29,6 +31,8 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 ```
 
 The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
+
+## Header Exchange Trigger
 
 ```C#
 public static void RabbitMQTrigger_HeadersExchange(
@@ -54,11 +58,13 @@ If an x-match binding is not specified as per the RabbitMQ spec then all events 
 
 ### Queue Trigger Properties
 |Property Name|Description|Example|
+|--|--|--|
 |QueueName|The name of the source or destination queue|`myQueue`|
 |DeadLetterExchangeName|The name of the deadletter exchange for poison queue patterns|`dtxExchange`|
 
 ### Header Exchange Trigger Properties
 |Property Name|Description|Example|
+|--|--|--|
 |ExchangeName|The name of the source or destination queue|`myExchange`|
 |XMatch|Many any or all of the headers specified in the arguments|`any`|
 |Arguments|The headers to filter on if specified|`"{\"HeaderKey\":\"HeaderValue\"}"`|
