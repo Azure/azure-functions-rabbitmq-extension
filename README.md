@@ -30,17 +30,38 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 
 The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
 
+```C#
+public static void RabbitMQTrigger_HeadersExchange(
+    [RabbitMQTrigger("headersExchange", "all", "{\"HeaderKey1\":\"fba410d3-b9bd-40c3-8e6c-d76981cd64af\",\"HeaderKey2\":\"events\"}", ConnectionStringSetting = "RabbitMQConnection")] string inputMessage,
+    ILogger logger)
+{    
+    logger.LogInformation($"RabittMQ header exchange input binding function received message: {intputMessage}");
+}
+```
+
+The above sample waits on a trigger from an exchange named "headersExchange" connected to the connection string value of key "RabbitMQConnection.".
+This uses an x-match binding of "all" for the arguments "HeaderKey1" and "HeaderKey2", which for this example means that only events with the matching header keys will be received. 
+If an x-match binding is not specified as per the RabbitMQ spec then all events will be received.
 
 ## Properties
 
 |Property Name|Description|Example|
 |--|--|--|
 |ConnectionStringSetting|The connection string for the RabbitMQ queue|`amqp://user:password@url:port`|
-|QueueName|The name of the source or destination queue|`myQueue`|
-|DeadLetterExchangeName|The name of the deadletter exchange for poison queue patterns|`dtxExchange`|
 |HostName|(optional if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
 |UserName|(optional if using ConnectionStringSetting) User name to access queue|`user`|
 |Password|(optional if using ConnectionStringSetting) Password to access queue|`password1`|
+
+### Queue Trigger Properties
+|Property Name|Description|Example|
+|QueueName|The name of the source or destination queue|`myQueue`|
+|DeadLetterExchangeName|The name of the deadletter exchange for poison queue patterns|`dtxExchange`|
+
+### Header Exchange Trigger Properties
+|Property Name|Description|Example|
+|ExchangeName|The name of the source or destination queue|`myExchange`|
+|XMatch|Many any or all of the headers specified in the arguments|`any`|
+|Arguments|The headers to filter on if specified|`"{\"HeaderKey\":\"HeaderValue\"}"`|
 
 # Contributing
 
