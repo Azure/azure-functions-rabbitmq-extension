@@ -23,6 +23,17 @@ namespace Microsoft.Azure.WebJobs
             Port = port;
             QueueName = queueName;
         }
+        
+         public RabbitMQTriggerAttribute(string queueName, bool queueDurabe, bool deadLetterQueueDurable, string deadLetterQueuesuffix, string deadLetterExchangeType, string deadLetterRoutingKey, string deadLetterExchangeName)
+        {
+            QueueName = queueName;
+            QueueDurabe = queueDurabe;
+            DeadLetterQueueDurable = deadLetterQueueDurable;
+            DeadLetterQueueSuffix = deadLetterQueuesuffix;
+            DeadLetterExchangeType = deadLetterExchangeType;
+            DeadLetterRoutingKeyValue = deadLetterRoutingKey;
+            DeadLetterExchangeName = deadLetterExchangeName;
+        }
 
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
@@ -40,5 +51,17 @@ namespace Microsoft.Azure.WebJobs
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+        
+        public string DeadLetterExchangeName { get; set; }
+
+        public bool QueueDurabe { get; set; }
+
+        public bool DeadLetterQueueDurable { get; set; }
+
+        public string DeadLetterQueueSuffix { get; set; }
+
+        public string DeadLetterExchangeType { get; set; }
+
+        public string DeadLetterRoutingKeyValue { get; set; }
     }
 }
