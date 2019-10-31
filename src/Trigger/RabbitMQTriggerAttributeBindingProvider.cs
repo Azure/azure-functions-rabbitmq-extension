@@ -62,6 +62,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string deadLetterExchangeName = Resolve(attribute.DeadLetterExchangeName) ?? string.Empty;
 
             int port = attribute.Port;
+            
+            bool queueDurabe = attribute.QueueDurabe;
+
+            bool deadLetterQueueDurable = attribute.DeadLetterQueueDurable;
+
+            string deadLetterQueuesuffix = Resolve(attribute.DeadLetterQueueSuffix) ?? string.Empty;
+
+            string deadLetterExchangeType = Resolve(attribute.DeadLetterExchangeType) ?? string.Empty;
+
+            string deadLetterRoutingKey = Resolve(attribute.DeadLetterRoutingKeyValue) ?? string.Empty;
 
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
@@ -71,7 +81,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             // If there's no specified batch number, default to 1
             ushort batchNumber = 1;
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, queueDurabe, deadLetterQueueDurable, deadLetterQueuesuffix, deadLetterExchangeType, deadLetterRoutingKey);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber, _logger));
         }
