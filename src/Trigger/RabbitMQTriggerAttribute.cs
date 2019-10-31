@@ -51,8 +51,6 @@ namespace Microsoft.Azure.WebJobs
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
-        
-        public string DeadLetterExchangeName { get; set; }
 
         public bool QueueDurabe { get; set; }
 
