@@ -63,6 +63,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
             _batch = _model.CreateBasicPublishBatch();
         }
+        
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName, bool queueDurable, bool deadQueueDurable,string deadLetterQueueSuffix, string deadLetterExchangeType, string deadLetterRoutingKeyValue)
+            : this(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName)
+        {
+            _rabbitMQModel = new RabbitMQModel(_model);
+
+            _deadLetterExchangeName = deadLetterExchangeName;
+            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+
+            Dictionary<string, object> args = new Dictionary<string, object>();
+
+            // Create dead letter queue
+            if (!string.IsNullOrEmpty(_deadLetterExchangeName))
+            {
+                string deadLetterQueueName = string.Concat(queueName, deadLetterQueueSuffix);
+                _model.QueueDeclare(queue: deadLetterQueueName, durable: deadQueueDurable, exclusive: false, autoDelete: false, arguments: null);
+                _model.ExchangeDeclare(_deadLetterExchangeName, deadLetterExchangeType, true);
+                _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, deadLetterRoutingKeyValue, null);
+
+                args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
+                args[Constants.DeadLetterRoutingKey] = deadLetterRoutingKeyValue;
+            }
+
+            _model.QueueDeclare(queue: _queueName, durable: queueDurable, exclusive: false, autoDelete: false, arguments: args);
+            _batch = _model.CreateBasicPublishBatch();
+        }
 
         internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
         {
