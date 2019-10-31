@@ -14,5 +14,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             return new RabbitMQService(connectionString, hostName, userName, password, port);
         }
+        
+        public IRabbitMQService CreateService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName, bool queueDurabe, bool deadLetterQueueDurable, string deadLetterQueuesuffix, string deadLetterExchangeType, string deadLetterRoutingKey)
+        {
+            return new RabbitMQService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, queueDurabe, deadLetterQueueDurable, deadLetterQueuesuffix, deadLetterExchangeType, deadLetterRoutingKey);
+        }
     }
 }
