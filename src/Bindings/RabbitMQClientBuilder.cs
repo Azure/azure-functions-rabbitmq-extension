@@ -30,8 +30,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string resolvedUserName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int resolvedPort = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            string resolvedQueueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
+            bool resolvedQueueDurable = Utility.FirstOrDefault(attribute.QueueDurable, _options.Value.QueueDurable);
+            string resolvedDeadLetterExchangeName = Utility.FirstOrDefault(attribute.DeadLetterExchangeName, _options.Value.DeadLetterExchangeName);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedQueueName, resolvedQueueDurable, resolvedUserName, resolvedPassword, resolvedPort, resolvedDeadLetterExchangeName);
 
             return service.Model;
         }

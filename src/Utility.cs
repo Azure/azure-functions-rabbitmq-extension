@@ -4,39 +4,18 @@
 using System;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions
 {
     internal static class Utility
     {
-        internal static string FirstOrDefault(params string[] values)
-        {
-            return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
-        }
+        internal static string FirstOrDefault(params string[] values) => values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
 
-        internal static int FirstOrDefault(params int[] values)
-        {
-            return values.FirstOrDefault(v =>
-            {
-                if (v != 0)
-                {
-                    return true;
-                }
+        internal static bool FirstOrDefault(params bool[] values) => values.FirstOrDefault(v => v);
 
-                return false;
-            });
-        }
+        internal static int FirstOrDefault(params int[] values) => values.FirstOrDefault(v => v != 0);
 
-        internal static bool ValidateUserNamePassword(string userName, string password, string hostName)
-        {
-            if (!hostName.Equals(Constants.LocalHost, StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)))
-            {
-                return false;
-            }
-
-            return true;
-        }
+        internal static bool ValidateUserNamePassword(string userName, string password, string hostName) => hostName.Equals(Constants.LocalHost, StringComparison.InvariantCultureIgnoreCase) || (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(password));
 
         internal static string ResolveConnectionString(string attributeConnectionStringKey, string optionsConnectionString, IConfiguration configuration)
         {
@@ -48,9 +27,9 @@ namespace Microsoft.Azure.WebJobs.Extensions
                     return resolvedString;
                 }
             }
-            catch (Exception e)
-            {
-            }
+            catch
+            {}
+
             return optionsConnectionString;
         }
     }

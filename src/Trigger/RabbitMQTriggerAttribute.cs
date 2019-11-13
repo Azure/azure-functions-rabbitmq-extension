@@ -11,17 +11,17 @@ namespace Microsoft.Azure.WebJobs
     {
 
         public RabbitMQTriggerAttribute(string queueName)
-        {
-            QueueName = queueName;
-        }
+            : this(null, null, null, 0, queueName)
+        {}
 
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, bool queueDurable = false)
         {
             HostName = hostName;
             UserNameSetting = userNameSetting;
             PasswordSetting = passwordSetting;
             Port = port;
             QueueName = queueName;
+            QueueDurable = queueDurable;
         }
 
         [ConnectionString]
@@ -30,6 +30,8 @@ namespace Microsoft.Azure.WebJobs
         public string HostName { get; set; }
 
         public string QueueName { get; }
+
+        public bool QueueDurable { get; }
 
         [AppSetting]
         public string UserNameSetting { get; set; }

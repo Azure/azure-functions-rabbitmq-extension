@@ -54,7 +54,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
 
             return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _batchNumber, _logger));

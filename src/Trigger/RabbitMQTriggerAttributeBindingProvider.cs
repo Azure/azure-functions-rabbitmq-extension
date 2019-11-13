@@ -38,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
 
             ParameterInfo parameter = context.Parameter;
@@ -52,6 +52,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _configuration);
 
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+
+            bool queueDurable = attribute.QueueDurable;
 
             string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
 
@@ -71,7 +73,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             // If there's no specified batch number, default to 1
             ushort batchNumber = 1;
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, queueDurable, userName, password, port, deadLetterExchangeName);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber, _logger));
         }
