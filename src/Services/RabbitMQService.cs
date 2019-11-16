@@ -21,6 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _deadLetterExchangeName;
 
         public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+
         public IModel Model => _model;
 
         public IBasicPublishBatch BasicPublishBatch => _batch;

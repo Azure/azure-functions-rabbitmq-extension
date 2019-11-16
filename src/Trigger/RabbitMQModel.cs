@@ -10,16 +10,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly IModel _model;
 
-        public IModel Model => _model;
-
         public RabbitMQModel(IModel model)
         {
             _model = model;
         }
 
+        public IModel Model => _model;
+
         public IBasicPublishBatch CreateBasicPublishBatch()
         {
             return _model.CreateBasicPublishBatch();
+        }
+
+        public QueueDeclareOk QueueDeclarePassive(string queue)
+        {
+            return _model.QueueDeclarePassive(queue);
         }
 
         public QueueDeclareOk QueueDeclare(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object> arguments)
@@ -71,6 +76,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             _model.Close();
         }
-
     }
 }
