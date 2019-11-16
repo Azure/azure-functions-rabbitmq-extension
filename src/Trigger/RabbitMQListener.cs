@@ -26,11 +26,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly ILogger _logger;
         private readonly FunctionDescriptor _functionDescriptor;
         private readonly string _functionId;
+        private readonly List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
+        private readonly ScaleMonitorDescriptor _scaleMonitorDescriptor;
 
         private EventingBasicConsumer _consumer;
         private IRabbitMQModel _rabbitMQModel;
-        private List<BasicDeliverEventArgs> batchedMessages = new List<BasicDeliverEventArgs>();
-
         private string _consumerTag;
         private bool _disposed;
         private bool _started;
@@ -49,6 +49,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _rabbitMQModel = _service.RabbitMQModel;
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
+            _scaleMonitorDescriptor = new ScaleMonitorDescriptor($"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower());
+        }
+
+        public ScaleMonitorDescriptor Descriptor
+        {
+            get
+            {
+                return _scaleMonitorDescriptor;
+            }
         }
 
         public void Cancel()
@@ -152,22 +161,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
         }
 
-        public string Id
-        {
-            get
-            {
-                return $"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower();
-            }
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(null);
-            }
-        }
-
         async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
         {
             return await GetMetricsAsync();
@@ -179,7 +172,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             RabbitMQTriggerMetrics metrics = new RabbitMQTriggerMetrics
             {
                 QueueLength = queueInfo.MessageCount,
-                TimeStamp = DateTime.UtcNow,
+                Timestamp = DateTime.UtcNow,
             };
 
             return Task.FromResult(metrics);
@@ -193,6 +186,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
         {
             return GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(null);
+            }
         }
 
         private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)

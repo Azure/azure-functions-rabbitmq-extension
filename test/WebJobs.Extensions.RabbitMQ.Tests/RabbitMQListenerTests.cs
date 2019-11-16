@@ -64,9 +64,10 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object);
 
-            var properties = new BasicProperties();
-            properties.Headers = new Dictionary<string, object>();
-            properties.Headers.Add("requeueCount", 1);
+            var properties = new BasicProperties()
+            {
+                Headers = new Dictionary<string, object>() { { "requeueCount", 1 } }
+            };
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
@@ -80,9 +81,10 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object);
 
-            var properties = new BasicProperties();
-            properties.Headers = new Dictionary<string, object>();
-            properties.Headers.Add("requeueCount", 6);
+            var properties = new BasicProperties()
+            {
+                Headers = new Dictionary<string, object>() { { "requeueCount", 6 } }
+            };
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
@@ -92,7 +94,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void ScaleMonitor_Id_ReturnsExpectedValue()
         {
-            Assert.Equal("testfunction-rabbitmqtrigger-blah", _testListener.Id);
+            Assert.Equal("testfunction-rabbitmqtrigger-blah", _testListener.Descriptor.Id);
         }
 
         [Fact]
@@ -102,7 +104,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var metrics = await listener.GetMetricsAsync();
 
             Assert.Equal((uint)5, metrics.QueueLength);
-            Assert.NotEqual(default(DateTime), metrics.TimeStamp);
+            Assert.NotEqual(default(DateTime), metrics.Timestamp);
         }
 
         [Fact]
@@ -128,15 +130,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 WorkerCount = 1
             };
 
-            var timestamp = DateTime.UtcNow;
+            var Timestamp = DateTime.UtcNow;
             var RabbitMQTriggerMetrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 2500, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 2505, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 2612, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 2700, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 2810, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 2900, TimeStamp = timestamp.AddSeconds(15) }
+                new RabbitMQTriggerMetrics { QueueLength = 2500, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 2505, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 2612, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 2700, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 2810, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 2900, Timestamp = Timestamp.AddSeconds(15) }
             };
             context.Metrics = RabbitMQTriggerMetrics;
 
@@ -161,15 +163,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             {
                 WorkerCount = 1
             };
-            var timestamp = DateTime.UtcNow;
+            var Timestamp = DateTime.UtcNow;
             context.Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 10, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 20, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 40, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 80, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 100, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 150, TimeStamp = timestamp.AddSeconds(15) }
+                new RabbitMQTriggerMetrics { QueueLength = 10, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 20, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 40, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 80, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 100, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 150, Timestamp = Timestamp.AddSeconds(15) }
             };
 
             var status = _testListener.GetScaleStatus(context);
@@ -184,15 +186,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             {
                 WorkerCount = 5
             };
-            var timestamp = DateTime.UtcNow;
+            var Timestamp = DateTime.UtcNow;
             context.Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 150, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 100, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 80, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 40, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 20, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 10, TimeStamp = timestamp.AddSeconds(15) }
+                new RabbitMQTriggerMetrics { QueueLength = 150, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 100, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 80, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 40, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 20, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 10, Timestamp = Timestamp.AddSeconds(15) }
             };
 
             var status = _testListener.GetScaleStatus(context);
@@ -207,15 +209,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             {
                 WorkerCount = 2
             };
-            var timestamp = DateTime.UtcNow;
+            var Timestamp = DateTime.UtcNow;
             context.Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 1500, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1600, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1400, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1300, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1700, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1600, TimeStamp = timestamp.AddSeconds(15) }
+                new RabbitMQTriggerMetrics { QueueLength = 1500, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 1600, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 1400, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 1300, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 1700, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 1600, Timestamp = Timestamp.AddSeconds(15) }
             };
 
             var status = _testListener.GetScaleStatus(context);
@@ -230,15 +232,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             {
                 WorkerCount = 3
             };
-            var timestamp = DateTime.UtcNow;
+            var Timestamp = DateTime.UtcNow;
             context.Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, TimeStamp = timestamp.AddSeconds(15) }
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = Timestamp.AddSeconds(15) }
             };
 
             var status = _testListener.GetScaleStatus(context);
@@ -255,8 +257,8 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             };
             context.Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 5, TimeStamp = DateTime.UtcNow },
-                new RabbitMQTriggerMetrics { QueueLength = 10, TimeStamp = DateTime.UtcNow }
+                new RabbitMQTriggerMetrics { QueueLength = 5, Timestamp = DateTime.UtcNow },
+                new RabbitMQTriggerMetrics { QueueLength = 10, Timestamp = DateTime.UtcNow }
             };
 
             var status = _testListener.GetScaleStatus(context);
