@@ -15,48 +15,50 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _connectionString;
         private string _hostName;
         private string _queueName;
+        private bool _queueDurable;
         private string _userName;
         private string _password;
         private int _port;
         private string _deadLetterExchangeName;
 
         public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
-
         public IModel Model => _model;
-
         public IBasicPublishBatch BasicPublishBatch => _batch;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
             ConnectionFactory connectionFactory = GetConnectionFactory(connectionString, hostName, userName, password, port);
 
-            Model = connectionFactory.CreateConnection().CreateModel();
+            _model = connectionFactory.CreateConnection().CreateModel();
         }
 
         public RabbitMQService(string connectionString, string hostName, string queueName, bool queueDurable, string userName, string password, int port, string deadLetterExchangeName)
             : this(connectionString, hostName, userName, password, port)
         {
-            RabbitMQModel = new RabbitMQModel(Model);
+            _rabbitMQModel = new RabbitMQModel(_model);
+            _queueDurable = queueDurable;
+            _deadLetterExchangeName = deadLetterExchangeName;
 
             string resolvedQueueName = queueName ?? string.Empty;
 
             Dictionary<string, object> args = new Dictionary<string, object>();
 
-            QueueDeclareOk queueDeclareResult = Model.QueueDeclare(queue: resolvedQueueName, durable: queueDurable, exclusive: false, autoDelete: false, arguments: args);
+            QueueDeclareOk queueDeclareResult = _model.QueueDeclare(queue: resolvedQueueName, durable: _queueDurable, exclusive: false, autoDelete: false, arguments: args);
+            _queueName = queueDeclareResult.QueueName;
 
             // Create dead letter queue
-            if (!string.IsNullOrEmpty(deadLetterExchangeName))
+            if (!string.IsNullOrEmpty(_deadLetterExchangeName))
             {
-                string deadLetterQueueName = string.Format("{0}-poison", queueDeclareResult.QueueName);
-                Model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-                Model.ExchangeDeclare(deadLetterExchangeName, Constants.DefaultDLXSetting);
-                Model.QueueBind(deadLetterQueueName, deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
+                string deadLetterQueueName = string.Format("{0}-poison", _queueName);
+                _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+                _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
+                _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
 
-                args[Constants.DeadLetterExchangeKey] = deadLetterExchangeName;
+                args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
                 args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
             }
 
-            BasicPublishBatch = Model.CreateBasicPublishBatch();
+            _batch = _model.CreateBasicPublishBatch();
         }
 
         internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
