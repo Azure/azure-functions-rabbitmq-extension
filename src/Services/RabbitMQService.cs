@@ -9,9 +9,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        public IRabbitMQModel RabbitMQModel { get; }
-        public IModel Model { get; }
-        public IBasicPublishBatch BasicPublishBatch { get; }
+        private IRabbitMQModel _rabbitMQModel;
+        private IModel _model;
+        private IBasicPublishBatch _batch;
+        private string _connectionString;
+        private string _hostName;
+        private string _queueName;
+        private string _userName;
+        private string _password;
+        private int _port;
+        private string _deadLetterExchangeName;
+
+        public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+
+        public IModel Model => _model;
+
+        public IBasicPublishBatch BasicPublishBatch => _batch;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {

@@ -70,12 +70,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
 
-            // If there's no specified batch number, default to 1
-            ushort batchNumber = 1;
-
             IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, queueDurable, userName, password, port, deadLetterExchangeName);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, batchNumber, _logger));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger));
         }
 
         private string Resolve(string name)
