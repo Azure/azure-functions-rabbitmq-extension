@@ -140,6 +140,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
         }
 
+        public static void RabbitMQTrigger_DurableQueue(
+            [RabbitMQTrigger("localhost", "guest", "guest", 5672, "queue", true)] string message,
+            string consumerTag,
+            ILogger logger)
+        {
+            logger.LogInformation($"RabbitMQ durable queue trigger function processed message: {message} and consumer tag: {consumerTag}");
+        }
+
         public class TestClass
         {
             private readonly int _x;

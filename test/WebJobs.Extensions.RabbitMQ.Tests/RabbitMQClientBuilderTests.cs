@@ -12,6 +12,8 @@ using Xunit;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
+    using Castle.DynamicProxy.Generators;
+
     public class RabbitMQClientBuilderTests
     {
         private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
@@ -44,8 +46,11 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, It.IsAny<string>(), It.IsAny<bool>(), "guest", "guest", 5672, It.IsAny<string>()), Times.Exactly(1));
         }
 
-        [Fact]
-        public void Opens_Connection_NonDurableQueue_Default()
+        [Theory]
+        [InlineData(Constants.LocalHost, "guest", "guest", 5672, null)]
+        [InlineData(Constants.LocalHost, "guest", "guest", 5672, false)]
+        [InlineData(Constants.LocalHost, "guest", "guest", 5672, true)]
+        public void Opens_Connection_QueueDurable(string hostName, string userName, string password, int port, bool? queueDurable)
         {
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
             var loggerFactory = new LoggerFactory();
@@ -59,75 +64,21 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             RabbitMQAttribute attr = new RabbitMQAttribute
                                      {
                                          ConnectionStringSetting = string.Empty,
-                                         HostName = Constants.LocalHost,
-                                         UserName = "guest",
-                                         Password = "guest",
-                                         Port = 5672,
+                                         HostName = hostName,
+                                         UserName = userName,
+                                         Password = password,
+                                         Port = port
                                      };
+            if (queueDurable.HasValue)
+            {
+                attr.QueueDurable = queueDurable.Value;
+            }
 
             RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
 
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, It.IsAny<string>(), false, "guest", "guest", 5672, It.IsAny<string>()), Times.Exactly(1));
-        }
-
-        [Fact]
-        public void Opens_Connection_NonDurableQueue()
-        {
-            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
-            var loggerFactory = new LoggerFactory();
-            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(options, mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
-            var mockService = new Mock<IRabbitMQService>();
-
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>())).Returns(mockService.Object);
-
-            RabbitMQAttribute attr = new RabbitMQAttribute
-                                     {
-                                         ConnectionStringSetting = string.Empty,
-                                         HostName = Constants.LocalHost,
-                                         UserName = "guest",
-                                         Password = "guest",
-                                         Port = 5672,
-                                         QueueDurable = false
-                                     };
-
-            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
-
-            var model = clientBuilder.Convert(attr);
-
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, It.IsAny<string>(), false, "guest", "guest", 5672, It.IsAny<string>()), Times.Exactly(1));
-        }
-
-        [Fact]
-        public void Opens_Connection_DurableQueue()
-        {
-            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
-            var loggerFactory = new LoggerFactory();
-            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(options, mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
-            var mockService = new Mock<IRabbitMQService>();
-
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>())).Returns(mockService.Object);
-
-            RabbitMQAttribute attr = new RabbitMQAttribute
-                                     {
-                                         ConnectionStringSetting = string.Empty,
-                                         HostName = Constants.LocalHost,
-                                         UserName = "guest",
-                                         Password = "guest",
-                                         Port = 5672,
-                                         QueueDurable = true
-                                     };
-
-            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
-
-            var model = clientBuilder.Convert(attr);
-
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, It.IsAny<string>(), true, "guest", "guest", 5672, It.IsAny<string>()), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), hostName, It.IsAny<string>(), queueDurable ?? false, userName, password, port, It.IsAny<string>()), Times.Exactly(1));
         }
     }
 }

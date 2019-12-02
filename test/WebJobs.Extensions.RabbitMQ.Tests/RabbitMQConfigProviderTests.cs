@@ -43,55 +43,38 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
         }
 
-        [Fact]
-        public void Creates_Context_Correctly_QueueDurableDefault()
+        [Theory]
+		[InlineData("131.107.174.10", "queue", null)]
+        [InlineData("131.107.174.10", "queue", false)]
+        [InlineData("131.107.174.10", "queue", true)]
+        public void Creates_Context_Correctly_QueueDurable(string hostName, string queueName, bool? queueDurable)
         {
             var options = new RabbitMQOptions { HostName = Constants.LocalHost, QueueName = "hello" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
-            var attribute = new RabbitMQAttribute { HostName = "131.107.174.10", QueueName = "queue" };
+            var attribute = new RabbitMQAttribute { HostName = hostName, QueueName = queueName };
+            if (queueDurable.HasValue)
+            {
+	            attribute.QueueDurable = queueDurable.Value;
+            }
+
             var actualContext = config.CreateContext(attribute);
 
             RabbitMQAttribute attr = new RabbitMQAttribute
                                      {
-                                         HostName = "131.107.174.10",
-                                         QueueName = "queue"
+                                         HostName = hostName,
+                                         QueueName = queueName
                                      };
+            if (queueDurable.HasValue)
+            {
+	            attr.QueueDurable = queueDurable.Value;
+            }
 
             RabbitMQContext expectedContext = new RabbitMQContext
                                               {
                                                   ResolvedAttribute = attr,
-                                              };
-
-            Assert.Equal(actualContext.ResolvedAttribute.HostName, expectedContext.ResolvedAttribute.HostName);
-            Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
-            Assert.False(actualContext.ResolvedAttribute.QueueDurable);
-        }
-
-        [Fact]
-        public void Creates_Context_Correctly_QueueDurableSet()
-        {
-            var options = new RabbitMQOptions { HostName = Constants.LocalHost, QueueName = "hello" };
-            var loggerFactory = new LoggerFactory();
-            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
-            var attribute = new RabbitMQAttribute { HostName = "131.107.174.10", QueueName = "queue", QueueDurable = true};
-
-            var actualContext = config.CreateContext(attribute);
-
-            RabbitMQAttribute attr = new RabbitMQAttribute
-                                     {
-                                         HostName = "131.107.174.10",
-                                         QueueName = "queue",
-                                         QueueDurable = true
-                                     };
-
-            RabbitMQContext expectedContext = new RabbitMQContext
-                                              {
-                                                  ResolvedAttribute = attr
                                               };
 
             Assert.Equal(actualContext.ResolvedAttribute.HostName, expectedContext.ResolvedAttribute.HostName);

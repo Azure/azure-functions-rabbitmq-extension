@@ -121,5 +121,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, queueDurable, userName, password, port, deadLetterExchangeName);
         }
+
+        // Overloaded method used only for getting the RabbitMQ client
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
+        {
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port);
+        }
     }
 }
