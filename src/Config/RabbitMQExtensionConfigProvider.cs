@@ -108,7 +108,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 DeadLetterExchangeName = deadLetterExchangeName,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, attribute.IsDurable, attribute.IsDeadLetterExchangeDurable);
 
             return new RabbitMQContext
             {
@@ -117,9 +117,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        internal IRabbitMQService GetService(
+            string connectionString,
+            string hostName,
+            string queueName,
+            string userName,
+            string password,
+            int port,
+            string deadLetterExchangeName,
+            bool isDurable,
+            bool isDeadLetterExchangeDurable)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, isDurable, isDeadLetterExchangeDurable);
         }
 
         // Overloaded method used only for getting the RabbitMQ client
