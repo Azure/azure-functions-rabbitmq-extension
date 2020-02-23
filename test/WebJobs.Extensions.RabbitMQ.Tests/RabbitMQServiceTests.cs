@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
-using Moq;
 using RabbitMQ.Client;
 using Xunit;
 
@@ -12,13 +11,12 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
     public class RabbitMQServiceTests
     {
         [Theory]
-        [InlineData("", "localhost", "guest", "guest", 5672, "", "localhost", "guest", "guest", 5672)]
-        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", null, null, null, null, "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672)]
-        [InlineData("", "localhost", null, null, 0, "", "localhost", "guest", "guest", -1)] // Should fill in "guest", "guest", 5672
-        public void Handles_Connection_Attributes_And_Options(string connectionString, string hostName, string userName, string password, int port,
+        [InlineData("amqp://guest:guest@localhost:5672", "amqp://guest:guest@localhost:5672", "localhost", "guest", "guest", 5672)]
+        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672)]
+        public void Handles_Connection_Attributes_And_Options(string connectionString,
             string expectedConnectionString, string expectedHostName, string expectedUserName, string expectedPassword, int expectedPort)
         {
-            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString, hostName, userName, password, port);
+            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString);
 
             if (String.IsNullOrEmpty(connectionString))
             {
