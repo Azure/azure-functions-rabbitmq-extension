@@ -30,6 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
         {
+            //TODO: Should we publish into exchange instead?
             _batch.Add(exchange: string.Empty, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
             _logger.LogDebug($"Adding message to batch for publishing...");
 

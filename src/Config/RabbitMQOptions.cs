@@ -1,9 +1,6 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using Microsoft.Azure.WebJobs.Description;
-using RabbitMQ.Client;
-
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public class RabbitMQOptions
@@ -21,5 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+
+        public RabbitMqTriggerOptions Trigger { get; set; }
     }
 }

@@ -17,14 +17,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQTriggerBinding : ITriggerBinding
     {
         private readonly IRabbitMQService _service;
-        private readonly string _queueName;
+        private readonly TriggerConfiguration _triggerOptions;
         private readonly string _hostName;
         private readonly ILogger _logger;
 
-        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger)
+        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, TriggerConfiguration triggerOptions, ILogger logger)
         {
             _service = service;
-            _queueName = queueName;
+            _triggerOptions = triggerOptions;
             _hostName = hostname;
             _logger = logger;
             BindingDataContract = CreateBindingDataContract();
@@ -55,7 +55,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _triggerOptions, _logger, context.Descriptor));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return new RabbitMQTriggerParameterDescriptor
             {
                 Hostname = _hostName,
-                QueueName = _queueName,
+                QueueName = _triggerOptions.Queue.Name,
             };
         }
 

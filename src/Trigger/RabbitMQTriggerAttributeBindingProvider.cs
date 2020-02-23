@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
@@ -49,9 +50,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _configuration);
+            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting,
+                _options.Value.ConnectionString, _configuration);
 
-            string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+            string queueName = Resolve(attribute.QueueName) ??
+                               throw new InvalidOperationException("RabbitMQ queue name is missing");
 
             string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
 
@@ -63,14 +66,44 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             int port = attribute.Port;
 
-            if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
+            if (string.IsNullOrEmpty(connectionString) &&
+                !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
-                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
+                throw new InvalidOperationException(
+                    "RabbitMQ username and password required if not connecting to localhost");
             }
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            var triggerConfiguration = BuildTriggerConfiguration(queueName, deadLetterExchangeName, _options.Value);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger));
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, userName, password, port, triggerConfiguration.Queue);
+
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, triggerConfiguration, _logger));
+        }
+
+        private TriggerConfiguration BuildTriggerConfiguration(string queueName, string deadLetterExchangeName, RabbitMQOptions options)
+        {
+            var config = new TriggerConfiguration
+            {
+                PrefetchCount = options.Trigger.PrefetchCount == default
+                    ? Constants.PrefetchCountDefault
+                    : options.Trigger.PrefetchCount,
+                Queue = new QueueConfiguration
+                {
+                    Name = queueName,
+                    Exclusive = options.Trigger.IsExclusiveQueue,
+                    Durable = options.Trigger.IsDurableQueue,
+                    AutoDelete = options.Trigger.IsAutoDeleteQueue,
+                    Arguments = new Dictionary<string, object>(),
+                    DeadLetterExchangeName = deadLetterExchangeName,
+                },
+            };
+
+            if (options.Trigger.IsLazyQueue)
+            {
+                config.Queue.Arguments.Add("x-queue-mode", "lazy");
+            }
+
+            return config;
         }
 
         private string Resolve(string name)

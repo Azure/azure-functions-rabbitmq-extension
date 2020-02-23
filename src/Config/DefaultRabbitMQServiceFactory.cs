@@ -5,14 +5,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class DefaultRabbitMQServiceFactory : IRabbitMQServiceFactory
     {
-        public IRabbitMQService CreateService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        public IRabbitMQService CreateService(string connectionString, QueueConfiguration config)
         {
-            return new RabbitMQService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            return new RabbitMQService(connectionString, config);
         }
 
-        public IRabbitMQService CreateService(string connectionString, string hostName, string userName, string password, int port)
+        public IRabbitMQService CreateService(string connectionString)
         {
-            return new RabbitMQService(connectionString, hostName, userName, password, port);
+            return new RabbitMQService(connectionString);
         }
     }
 }

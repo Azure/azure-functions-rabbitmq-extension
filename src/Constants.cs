@@ -9,5 +9,9 @@
         public const string DefaultDLXSetting = "direct";
         public const string DeadLetterRoutingKey = "x-dead-letter-routing-key";
         public const string DeadLetterRoutingKeyValue = "poison-queue";
+        public const string DefaultUsername = "guest";
+        public const string DefaultPassword = "guest";
+        public const int DefaultPort = 5672;
+        public const ushort PrefetchCountDefault = 8;
     }
 }

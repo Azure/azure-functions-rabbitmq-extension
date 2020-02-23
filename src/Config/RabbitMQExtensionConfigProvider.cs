@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -108,7 +109,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 DeadLetterExchangeName = deadLetterExchangeName,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            var queueConfig = new QueueConfiguration
+            {
+                Name = queueName,
+                DeadLetterExchangeName = deadLetterExchangeName,
+                Arguments = new Dictionary<string, object>(),
+            };
+
+            service = GetService(connectionString, hostName, userName, password, port, queueConfig);
 
             return new RabbitMQContext
             {
@@ -117,15 +125,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, QueueConfiguration config)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            var cs = string.IsNullOrWhiteSpace(connectionString)
+                ? BuildConnectionString(hostName, userName, password, port)
+                : connectionString;
+
+            return _rabbitMQServiceFactory.CreateService(cs, config);
         }
 
         // Overloaded method used only for getting the RabbitMQ client
         internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port);
+            var cs = string.IsNullOrWhiteSpace(connectionString)
+                ? BuildConnectionString(hostName, userName, password, port)
+                : connectionString;
+
+            return _rabbitMQServiceFactory.CreateService(cs);
+        }
+
+        private string BuildConnectionString(string hostName, string userName, string password, int portNumber)
+        {
+            var host = string.IsNullOrWhiteSpace(hostName) ? Constants.LocalHost : hostName;
+            var user = string.IsNullOrWhiteSpace(userName) ? Constants.DefaultUsername : userName;
+            var pwd = string.IsNullOrWhiteSpace(password) ? Constants.DefaultPassword : password;
+            var port = portNumber == default(int) ? Constants.DefaultPort : portNumber;
+
+            return $"amqp://{user}:{pwd}@{host}:{port}";
         }
     }
 }
