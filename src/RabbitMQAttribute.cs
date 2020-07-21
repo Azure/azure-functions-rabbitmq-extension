@@ -35,6 +35,8 @@ namespace Microsoft.Azure.WebJobs
         [AppSetting]
         public string Password { get; set; }
 
+        public bool IsDurable { get; set; }
+
         // Optional
         public int Port { get; set; }
 
@@ -43,5 +45,7 @@ namespace Microsoft.Azure.WebJobs
 
         [AutoResolve]
         public string DeadLetterExchangeName { get; set; }
+
+        public bool IsDeadLetterExchangeDurable { get; set; }
     }
 }

@@ -39,8 +39,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model = connectionFactory.CreateConnection().CreateModel();
         }
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
-            : this(connectionString, hostName, userName, password, port)
+        public RabbitMQService(
+             string connectionString,
+             string hostName,
+             string queueName,
+             string userName,
+             string password,
+             int port,
+             string deadLetterExchangeName,
+             bool isDurable,
+             bool isDeadLetterExchangeDurable)
+             : this(connectionString, hostName, userName, password, port)
         {
             _rabbitMQModel = new RabbitMQModel(_model);
 
@@ -53,7 +62,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (!string.IsNullOrEmpty(_deadLetterExchangeName))
             {
                 string deadLetterQueueName = string.Format("{0}-poison", _queueName);
-                _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+                _model.QueueDeclare(queue: deadLetterQueueName, isDeadLetterExchangeDurable, exclusive: false, autoDelete: false, arguments: null);
                 _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
                 _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
 
@@ -61,7 +70,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
             }
 
-            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
+            _model.QueueDeclare(queue: _queueName, isDurable, exclusive: false, autoDelete: false, arguments: args);
             _batch = _model.CreateBasicPublishBatch();
         }
 

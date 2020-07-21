@@ -15,6 +15,20 @@ namespace Microsoft.Azure.WebJobs
             QueueName = queueName;
         }
 
+        public RabbitMQTriggerAttribute(
+           string hostName,
+           string userNameSetting,
+           string passwordSetting,
+           int port,
+           string queueName,
+           bool isDurable,
+           bool isDeadLetterExchangeDurable)
+           : this(hostName, userNameSetting, passwordSetting, port, queueName)
+        {
+            IsDurable = isDurable;
+            IsDeadLetterExchangeDurable = isDeadLetterExchangeDurable;
+        }
+
         public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
         {
             HostName = hostName;
@@ -37,8 +51,12 @@ namespace Microsoft.Azure.WebJobs
         [AppSetting]
         public string PasswordSetting { get; set; }
 
+        public bool IsDurable { get; set; }
+
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+
+        public bool IsDeadLetterExchangeDurable { get; set; }
     }
 }
