@@ -4,6 +4,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +26,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             RabbitMQExtensionConfigProvider provider,
             ILogger logger,
             IOptions<RabbitMQOptions> options,
-            IConfiguration configuration)
+            IConfiguration configuration
+        )
         {
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
@@ -38,7 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
 
             ParameterInfo parameter = context.Parameter;
@@ -63,12 +65,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             int port = attribute.Port;
 
+            IRabbitMQQueueDefinitionFactory queueDefinitionFactory = null;
+            if (attribute.QueueDefinitionFactoryType != null)
+            {
+                if (!typeof(IRabbitMQQueueDefinitionFactory).IsAssignableFrom(attribute.QueueDefinitionFactoryType))
+                {
+                    throw new InvalidOperationException($"The type given to {nameof(attribute.QueueDefinitionFactoryType)} should implements IRabbitMQQueueDefinitionFactory");
+                }
+
+                queueDefinitionFactory = (IRabbitMQQueueDefinitionFactory)Activator.CreateInstance(attribute.QueueDefinitionFactoryType);
+            }
+
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            IRabbitMQService service = _provider.GetService(
+                connectionString,
+                hostName,
+                queueName,
+                userName,
+                password,
+                port,
+                deadLetterExchangeName,
+                queueDefinitionFactory);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger));
         }

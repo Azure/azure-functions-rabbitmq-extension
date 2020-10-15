@@ -43,5 +43,7 @@ namespace Microsoft.Azure.WebJobs
 
         [AutoResolve]
         public string DeadLetterExchangeName { get; set; }
+
+        public Type QueueDefinitionFactoryType { get; set; }
     }
 }

@@ -40,5 +40,7 @@ namespace Microsoft.Azure.WebJobs
         public int Port { get; set; }
 
         public string DeadLetterExchangeName { get; set; }
+
+        public Type QueueDefinitionFactoryType { get; set; }
     }
 }

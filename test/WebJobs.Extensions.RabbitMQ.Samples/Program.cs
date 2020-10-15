@@ -18,7 +18,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             // be indexed by the JobHost.
             // To run some of the other samples included, add their types to this list
             var typeLocator = new SamplesTypeLocator(
-                typeof(RabbitMQSamples));
+                typeof(RabbitMQSamples),
+                typeof(RabbitMQSamplesChainedErrorQueues));
 
             var builder = new HostBuilder()
                .UseEnvironment("Development")

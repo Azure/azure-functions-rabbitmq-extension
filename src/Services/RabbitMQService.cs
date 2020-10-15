@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
@@ -18,7 +19,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private string _userName;
         private string _password;
         private int _port;
-        private string _deadLetterExchangeName;
 
         public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
 
@@ -39,30 +39,55 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model = connectionFactory.CreateConnection().CreateModel();
         }
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        public RabbitMQService(
+            string connectionString,
+            string hostName,
+            string queueName,
+            string userName,
+            string password,
+            int port,
+            string deadLetterExchangeName,
+            IRabbitMQQueueDefinitionFactory queueDefinitionFactory)
             : this(connectionString, hostName, userName, password, port)
         {
             _rabbitMQModel = new RabbitMQModel(_model);
 
-            _deadLetterExchangeName = deadLetterExchangeName;
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
             Dictionary<string, object> args = new Dictionary<string, object>();
 
-            // Create dead letter queue
-            if (!string.IsNullOrEmpty(_deadLetterExchangeName))
+            var deadLetterQueueName = queueDefinitionFactory?.GetDeadLetterQueueName(_queueName);
+            if (deadLetterQueueName != null)
             {
-                string deadLetterQueueName = string.Format("{0}-poison", _queueName);
-                _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-                _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
-                _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
+                DeclareQueue(deadLetterQueueName, queueDefinitionFactory.BuildDeadLetterQueueDefinition(deadLetterQueueName));
+            }
 
-                args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
+            if (!string.IsNullOrEmpty(deadLetterExchangeName))
+            {
+                deadLetterQueueName = string.Format("{0}-poison", _queueName);
+                _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+                _model.ExchangeDeclare(deadLetterExchangeName, Constants.DefaultDLXSetting);
+                _model.QueueBind(deadLetterQueueName, deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
+
+                args[Constants.DeadLetterExchangeKey] = deadLetterExchangeName;
                 args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
             }
 
-            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
+            if (queueDefinitionFactory != null)
+            {
+                DeclareQueue(_queueName, queueDefinitionFactory.BuildDefinition(_queueName));
+            }
+            else
+            {
+                _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
+            }
+
             _batch = _model.CreateBasicPublishBatch();
+        }
+
+        private void DeclareQueue(string queueName, RabbitMQQueueDefinition queueDefinition)
+        {
+            _model.QueueDeclare(queueName, queueDefinition.Durable, queueDefinition.Exclusive, queueDefinition.AutoDelete, queueDefinition.Arguments);
         }
 
         internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)

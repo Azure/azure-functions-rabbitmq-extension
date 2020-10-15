@@ -4,6 +4,7 @@
 using System;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Trigger;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
@@ -81,6 +82,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
+
+            if (attribute.QueueDefinitionFactoryType != null && !typeof(IRabbitMQQueueDefinitionFactory).IsAssignableFrom(attribute.QueueDefinitionFactoryType))
+            {
+                throw new InvalidOperationException($"The type given to {nameof(attribute.QueueDefinitionFactoryType)} should implements IRabbitMQQueueDefinitionFactory");
+            }
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
@@ -93,6 +99,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
             string deadLetterExchangeName = Utility.FirstOrDefault(attribute.DeadLetterExchangeName, _options.Value.DeadLetterExchangeName);
 
+            IRabbitMQQueueDefinitionFactory queueDefinitionFactory = null;
+            if (attribute.QueueDefinitionFactoryType != null)
+            {
+                queueDefinitionFactory = (IRabbitMQQueueDefinitionFactory) Activator.CreateInstance(attribute.QueueDefinitionFactoryType);
+            }
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -108,7 +119,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 DeadLetterExchangeName = deadLetterExchangeName,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, queueDefinitionFactory);
 
             return new RabbitMQContext
             {
@@ -117,9 +128,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        internal IRabbitMQService GetService(
+            string connectionString,
+            string hostName,
+            string queueName,
+            string userName,
+            string password,
+            int port,
+            string deadLetterExchangeName,
+            IRabbitMQQueueDefinitionFactory queueDefinitionFactory)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, deadLetterExchangeName, queueDefinitionFactory);
         }
 
         // Overloaded method used only for getting the RabbitMQ client
