@@ -117,15 +117,6 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ queue trigger function processed message: {pocObj}");
         }
 
-        // This sample waits on messages from the poison queue created by the above sample.
-        // It should process it correctly since it's configured to be of type string.
-        public static void RabbitMQTrigger_Process_PoisonQueue(
-            [RabbitMQTrigger("new_test_queue-poison", ConnectionStringSetting = "rabbitMQ")] string res,
-            ILogger logger)
-        {
-            logger.LogInformation($"RabbitMQ queue trigger function processed message: {res}");
-        }
-
         public static void RabbitMQTrigger_RabbitMQOutput(
             [RabbitMQTrigger("queue")] string inputMessage,
             [RabbitMQ(
