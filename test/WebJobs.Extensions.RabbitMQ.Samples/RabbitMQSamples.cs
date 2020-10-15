@@ -138,6 +138,14 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
         }
 
+        public static void RabbitMQTrigger_String_NoConnectionString_WithVirtualHost(
+            [RabbitMQTrigger(hostName: "%RabbitMQHostName%", userNameSetting: "%UserNameSetting%", passwordSetting: "%PasswordSetting%", port: 5672, queueName: "queue-in-vhost", VirtualHost = "azure-rabbitmq-vhost")] string message,
+            string consumerTag,
+            ILogger logger)
+        {
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {message} and consumer tag: {consumerTag}");
+        }
+
         public class TestClass
         {
             private readonly int _x;

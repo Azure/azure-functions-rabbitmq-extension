@@ -16,23 +16,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly string _queueName;
         private readonly string _userName;
         private readonly string _password;
+        private readonly string _virtualHost;
         private readonly int _port;
 
-        public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
+        public RabbitMQService(string connectionString, string hostName, string userName, string password, int port, string virtualHost)
         {
             _connectionString = connectionString;
             _hostName = hostName;
             _userName = userName;
             _password = password;
             _port = port;
+            _virtualHost = virtualHost;
 
-            ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
+            ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port, _virtualHost);
 
             _model = connectionFactory.CreateConnection().CreateModel();
         }
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
-            : this(connectionString, hostName, userName, password, port)
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string virtualHost)
+            : this(connectionString, hostName, userName, password, port, virtualHost)
         {
             _rabbitMQModel = new RabbitMQModel(_model);
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
@@ -47,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
 
-        internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
+        internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port, string virtualHost)
         {
             ConnectionFactory connectionFactory = new ConnectionFactory();
 
@@ -71,6 +73,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 if (!string.IsNullOrEmpty(password))
                 {
                     connectionFactory.Password = password;
+                }
+
+                if (!string.IsNullOrEmpty(virtualHost))
+                {
+                    connectionFactory.VirtualHost = virtualHost;
                 }
 
                 if (port != 0)

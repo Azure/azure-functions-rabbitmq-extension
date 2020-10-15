@@ -76,6 +76,13 @@ public @interface RabbitMQOutput {
     String password() default "";
 
     /**
+     * The VirtualHost used on the rabbitMQ Server.
+     * @see <a href="https://www.rabbitmq.com/vhosts.html">Virtual Hosts</a>
+     * @return The VirtualHost used on the rabbitMQ Server.
+     */
+    String virtualHost() default "";
+
+    /**
      * The port to attach.
      * @return The port to attach.
      */

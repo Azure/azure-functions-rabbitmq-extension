@@ -36,6 +36,8 @@ namespace Microsoft.Azure.WebJobs
         [AppSetting]
         public string PasswordSetting { get; set; }
 
+        public string VirtualHost { get; set; }
+
         public int Port { get; set; }
     }
 }

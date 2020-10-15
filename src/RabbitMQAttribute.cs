@@ -34,6 +34,14 @@ namespace Microsoft.Azure.WebJobs
         [AppSetting]
         public string Password { get; set; }
 
+        /// <summary>
+        /// Gets or sets the vhost to use when connecting to RabbitMQ using HostName / UserName / Password
+        /// Optional
+        /// <see href="https://www.rabbitmq.com/vhosts.html"/>
+        /// </summary>
+        [AppSetting]
+        public string VirtualHost { get; set; }
+
         // Optional
         public int Port { get; set; }
 

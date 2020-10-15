@@ -26,7 +26,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var config = new RabbitMQExtensionConfigProvider(options, mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
             var mockService = new Mock<IRabbitMQService>();
 
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(mockService.Object);
+            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>())).Returns(mockService.Object);
 
             RabbitMQAttribute attr = new RabbitMQAttribute
             {
@@ -34,14 +34,15 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 HostName = Constants.LocalHost,
                 UserName = "guest",
                 Password = "guest",
-                Port = 5672
+                Port = 5672,
+                VirtualHost = "some-vhost"
             };
 
             RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
 
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672, "some-vhost"), Times.Exactly(1));
         }
     }
 }

@@ -83,6 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            string virtualHost = Utility.FirstOrDefault(attribute.VirtualHost, _options.Value.VirtualHost);
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -95,9 +96,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 UserName = userName,
                 Password = password,
                 Port = port,
+                VirtualHost = virtualHost,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, virtualHost);
 
             return new RabbitMQContext
             {
@@ -106,15 +108,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, string virtualHost)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, virtualHost);
         }
 
         // Overloaded method used only for getting the RabbitMQ client
-        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, string virtualHost)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port, virtualHost);
         }
     }
 }
