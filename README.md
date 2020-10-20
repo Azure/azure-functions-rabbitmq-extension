@@ -1,6 +1,5 @@
 |Branch|Status|
 |---|---|
-|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/azure-functions-rabbitmq-extension-ci?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=34&branchName=master)|
 |dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/azure-functions-rabbitmq-extension-ci?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=34&branchName=dev)|
 
 # RabbitMQ Binding Support for Azure Functions
