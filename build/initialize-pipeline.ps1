@@ -1,5 +1,5 @@
 param(
-	[Parameter(Mandatory=$true)][string]$versionPath
+	[Parameter(Mandatory=$true)][string]$versionPath,
 	[Parameter(Mandatory=$true)][string]$buildNumber
 )
 
