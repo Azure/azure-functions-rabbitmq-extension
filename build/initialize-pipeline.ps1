@@ -3,7 +3,7 @@ param(
 )
 
 # Figure out the build number
-$version = [System.IO.File]::ReadAllText("$versionPath")
+$version = [System.IO.File]::ReadAllText("$versionPath\\version.txt")
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
