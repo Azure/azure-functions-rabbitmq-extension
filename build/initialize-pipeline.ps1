@@ -1,5 +1,9 @@
+param(
+	[Parameter(Mandatory=$true)][string]$versionPath
+)
+
 # Figure out the build number
-$version = [System.IO.File]::ReadAllText("$pwd\\version.txt")
+$version = [System.IO.File]::ReadAllText("$versionPath")
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
