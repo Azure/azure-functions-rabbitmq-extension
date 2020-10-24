@@ -1,3 +1,6 @@
+variables:
+  buildNumber: $[ counter('constant', 1) ]  # Every build (pr or branch) will increment.
+  
 pr:
   branches:
     include:
@@ -20,7 +23,7 @@ jobs:
     name: Initialize
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\initialize-pipeline.ps1'
-      arguments: '-versionPath ''$(Build.Repository.LocalPath)\build'''
+      arguments: '-versionPath ''$(Build.Repository.LocalPath)\build'' -buildNumber ''$(buildNumber)'''
       
 - job: BuildArtifacts
   dependsOn: InitializePipeline
@@ -47,7 +50,7 @@ jobs:
     displayName: 'ESRP CodeSigning: Strong Name and Authenticode'
     inputs:
       ConnectedServiceName: 'ESRP Service'
-      FolderPath: 'src\bin\Release'
+      FolderPath: 'src\bin\Release\netstandard2.0'
       Pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ*.dll
       signConfigType: inlineSignParams
       inlineOperation: |

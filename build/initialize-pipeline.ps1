@@ -1,5 +1,6 @@
 param(
 	[Parameter(Mandatory=$true)][string]$versionPath
+	[Parameter(Mandatory=$true)][string]$buildNumber
 )
 
 # Figure out the build number
@@ -7,7 +8,6 @@ $version = [System.IO.File]::ReadAllText("$versionPath\\version.txt")
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
-$buildNumber = $env:BUILD_BUILDID
 
 if ($buildReason -eq "PullRequest") {
   # parse PR title to see if we should pack this
