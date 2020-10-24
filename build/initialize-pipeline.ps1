@@ -7,7 +7,7 @@ $version = [System.IO.File]::ReadAllText("$versionPath\\version.txt")
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
-$buildNumber = $env:BUILD_BUILDNUMBER
+$buildNumber = $env:BUILD_BUILDID
 
 if ($buildReason -eq "PullRequest") {
   # parse PR title to see if we should pack this
