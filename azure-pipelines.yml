@@ -16,7 +16,7 @@ trigger:
 jobs:
 - job: InitializePipeline
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'vs2017-win2016'
   steps:
   - task: PowerShell@2
     displayName: 'Initialize'
@@ -31,12 +31,12 @@ jobs:
   variables:
     fullBuildNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
   pool:
-    vmImage: 'windows-2019' 
+    vmImage: 'vs2017-win2016'
   steps:
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '3.1.x'
+      version: '2.x'
       performMultiLevelLookup: true
   - task: DotNetCoreCLI@2
     displayName: 'Build RabbitMQ package'
@@ -120,12 +120,12 @@ jobs:
 
 - job: RunTests
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'vs2017-win2016'
   steps: 
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '3.1.x'
+      version: '2.x'
       performMultiLevelLookup: true
   - task: DotNetCoreCLI@2
     displayName: 'Tests'
