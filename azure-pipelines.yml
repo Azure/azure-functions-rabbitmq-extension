@@ -20,7 +20,7 @@ jobs:
     name: Initialize
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\initialize-pipeline.ps1'
-      arguments: '-versionPath '$(Build.Repository.LocalPath)\build'
+      arguments: '-versionPath ''$(Build.Repository.LocalPath)\build'''
       
 - job: BuildArtifacts
   dependsOn: InitializePipeline
