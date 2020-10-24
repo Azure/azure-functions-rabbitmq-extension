@@ -1,13 +1,13 @@
 pr:
   branches:
     include:
-    - yojagad/testingyml
+    - yojagad/Resurrect
     - rel/test
 
 trigger:
   branches:
     include:
-    - yojagad/testingyml
+    - yojagad/Resurrect
     - rel/test
     
 jobs:
