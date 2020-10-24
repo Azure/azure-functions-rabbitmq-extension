@@ -51,7 +51,7 @@ jobs:
     inputs:
       ConnectedServiceName: 'ESRP Service'
       FolderPath: 'src\bin\Release\netstandard2.0'
-      Pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ*.dll
+      Pattern: WebJobs.Extensions.RabbitMQ*.dll
       signConfigType: inlineSignParams
       inlineOperation: |
         [
@@ -85,7 +85,7 @@ jobs:
     inputs:
       command: 'custom'
       custom: 'pack'
-      arguments: '--no-build -c Release -o packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
+      arguments: '--no-build -p:Version=$(fullBuildNumber) -p:CommitHash=$(Build.SourceVersion) -c Release -o packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
       projects: |
         **\WebJobs.Extensions.RabbitMQ.csproj
   - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
