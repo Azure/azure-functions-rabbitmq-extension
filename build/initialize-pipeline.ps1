@@ -3,7 +3,8 @@ param(
 )
 
 # Figure out the build number
-$version = [System.IO.File]::ReadAllText("$versionPath\\version.txt")
+$xml = [Xml] (Get-Content "$versionPath\\WebJobs.Extensions.RabbitMQ.csproj")
+$version = $xml.Project.PropertyGroup.Version
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
