@@ -50,7 +50,7 @@ jobs:
     inputs:
       command: 'custom'
       custom: 'build'
-      arguments: -p:Version=$(FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release
+      arguments: -p:Version=$(FormulateFullVersionNumber.FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release
       projects: |
         **\WebJobs.Extensions.RabbitMQ.csproj
   - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
