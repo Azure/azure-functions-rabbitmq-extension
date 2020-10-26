@@ -29,10 +29,17 @@ jobs:
   dependsOn: InitializePipeline
   condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)))
   variables:
-    fullBuildNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
+    releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
+    buildCounter: $[counter(variables['releaseVersionNumber'], 1)]
   pool:
     vmImage: 'vs2017-win2016'
   steps:
+  - task: PowerShell@2 
+    displayName: 'FormulateFullVersionNumber'
+    name: 'FormulateFullVersionNumber'
+    inputs:
+      filePath: '$(Build.Repository.LocalPath)\build\VersionBuilder.ps1'
+      arguments: '-releaseVersionNumber ''$(releaseVersionNumber)'' -buildCounter ''$(buildCounter)'''
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
@@ -43,7 +50,7 @@ jobs:
     inputs:
       command: 'custom'
       custom: 'build'
-      arguments: -p:Version=$(fullBuildNumber) -p:CommitHash=$(Build.SourceVersion) -c Release
+      arguments: -p:Version=$(FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release
       projects: |
         **\WebJobs.Extensions.RabbitMQ.csproj
   - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
