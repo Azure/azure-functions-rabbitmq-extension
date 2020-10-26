@@ -4,7 +4,7 @@ param(
 
 # Figure out the build number
 $xml = [Xml] (Get-Content "$versionPath\\WebJobs.Extensions.RabbitMQ.csproj")
-$version = $xml.Project.PropertyGroup.Version
+$version = ([string]($xml.Project.PropertyGroup.Version)).Trim()
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
