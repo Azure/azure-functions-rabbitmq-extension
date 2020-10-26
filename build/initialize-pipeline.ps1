@@ -1,6 +1,5 @@
 param(
-	[Parameter(Mandatory=$true)][string]$versionPath,
-	[Parameter(Mandatory=$true)][string]$buildNumber
+	[Parameter(Mandatory=$true)][string]$versionPath
 )
 
 # Figure out the build number
@@ -19,9 +18,6 @@ if ($buildReason -eq "PullRequest") {
     Write-Host "Setting 'BuildArtifacts' to true."
   }
 }
-#elseif (-not($branch -contains "rel")) {
-#	$version = "$version.$buildNumber"
-#}
 
 Write-Host "Version is $version"
 Write-Host "##vso[task.setvariable variable=BuildNumber;isOutput=true]$version"

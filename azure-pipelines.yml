@@ -1,6 +1,3 @@
-variables:
-  buildNumber: $[ counter('constant', 1) ]  # Every build (pr or branch) will increment.
-  
 pr:
   branches:
     include:
@@ -23,7 +20,7 @@ jobs:
     name: Initialize
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\initialize-pipeline.ps1'
-      arguments: '-versionPath ''$(Build.Repository.LocalPath)\build'' -buildNumber ''$(buildNumber)'''
+      arguments: '-versionPath ''$(Build.Repository.LocalPath)\build'''
       
 - job: BuildArtifacts
   dependsOn: InitializePipeline
@@ -92,7 +89,7 @@ jobs:
     inputs:
       command: 'custom'
       custom: 'pack'
-      arguments: '--no-build -p:Version=$(fullBuildNumber) -p:CommitHash=$(Build.SourceVersion) -c Release -o packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
+      arguments: '--no-build -p:Version=$(FormulateFullVersionNumber.FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release -o packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
       projects: |
         **\WebJobs.Extensions.RabbitMQ.csproj
   - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
