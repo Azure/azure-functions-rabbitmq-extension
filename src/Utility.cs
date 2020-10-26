@@ -21,6 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
             {
                 if (v != 0)
                 {
+                    // Some random comment
                     return true;
                 }
 
