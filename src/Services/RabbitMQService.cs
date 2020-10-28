@@ -9,22 +9,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private IRabbitMQModel _rabbitMQModel;
-        private IModel _model;
-        private IBasicPublishBatch _batch;
-        private string _connectionString;
-        private string _hostName;
-        private string _queueName;
-        private string _userName;
-        private string _password;
-        private int _port;
-        private string _deadLetterExchangeName;
-
-        public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
-
-        public IModel Model => _model;
-
-        public IBasicPublishBatch BasicPublishBatch => _batch;
+        private readonly IRabbitMQModel _rabbitMQModel;
+        private readonly IModel _model;
+        private readonly IBasicPublishBatch _batch;
+        private readonly string _connectionString;
+        private readonly string _hostName;
+        private readonly string _queueName;
+        private readonly string _userName;
+        private readonly string _password;
+        private readonly int _port;
+        private readonly string _deadLetterExchangeName;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
@@ -64,6 +58,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
             _batch = _model.CreateBasicPublishBatch();
         }
+
+        public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+
+        public IModel Model => _model;
+
+        public IBasicPublishBatch BasicPublishBatch => _batch;
 
         internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
         {
