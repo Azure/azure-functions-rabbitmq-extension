@@ -48,9 +48,11 @@ namespace Microsoft.Azure.WebJobs.Extensions
                     return resolvedString;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
+                // Do Nothing
             }
+
             return optionsConnectionString;
         }
     }

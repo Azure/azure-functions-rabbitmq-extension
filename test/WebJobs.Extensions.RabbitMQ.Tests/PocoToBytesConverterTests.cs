@@ -33,13 +33,18 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
         public class TestClass
         {
-            public int x, y;
+            private readonly int _x;
+            private readonly int _y;
 
             public TestClass(int x, int y)
             {
-                x = x;
-                y = y;
+                _x = x;
+                _y = y;
             }
+
+            public int X => _x;
+
+            public int Y => _y;
         }
     }
 }

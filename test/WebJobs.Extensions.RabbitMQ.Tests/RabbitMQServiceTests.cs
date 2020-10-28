@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
-using Moq;
 using RabbitMQ.Client;
 using Xunit;
 

@@ -25,10 +25,12 @@
    
    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' or '$(Configuration)|$(Platform)'=='Debug|Any CPU'">
     <LangVersion>latest</LangVersion>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' or '$(Configuration)|$(Platform)'=='Release|Any CPU'">
     <LangVersion>latest</LangVersion>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

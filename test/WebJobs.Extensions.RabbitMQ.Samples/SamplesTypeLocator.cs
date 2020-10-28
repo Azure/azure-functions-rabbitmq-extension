@@ -9,7 +9,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
 {
     public class SamplesTypeLocator : ITypeLocator
     {
-        private Type[] _types;
+        private readonly Type[] _types;
 
         public SamplesTypeLocator(params Type[] types)
         {

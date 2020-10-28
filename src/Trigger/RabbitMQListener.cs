@@ -60,6 +60,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
         }
 
+        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
+        {
+            Debug.Assert(count > 1, "count must be greater than 1.");
+            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
+
+            // Walks through the list from left to right starting at len(samples) - count.
+            for (int i = samples.Count - count; i < samples.Count - 1; i++)
+            {
+                if (!predicate(samples[i], samples[i + 1]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public void Cancel()
         {
             StopAsync(CancellationToken.None).Wait();
@@ -143,6 +160,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal void RepublishMessages(BasicDeliverEventArgs ea)
         {
             int requeueCount = Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]);
+
             // Redelivered again
             requeueCount++;
             ea.BasicProperties.Headers[Constants.RequeueCount] = requeueCount;
@@ -256,23 +274,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             _logger.LogInformation($"Queue '{_queueName}' is steady");
             return status;
-        }
-
-        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
-        {
-            Debug.Assert(count > 1, "count must be greater than 1.");
-            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
-
-            // Walks through the list from left to right starting at len(samples) - count.
-            for (int i = samples.Count - count; i < samples.Count - 1; i++)
-            {
-                if (!predicate(samples[i], samples[i + 1]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }

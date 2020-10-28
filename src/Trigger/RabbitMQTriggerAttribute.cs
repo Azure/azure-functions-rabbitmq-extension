@@ -9,7 +9,6 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-
         public RabbitMQTriggerAttribute(string queueName)
         {
             QueueName = queueName;

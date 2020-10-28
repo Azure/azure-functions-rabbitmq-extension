@@ -21,7 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly IOptions<RabbitMQOptions> _options;
         private readonly INameResolver _nameResolver;
         private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
-        private ILogger _logger;
+        private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
         public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration)
@@ -35,7 +35,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Initialize(ExtensionConfigContext context)
         {
-
             if (context == null)
             {
                 throw new ArgumentNullException("context");
@@ -92,7 +91,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
             string deadLetterExchangeName = Utility.FirstOrDefault(attribute.DeadLetterExchangeName, _options.Value.DeadLetterExchangeName);
-
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
