@@ -13,7 +13,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
     {
         [Theory]
         [InlineData("", "localhost", "guest", "guest", 5672, "", "localhost", "guest", "guest", 5672)]
-        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", null, null, null, 8080, "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672)]
+        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", null, null, null, 0, "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672)]
         [InlineData("", "localhost", null, null, 0, "", "localhost", "guest", "guest", -1)] // Should fill in "guest", "guest", 5672
         public void Handles_Connection_Attributes_And_Options(string connectionString, string hostName, string userName, string password, int port,
             string expectedConnectionString, string expectedHostName, string expectedUserName, string expectedPassword, int expectedPort)
