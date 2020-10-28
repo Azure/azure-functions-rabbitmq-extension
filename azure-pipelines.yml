@@ -1,0 +1,146 @@
+pr:
+  branches:
+    include:
+    - dev
+    - release/1*
+
+trigger:
+  branches:
+    include:
+    - dev
+    - release/1*
+    
+jobs:
+- job: InitializePipeline
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: PowerShell@2
+    displayName: 'Initialize'
+    name: Initialize
+    inputs:
+      filePath: '$(Build.Repository.LocalPath)\build\initialize-pipeline.ps1'
+      arguments: '-versionPath ''$(Build.Repository.LocalPath)\src'''
+      
+- job: BuildArtifacts
+  dependsOn: InitializePipeline
+  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)))
+  variables:
+    releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
+    buildCounter: $[counter(variables['releaseVersionNumber'], 1)]
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: PowerShell@2 
+    displayName: 'VersioningAndSigning'
+    name: 'VersioningAndSigning'
+    inputs:
+      filePath: '$(Build.Repository.LocalPath)\build\DetermineVersionAndSigning.ps1'
+      arguments: '-releaseVersionNumber ''$(releaseVersionNumber)'' -buildCounter ''$(buildCounter)'''
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '2.x'
+      performMultiLevelLookup: true
+  - task: DotNetCoreCLI@2
+    displayName: 'Build RabbitMQ package'
+    inputs:
+      command: 'custom'
+      custom: 'build'
+      arguments: -p:Version=$(VersioningAndSigning.FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release
+      projects: |
+        **\WebJobs.Extensions.RabbitMQ.csproj
+  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+    displayName: 'ESRP CodeSigning: Strong Name and Authenticode'
+    inputs:
+      ConnectedServiceName: 'ESRP Service'
+      FolderPath: 'src\bin\Release\netstandard2.0'
+      Pattern: WebJobs.Extensions.RabbitMQ*.dll
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolSign",
+            "Parameters": {
+              "OpusName": "Microsoft",
+              "OpusInfo": "http://www.microsoft.com",
+              "FileDigest": "/fd \"SHA256\"",
+              "PageHash": "/NPH",
+              "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+            },
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-230012",
+            "OperationCode": "SigntoolVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+        ]
+    condition: and(succeeded(), startsWith(variables['VersioningAndSigning.SignArtifacts'], 'true')) 
+  - task: DeleteFiles@1
+    displayName: 'Delete CodeSignSummary files'
+    inputs:
+      contents: '**\CodeSignSummary-*.md'
+    condition: and(succeeded(), startsWith(variables['VersioningAndSigning.SignArtifacts'], 'true')) 
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack RabbitMQ package'
+    inputs:
+      command: 'custom'
+      custom: 'pack'
+      arguments: '--no-build -p:Version=$(VersioningAndSigning.FullVersionNumber) -p:CommitHash=$(Build.SourceVersion) -c Release -o packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
+      projects: |
+        **\WebJobs.Extensions.RabbitMQ.csproj
+  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+    displayName: 'ESRP CodeSigning: Nupkg'
+    inputs:
+      ConnectedServiceName: 'ESRP Service'
+      FolderPath: 'packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ'
+      Pattern: 'Microsoft.Azure.WebJobs.Extensions.RabbitMQ*.nupkg'
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+            {
+              "KeyCode": "CP-401405",
+              "OperationCode": "NuGetSign",
+              "Parameters": {},
+              "ToolName": "sign",
+              "ToolVersion": "1.0"
+            },
+            {
+              "KeyCode": "CP-401405",
+              "OperationCode": "NuGetVerify",
+              "Parameters": {},
+              "ToolName": "sign",
+              "ToolVersion": "1.0"
+            }
+        ]
+    condition: and(succeeded(), startsWith(variables['VersioningAndSigning.SignArtifacts'], 'true')) 
+  - task: DeleteFiles@1
+    displayName: 'Delete CodeSignSummary files'
+    inputs:
+      contents: '**\CodeSignSummary-*.md'
+    condition: and(succeeded(), startsWith(variables['VersioningAndSigning.SignArtifacts'], 'true'))
+  - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+
+- job: RunTests
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps: 
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '2.x'
+      performMultiLevelLookup: true
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests'
+    inputs:
+      command: 'test'
+      testRunTitle: 'Tests'
+      arguments: '-v n'
+      projects: |
+        **\WebJobs.Extensions.RabbitMQ.Tests.csproj
+
