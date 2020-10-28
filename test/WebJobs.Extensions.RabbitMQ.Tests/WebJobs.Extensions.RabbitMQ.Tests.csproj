@@ -17,6 +17,14 @@
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
   </ItemGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <CodeAnalysisRuleSet>WebJobs.Extensions.RabbitMQ.Tests.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <CodeAnalysisRuleSet>WebJobs.Extensions.RabbitMQ.Tests.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WebJobs.Extensions.RabbitMQ.csproj" />
