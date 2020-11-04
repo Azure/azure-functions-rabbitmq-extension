@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
@@ -17,16 +18,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal class RabbitMQTriggerBinding : ITriggerBinding
     {
         private readonly IRabbitMQService _service;
+        private readonly ILogger _logger;
+        private readonly ParameterInfo _parameter;
         private readonly string _queueName;
         private readonly string _hostName;
-        private readonly ILogger _logger;
 
-        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger)
+        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger, ParameterInfo parameter)
         {
             _service = service;
             _queueName = queueName;
             _hostName = hostname;
             _logger = logger;
+            _parameter = parameter;
             BindingDataContract = CreateBindingDataContract();
         }
 
@@ -43,9 +46,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
             BasicDeliverEventArgs message = value as BasicDeliverEventArgs;
-
             IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
-            return Task.FromResult<ITriggerData>(new TriggerData(null, bindingData));
+
+            return Task.FromResult<ITriggerData>(new TriggerData(new EventArgsValueProvider(message, _parameter.ParameterType), bindingData));
         }
 
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
