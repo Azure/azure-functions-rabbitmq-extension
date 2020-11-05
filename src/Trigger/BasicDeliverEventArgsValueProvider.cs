@@ -10,11 +10,11 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    public class EventArgsValueProvider : IValueProvider
+    public class BasicDeliverEventArgsValueProvider : IValueProvider
     {
         private readonly BasicDeliverEventArgs _input;
 
-        public EventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType)
+        public BasicDeliverEventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType)
         {
             _input = input;
             Type = destinationType;
@@ -24,8 +24,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task<object> GetValueAsync()
         {
-            string inputValue = ToInvokeString();
+            if (Type.Equals(typeof(BasicDeliverEventArgs)))
+            {
+                return Task.FromResult<object>(_input);
+            }
 
+            string inputValue = ToInvokeString();
             if (Type.Equals(typeof(string)))
             {
                 return Task.FromResult<object>(inputValue);
@@ -39,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 catch (JsonException e)
                 {
                     // Give useful error if object in queue is not deserialized properly.
-                    string msg = string.Format(@"Binding parameters to complex objects (such as '{0}') uses Json.NET serialization. The JSON parser failed: {1}", Type.Name, e.Message);
+                    string msg = string.Format(@"Binding parameters to complex objects (such as '{0}') uses Json.NET serialization. The JSON parser failed: {1} with stackTrace: {2}", Type.Name, e.Message, e.StackTrace);
                     throw new InvalidOperationException(msg);
                 }
             }

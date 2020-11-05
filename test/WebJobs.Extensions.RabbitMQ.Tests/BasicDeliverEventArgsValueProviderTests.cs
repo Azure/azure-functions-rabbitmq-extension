@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Framing;
 using Xunit;
 
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
-    public class EventArgsValueProviderTests
+    public class BasicDeliverEventArgsValueProviderTests
     {
 
         [Fact]
@@ -22,7 +23,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             string expectedStringifiedJson = JsonConvert.SerializeObject(expectedObject);
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedStringifiedJson);
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            EventArgsValueProvider testValueProvider = new EventArgsValueProvider(args, typeof(TestClass));
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
 
             TestClass actualObject = (TestClass)await testValueProvider.GetValueAsync();
 
@@ -39,7 +40,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             string expectedStringifiedJson = JsonConvert.SerializeObject(expectedObject);
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedStringifiedJson);
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            EventArgsValueProvider testValueProvider = new EventArgsValueProvider(args, typeof(string));
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
 
             string actualStringifiedJson = (string)await testValueProvider.GetValueAsync();
             TestClass actualObject = (TestClass)JsonConvert.DeserializeObject(actualStringifiedJson, typeof(TestClass));
@@ -51,12 +52,27 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Fact]
+        public async Task BasicDeliverEventArgs_NoConversion_Succeeds()
+        {
+            string expectedString = "someString";
+            byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
+            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", new BasicProperties(), stringInBytes);
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(BasicDeliverEventArgs));
+
+            BasicDeliverEventArgs actualObject = (BasicDeliverEventArgs)await testValueProvider.GetValueAsync();
+
+            Assert.Equal(actualObject, exceptedObject);
+            Assert.True(Object.ReferenceEquals(actualObject, exceptedObject));
+            Assert.Equal(typeof(BasicDeliverEventArgs), testValueProvider.Type);
+        }
+
+        [Fact]
         public async Task NormalString_Conversion_Succeeds()
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            EventArgsValueProvider testValueProvider = new EventArgsValueProvider(args, typeof(string));
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
 
             string actualString = (string)await testValueProvider.GetValueAsync();
 
@@ -70,7 +86,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             string expectedString = "someString";
             byte[] objJsonBytes = Encoding.UTF8.GetBytes(expectedString);
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, objJsonBytes);
-            EventArgsValueProvider testValueProvider = new EventArgsValueProvider(args, typeof(TestClass));
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => testValueProvider.GetValueAsync());
         }
