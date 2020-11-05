@@ -51,8 +51,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
 
-            // Note that triggerRule.BindToTrigger<BasicDeliverEventArgs> pattern fires up TriggerAdapterBindingProvider which does not respect RequestedType for out-of-proc languages.
-            // Also note that converter logic for this is part of IValueProvider since converters didn't fire for trigger being specified in the below way.
+            // More details about why the BindToTrigger was chosen instead of BindToTrigger<BasicDeliverEventArgs> detailed here https://github.com/Azure/azure-functions-rabbitmq-extension/issues/110
             triggerRule.BindToTrigger(new RabbitMQTriggerAttributeBindingProvider(
                     _nameResolver,
                     this,
