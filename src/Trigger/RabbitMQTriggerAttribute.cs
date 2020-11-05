@@ -37,7 +37,5 @@ namespace Microsoft.Azure.WebJobs
         public string PasswordSetting { get; set; }
 
         public int Port { get; set; }
-
-        public string DeadLetterExchangeName { get; set; }
     }
 }

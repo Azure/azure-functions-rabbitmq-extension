@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.Azure.WebJobs.Description;
-using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs
 {
@@ -40,8 +39,5 @@ namespace Microsoft.Azure.WebJobs
 
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
-
-        [AutoResolve]
-        public string DeadLetterExchangeName { get; set; }
     }
 }
