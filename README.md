@@ -36,7 +36,6 @@ The above sample waits on a trigger from the queue named "queue" connected to th
 |--|--|--|
 |ConnectionStringSetting|The connection string for the RabbitMQ queue|`amqp://user:password@url:port`|
 |QueueName|The name of the source or destination queue|`myQueue`|
-|DeadLetterExchangeName|The name of the deadletter exchange for poison queue patterns|`dtxExchange`|
 |HostName|(optional if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
 |UserName|(optional if using ConnectionStringSetting) User name to access queue|`user`|
 |Password|(optional if using ConnectionStringSetting) Password to access queue|`password1`|
