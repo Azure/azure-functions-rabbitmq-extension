@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
@@ -18,7 +17,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly string _userName;
         private readonly string _password;
         private readonly int _port;
-        private readonly string _deadLetterExchangeName;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
@@ -33,29 +31,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model = connectionFactory.CreateConnection().CreateModel();
         }
 
-        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port, string deadLetterExchangeName)
+        public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
             : this(connectionString, hostName, userName, password, port)
         {
             _rabbitMQModel = new RabbitMQModel(_model);
-
-            _deadLetterExchangeName = deadLetterExchangeName;
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
-            Dictionary<string, object> args = new Dictionary<string, object>();
-
-            // Create dead letter queue
-            if (!string.IsNullOrEmpty(_deadLetterExchangeName))
-            {
-                string deadLetterQueueName = string.Format("{0}-poison", _queueName);
-                _model.QueueDeclare(queue: deadLetterQueueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-                _model.ExchangeDeclare(_deadLetterExchangeName, Constants.DefaultDLXSetting);
-                _model.QueueBind(deadLetterQueueName, _deadLetterExchangeName, Constants.DeadLetterRoutingKeyValue, null);
-
-                args[Constants.DeadLetterExchangeKey] = _deadLetterExchangeName;
-                args[Constants.DeadLetterRoutingKey] = Constants.DeadLetterRoutingKeyValue;
-            }
-
-            _model.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: args);
+            _model.QueueDeclarePassive(_queueName); // Throws exception if queue doesn't exist
             _batch = _model.CreateBasicPublishBatch();
         }
 
