@@ -65,7 +65,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
             _logger.LogInformation("Setting hostName to localhost since it was not specified");
-            _ = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
 
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
