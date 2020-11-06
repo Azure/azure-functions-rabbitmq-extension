@@ -43,8 +43,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 catch (JsonException e)
                 {
                     // Give useful error if object in queue is not deserialized properly.
-                    string msg = string.Format(@"Binding parameters to complex objects (such as '{0}') uses Json.NET serialization. The JSON parser failed: {1} with stackTrace: {2}", Type.Name, e.Message, e.StackTrace);
-                    throw new InvalidOperationException(msg);
+                    string msg = string.Format(@"Binding parameters to complex objects (such as '{0}') uses Json.NET serialization. The JSON parser failed: {1}", Type.Name, e.Message);
+                    throw new InvalidOperationException(msg, e);
                 }
             }
         }
