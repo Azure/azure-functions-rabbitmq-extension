@@ -67,6 +67,20 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         }
 
         [Fact]
+        public async Task ByteArray_Conversion_Succeeds()
+        {
+            string expectedString = "someString";
+            byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
+            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", new BasicProperties(), stringInBytes);
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(byte[]));
+
+            byte[] actualResult = (byte[])await testValueProvider.GetValueAsync();
+
+            Assert.Equal(expectedString, Encoding.UTF8.GetString(actualResult));
+            Assert.Equal(typeof(byte[]), testValueProvider.Type);
+        }
+
+        [Fact]
         public async Task NormalString_Conversion_Succeeds()
         {
             string expectedString = "someString";

@@ -28,6 +28,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return Task.FromResult<object>(_input);
             }
+            else if (Type.Equals(typeof(byte[])))
+            {
+                return Task.FromResult<object>(_input.Body);
+            }
 
             string inputValue = ToInvokeString();
             if (Type.Equals(typeof(string)))
