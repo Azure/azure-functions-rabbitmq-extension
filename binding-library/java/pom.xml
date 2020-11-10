@@ -95,6 +95,17 @@
             <artifactId>azure-functions-java-library</artifactId>
             <version>${azure.functions.java.library.version}</version>
         </dependency>
+        <dependency>
+			    <groupId>junit</groupId>
+			    <artifactId>junit</artifactId>
+			    <scope>test</scope>
+		    </dependency>
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <version>4.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
