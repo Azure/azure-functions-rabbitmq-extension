@@ -18,7 +18,7 @@ import com.microsoft.azure.functions.annotation.CustomBinding;
  * The parameter can be one of the following</p>
  *
  * <ul>
- *     <li>A String java native type</li>
+ *     <li>Any native Java types such as int, String, byte[]</li>
  *     <li>Any POJO type</li>
  * </ul>
  */
