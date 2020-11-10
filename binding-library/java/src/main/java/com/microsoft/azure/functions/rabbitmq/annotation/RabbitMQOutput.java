@@ -21,6 +21,24 @@ import com.microsoft.azure.functions.annotation.CustomBinding;
  *     <li>Any native Java types such as int, String, byte[]</li>
  *     <li>Any POJO type</li>
  * </ul>
+ * <p>The following example is a Java function that uses a RabbitMQ trigger and output binding.</p>
+ *
+ * <pre>{@literal @}FunctionName("RabbitMQExample")
+ * public void run(
+ *    {@literal @}@RabbitMQTrigger(
+ *               connectionStringSetting = "ConnectionString",
+ *               queueName = "TestQueue"
+ *           ) String input,
+ *    {@literal@}@RabbitMQOutput(
+ *               connectionStringSetting = "ConnectionString",
+ *               queueName = "hello"
+ *           ) OutputBinding<String> output,
+ *     final ExecutionContext context
+ * ) {
+ *     context.getLogger().info("Java RabbitMQ trigger processed a request." + input);
+ *     output.setValue(input);
+ * }</pre>
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER, ElementType.METHOD})

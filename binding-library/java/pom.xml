@@ -15,12 +15,7 @@
 	</parent>
 
     <name>Microsoft Azure Functions Java RabbitMQ types</name>
-    <description>This package contains all Java interfaces and annotations to interact with Microsoft Azure functions runtime for RabbitMQ Service.</description>
-    <!--<url> URL to docs to be added</url>-->
-    <organization>
-        <name>Microsoft Azure</name>
-        <url>https://azure.microsoft.com</url>
-    </organization>
+    <description>This package contains all Java interfaces and annotations to interact with Microsoft Azure Functions runtime for RabbitMQ Service.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -96,9 +91,9 @@
             <version>${azure.functions.java.library.version}</version>
         </dependency>
         <dependency>
-			    <groupId>junit</groupId>
-			    <artifactId>junit</artifactId>
-			    <scope>test</scope>
+			      <groupId>junit</groupId>
+			      <artifactId>junit</artifactId>
+			      <scope>test</scope>
 		    </dependency>
         <dependency>
             <groupId>org.easymock</groupId>
