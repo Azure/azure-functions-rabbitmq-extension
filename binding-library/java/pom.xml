@@ -9,10 +9,10 @@
     <version>1.0.0-beta</version>
     <packaging>jar</packaging>
     <parent>
-		<groupId>com.microsoft.maven</groupId>
-		<artifactId>java-8-parent</artifactId>
-		<version>8.0.1</version>
-	</parent>
+        <groupId>com.microsoft.maven</groupId>
+        <artifactId>java-8-parent</artifactId>
+        <version>8.0.1</version>
+    </parent>
 
     <name>Microsoft Azure Functions Java RabbitMQ types</name>
     <description>This package contains all Java interfaces and annotations to interact with Microsoft Azure Functions runtime for RabbitMQ Service.</description>
@@ -92,7 +92,7 @@
         </dependency>
         <dependency>
             <groupId>junit</groupId>
-		    <artifactId>junit</artifactId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
