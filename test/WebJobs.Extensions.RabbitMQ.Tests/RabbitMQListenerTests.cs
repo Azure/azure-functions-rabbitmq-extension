@@ -41,8 +41,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             _mockOptions.Setup(a => a.Value).Returns(new RabbitMQOptions()
             {
-                PrefetchOptions = new PrefetchOptions(),
-                ScaleOptions = new ScaleOptions()
+                PrefetchOptions = new PrefetchOptions()
             });
             QueueDeclareOk queueInfo = new QueueDeclareOk("blah", 5, 1);
             _mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
