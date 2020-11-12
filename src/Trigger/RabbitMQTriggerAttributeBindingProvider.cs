@@ -68,7 +68,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger, parameter.ParameterType));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger, parameter.ParameterType, _options));
         }
 
         private string Resolve(string name)

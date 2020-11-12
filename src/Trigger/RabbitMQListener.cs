@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -13,6 +12,7 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -22,6 +22,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
+        private readonly int _sampleCount;
+        private readonly int _targetQueueLength;
+        private readonly ushort _prefetchSize;
+        private readonly ushort _prefetchCount;
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
         private readonly FunctionDescriptor _functionDescriptor;
@@ -40,7 +44,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             IRabbitMQService service,
             string queueName,
             ILogger logger,
-            FunctionDescriptor functionDescriptor)
+            FunctionDescriptor functionDescriptor,
+            IOptions<RabbitMQOptions> options)
         {
             _executor = executor;
             _service = service;
@@ -50,6 +55,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
             _scaleMonitorDescriptor = new ScaleMonitorDescriptor($"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower());
+            _sampleCount = options.Value.ScaleOptions?.SampleCount ?? 5;
+            _targetQueueLength = options.Value.ScaleOptions?.TargetQueueLength ?? 1000;
+            _prefetchCount = options.Value.PrefetchOptions?.PrefetchCount ?? 30;
+            _prefetchSize = options.Value.PrefetchOptions?.PrefetchSize ?? 0;
         }
 
         public ScaleMonitorDescriptor Descriptor
@@ -95,8 +104,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            // TODO: Add prefetch params as part of RabbitMQOptions
-            _rabbitMQModel.BasicQos(0, 30, false);
+            _rabbitMQModel.BasicQos(_prefetchSize, _prefetchCount, false);
             _consumer = new EventingBasicConsumer(_rabbitMQModel.Model);
 
             _consumer.Received += async (model, ea) =>
@@ -145,8 +153,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
         {
-            _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
-
             if (ea.BasicProperties.Headers == null)
             {
                 ea.BasicProperties.Headers = new Dictionary<string, object>();
@@ -155,6 +161,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
             _logger.LogDebug("Republishing message");
             _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+            _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
         }
 
         internal void RepublishMessages(BasicDeliverEventArgs ea)
@@ -167,9 +174,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             if (Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]) < 5)
             {
-                _rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but resend
                 _logger.LogDebug("Republishing message");
                 _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+                _rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but ack after resend
             }
             else
             {
@@ -221,16 +228,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Vote = ScaleVote.None,
             };
 
-            const int NumberOfSamplesToConsider = 5;
+            int numberOfSamplesToConsider = _sampleCount;
 
-            if (metrics == null || metrics.Length < NumberOfSamplesToConsider)
+            if (metrics == null || metrics.Length < numberOfSamplesToConsider)
             {
                 return status;
             }
 
             long latestQueueLength = metrics.Last().QueueLength;
 
-            if (latestQueueLength > workerCount * 1000)
+            if (latestQueueLength > workerCount * _targetQueueLength)
             {
                 status.Vote = ScaleVote.ScaleOut;
                 _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
@@ -250,7 +257,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             bool queueLengthIncreasing =
                 IsTrueForLast(
                     metrics,
-                    NumberOfSamplesToConsider,
+                    numberOfSamplesToConsider,
                     (prev, next) => prev.QueueLength < next.QueueLength) && metrics[0].QueueLength > 0;
 
             if (queueLengthIncreasing)
@@ -263,7 +270,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             bool queueLengthDecreasing =
                 IsTrueForLast(
                     metrics,
-                    NumberOfSamplesToConsider,
+                    numberOfSamplesToConsider,
                     (prev, next) => prev.QueueLength > next.QueueLength);
 
             if (queueLengthDecreasing)
