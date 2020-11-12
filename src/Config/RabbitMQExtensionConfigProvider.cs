@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
@@ -51,19 +50,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
 
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
-            triggerRule.BindToTrigger<BasicDeliverEventArgs>(new RabbitMQTriggerAttributeBindingProvider(
+
+            // More details about why the BindToTrigger was chosen instead of BindToTrigger<BasicDeliverEventArgs> detailed here https://github.com/Azure/azure-functions-rabbitmq-extension/issues/110
+            triggerRule.BindToTrigger(new RabbitMQTriggerAttributeBindingProvider(
                     _nameResolver,
                     this,
                     _logger,
                     _options,
                     _configuration));
-
-            // Converts BasicDeliverEventArgs to string so user can extract received message.
-            triggerRule.AddConverter<BasicDeliverEventArgs, string>(args => Encoding.UTF8.GetString(args.Body))
-                .AddConverter<BasicDeliverEventArgs, DirectInvokeString>((args) => new DirectInvokeString(null));
-
-            // Convert BasicDeliverEventArgs --> string-- > JSON-- > POCO
-            triggerRule.AddOpenConverter<BasicDeliverEventArgs, OpenType.Poco>(typeof(BasicDeliverEventArgsToPocoConverter<>), _logger);
         }
 
         public void ValidateBinding(RabbitMQAttribute attribute, Type type)
@@ -71,7 +65,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
             string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
             _logger.LogInformation("Setting hostName to localhost since it was not specified");
-            string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
 
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
