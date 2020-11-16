@@ -28,8 +28,7 @@ jobs:
   steps:
   - task: BatchScript@1
     inputs:
-       filename: 'mvnBuild.bat'
-       workingFolder: '$(Build.Repository.LocalPath)\binding-library\java'
+       filename: '$(Build.Repository.LocalPath)\binding-library\java\mvnBuild.bat'
       
 - job: BuildArtifacts
   dependsOn: 
