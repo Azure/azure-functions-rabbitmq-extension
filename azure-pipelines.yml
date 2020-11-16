@@ -21,9 +21,20 @@ jobs:
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\initialize-pipeline.ps1'
       arguments: '-versionPath ''$(Build.Repository.LocalPath)\src'''
+
+- job: MvnBuild
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: BatchScript@1
+    inputs:
+       filename: 'mvnBuild.bat'
+       workingFolder: '$(Build.Repository.LocalPath)\binding-library\java'
       
 - job: BuildArtifacts
-  dependsOn: InitializePipeline
+  dependsOn: 
+    - InitializePipeline
+    - MvnBuild
   condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)))
   variables:
     releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
