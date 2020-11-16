@@ -136,7 +136,16 @@ jobs:
     inputs:
       contents: '**\CodeSignSummary-*.md'
     condition: and(succeeded(), startsWith(variables['VersioningAndSigning.SignArtifacts'], 'true'))
+  - task: PowerShell@2
+    displayName: 'Mvn package'
+    name: MvnBuildAndPackage
+    inputs:
+      filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\$(outputXmlFileName).xml
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\$(outputXmlFileName).jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\$(outputXmlFileName)-javadoc.jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\$(outputXmlFileName)-sources.jar
 
 - job: RunTests
   pool:
