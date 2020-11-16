@@ -1,1 +1,2 @@
-cmd.exe /c '../binding-library/java/mvnBuild.bat'
+cd ../binding-library/java
+cmd.exe /c 'mvnBuild.bat'
