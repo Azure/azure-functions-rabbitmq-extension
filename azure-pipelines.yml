@@ -26,9 +26,11 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   steps:
-  - task: BatchScript@1
+  - task: PowerShell@2
+    displayName: 'Mvn build'
+    name: MvnBuild
     inputs:
-       filename: '$(Build.Repository.LocalPath)\binding-library\java\mvnBuild.bat'
+      filePath: '$(Build.Repository.LocalPath)\build\mvnBuild.ps1'
       
 - job: BuildArtifacts
   dependsOn: 
