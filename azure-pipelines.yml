@@ -148,10 +148,7 @@ jobs:
       filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
       arguments: '-mvnPrefix ''$(mvnPrefix)'''
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.xml
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.jar
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}-javadoc.jar
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}-sources.jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\ToBePublished
 
 - job: RunTests
   pool:
