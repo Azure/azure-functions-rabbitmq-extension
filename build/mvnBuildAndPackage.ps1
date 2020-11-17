@@ -8,9 +8,6 @@ Write-Host "Mvn prefix is $mvnPrefix"
 cd binding-library/java
 .\mvnBuild.bat
 
-#Copy pom.xml to target fileName
-#Copy-Item pom.xml "target\$mvnPrefix.xml"
-
 #Copy items to be published
 mkdir ToBePublished
 Copy-Item pom.xml "ToBePublished\$mvnPrefix.xml"
