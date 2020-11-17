@@ -40,7 +40,7 @@ jobs:
   condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)))
   variables:
     releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
-    mvnPackagePrefix: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackagePrefix']]
+    mvnPrefix: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackagePrefix']]
     buildCounter: $[counter(variables['releaseVersionNumber'], 1)]
   pool:
     vmImage: 'vs2017-win2016'
@@ -144,10 +144,10 @@ jobs:
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPackagePrefix }}.xml
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPackagePrefix }}.jar
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPackagePrefix }}-javadoc.jar
-  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPackagePrefix }}-sources.jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.xml
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}-javadoc.jar
+  - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}-sources.jar
 
 - job: RunTests
   pool:
