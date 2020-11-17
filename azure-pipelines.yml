@@ -142,7 +142,7 @@ jobs:
     displayName: 'Mvn package'
     name: MvnBuildAndPackage
     inputs:
-      filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
+      filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1 -mvnPrefix ''$(mvnPrefix)'''
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
   - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.xml
   - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.jar
