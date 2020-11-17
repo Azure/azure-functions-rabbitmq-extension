@@ -4,10 +4,11 @@ param(
 )
 
 #Figure out mvn build number
-[XML]$xmlContent = Get-Content "$javaPath\\pom.xml"
+$xmlContent = [XML] (Get-Content "$javaPath\\pom.xml")
 $artifactId = $xmlContent.project.artifactId
 $version = $xmlContent.project.version
-$outputXmlFileName = "$artifactid-$version"
+$outputXmlFileName = ([string] ("$artifactid-$version")).Trim()
+Write-Host "Prefix generated from pom.xml is $outputXmlFileName"
 Write-Host "##vso[task.setvariable variable=MvnPackagePrefix;isOutput=true]$outputXmlFileName"
 
 # Figure out nuget build number
