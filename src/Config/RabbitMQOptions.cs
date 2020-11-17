@@ -1,24 +1,78 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Hosting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    public class RabbitMQOptions
+    /// <summary>
+    /// Configuration options for the RabbitMQ extension.
+    /// </summary>
+    public class RabbitMQOptions : IOptionsFormatter
     {
+        public RabbitMQOptions()
+        {
+            PrefetchOptions = new PrefetchOptions();
+        }
+
+        /// <summary>
+        /// Gets or sets the HostName used to authenticate with RabbitMQ.
+        /// </summary>
         public string HostName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the QueueName to receive messages from or enqueue messages to.
+        /// </summary>
         public string QueueName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the UserName used to authenticate with RabbitMQ.
+        /// </summary>
         public string UserName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Password used to authenticate with RabbitMQ.
+        /// </summary>
         public string Password { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ConnectionString used to authenticate with RabbitMQ.
+        /// </summary>
         public string ConnectionString { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Port used. Defaults to 0.
+        /// </summary>
         public int Port { get; set; }
 
+        /// <summary>
+        /// Gets or sets the prefetch options while creating the RabbitMQ model.
+        /// </summary>
         public PrefetchOptions PrefetchOptions { get; set; }
 
-        public ScaleOptions ScaleOptions { get; set; }
+        public string Format()
+        {
+            JObject prefetchOptions = null;
+            if (PrefetchOptions != null)
+            {
+                prefetchOptions = new JObject
+                {
+                    { nameof(PrefetchOptions.PrefetchSize), PrefetchOptions.PrefetchSize },
+                    { nameof(PrefetchOptions.PrefetchCount), PrefetchOptions.PrefetchCount },
+                };
+            }
+
+            JObject options = new JObject
+            {
+                { nameof(HostName), HostName },
+                { nameof(QueueName), QueueName },
+                { nameof(Port), Port },
+                { nameof(PrefetchOptions), prefetchOptions },
+            };
+
+            return options.ToString(Formatting.Indented);
+        }
     }
 }

@@ -22,9 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
-        private readonly int _sampleCount;
-        private readonly int _targetQueueLength;
-        private readonly ushort _prefetchSize;
+        private readonly uint _prefetchSize;
         private readonly ushort _prefetchCount;
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
@@ -55,10 +53,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
             _scaleMonitorDescriptor = new ScaleMonitorDescriptor($"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower());
-            _sampleCount = options.Value.ScaleOptions?.SampleCount ?? 5;
-            _targetQueueLength = options.Value.ScaleOptions?.TargetQueueLength ?? 1000;
-            _prefetchCount = options.Value.PrefetchOptions?.PrefetchCount ?? 30;
-            _prefetchSize = options.Value.PrefetchOptions?.PrefetchSize ?? 0;
+            _prefetchCount = options.Value.PrefetchOptions.PrefetchCount;
+            _prefetchSize = options.Value.PrefetchOptions.PrefetchSize;
         }
 
         public ScaleMonitorDescriptor Descriptor
@@ -228,7 +224,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 Vote = ScaleVote.None,
             };
 
-            int numberOfSamplesToConsider = _sampleCount;
+            // TODO: Make the below two ints configurable.
+            int numberOfSamplesToConsider = 5;
+            int targetQueueLength = 1000;
 
             if (metrics == null || metrics.Length < numberOfSamplesToConsider)
             {
@@ -237,7 +235,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             long latestQueueLength = metrics.Last().QueueLength;
 
-            if (latestQueueLength > workerCount * _targetQueueLength)
+            if (latestQueueLength > workerCount * targetQueueLength)
             {
                 status.Vote = ScaleVote.ScaleOut;
                 _logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
