@@ -38,7 +38,7 @@ jobs:
   dependsOn: 
     - InitializePipeline
     - MvnBuild
-  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)))
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true))
   variables:
     releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
     mvnPackagePrefix: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackagePrefix']]
