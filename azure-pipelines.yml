@@ -25,6 +25,8 @@ jobs:
 - job: MvnBuild
   dependsOn: InitializePipeline
   condition: ne(dependencies.InitializePipeline.outputs['Initialize.BuildArtifacts'], true)
+  variables:
+    mvnPrefix: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackagePrefix']]
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -33,6 +35,7 @@ jobs:
     name: MvnBuild
     inputs:
       filePath: '$(Build.Repository.LocalPath)\build\MvnBuildAndPackage.ps1'
+      arguments: '-mvnPrefix ''$(mvnPrefix)'''
       
 - job: BuildArtifacts
   dependsOn: 
@@ -142,7 +145,8 @@ jobs:
     displayName: 'Mvn package'
     name: MvnBuildAndPackage
     inputs:
-      filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1 -mvnPrefix ''$(mvnPrefix)'''
+      filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
+      arguments: '-mvnPrefix ''$(mvnPrefix)'''
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
   - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.xml
   - publish: $(Build.Repository.LocalPath)\binding-library\java\target\${{ variables.mvnPrefix }}.jar
