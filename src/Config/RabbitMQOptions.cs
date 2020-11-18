@@ -14,7 +14,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         public RabbitMQOptions()
         {
-            PrefetchOptions = new PrefetchOptions();
+            PrefetchCount = 30;
         }
 
         /// <summary>
@@ -48,28 +48,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public int Port { get; set; }
 
         /// <summary>
-        /// Gets or sets the prefetch options while creating the RabbitMQ model.
+        /// Gets or sets the prefetch count while creating the RabbitMQ QoS. This seting controls how many values are cached.
         /// </summary>
-        public PrefetchOptions PrefetchOptions { get; set; }
+        public ushort PrefetchCount { get; set; }
 
         public string Format()
         {
-            JObject prefetchOptions = null;
-            if (PrefetchOptions != null)
-            {
-                prefetchOptions = new JObject
-                {
-                    { nameof(PrefetchOptions.PrefetchSize), PrefetchOptions.PrefetchSize },
-                    { nameof(PrefetchOptions.PrefetchCount), PrefetchOptions.PrefetchCount },
-                };
-            }
-
             JObject options = new JObject
             {
                 { nameof(HostName), HostName },
                 { nameof(QueueName), QueueName },
                 { nameof(Port), Port },
-                { nameof(PrefetchOptions), prefetchOptions },
+                { nameof(PrefetchCount), PrefetchCount },
             };
 
             return options.ToString(Formatting.Indented);

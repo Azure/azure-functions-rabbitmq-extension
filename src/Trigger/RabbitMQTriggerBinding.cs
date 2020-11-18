@@ -60,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _options));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _options.Value.PrefetchCount));
         }
 
         public ParameterDescriptor ToParameterDescriptor()

@@ -12,7 +12,6 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -22,7 +21,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly string _queueName;
-        private readonly uint _prefetchSize;
         private readonly ushort _prefetchCount;
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
@@ -43,7 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string queueName,
             ILogger logger,
             FunctionDescriptor functionDescriptor,
-            IOptions<RabbitMQOptions> options)
+            ushort prefetchCount)
         {
             _executor = executor;
             _service = service;
@@ -53,8 +51,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _functionDescriptor = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
             _functionId = functionDescriptor.Id;
             _scaleMonitorDescriptor = new ScaleMonitorDescriptor($"{_functionId}-RabbitMQTrigger-{_queueName}".ToLower());
-            _prefetchCount = options.Value.PrefetchOptions.PrefetchCount;
-            _prefetchSize = options.Value.PrefetchOptions.PrefetchSize;
+            _prefetchCount = prefetchCount;
         }
 
         public ScaleMonitorDescriptor Descriptor
@@ -100,7 +97,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            _rabbitMQModel.BasicQos(_prefetchSize, _prefetchCount, false);
+            _rabbitMQModel.BasicQos(0, _prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
             _consumer = new EventingBasicConsumer(_rabbitMQModel.Model);
 
             _consumer.Received += async (model, ea) =>
