@@ -9,7 +9,6 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -19,19 +18,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly IRabbitMQService _service;
         private readonly ILogger _logger;
-        private readonly IOptions<RabbitMQOptions> _options;
         private readonly Type _parameterType;
         private readonly string _queueName;
         private readonly string _hostName;
+        private readonly ushort _prefetchCount;
 
-        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger, Type parameterType, IOptions<RabbitMQOptions> options)
+        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger, Type parameterType, ushort prefetchCount)
         {
             _service = service;
             _queueName = queueName;
             _hostName = hostname;
             _logger = logger;
             _parameterType = parameterType;
-            _options = options;
+            _prefetchCount = prefetchCount;
             BindingDataContract = CreateBindingDataContract();
         }
 
@@ -60,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException("context");
             }
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _options.Value.PrefetchCount));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _prefetchCount));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
