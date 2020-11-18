@@ -1,8 +1,17 @@
 param(
-	[Parameter(Mandatory=$true)][string]$versionPath
+	[Parameter(Mandatory=$true)][string]$versionPath,
+	[Parameter(Mandatory=$true)][string]$javaPath
 )
 
-# Figure out the build number
+#Figure out mvn build number
+$xmlContent = [XML] (Get-Content "$javaPath\\pom.xml")
+$artifactId = $xmlContent.project.artifactId
+$version = $xmlContent.project.version
+$outputXmlFileName = ([string] ("$artifactid-$version")).Trim()
+Write-Host "Prefix generated from pom.xml is $outputXmlFileName"
+Write-Host "##vso[task.setvariable variable=MvnPackagePrefix;isOutput=true]$outputXmlFileName"
+
+# Figure out nuget build number
 $xml = [Xml] (Get-Content "$versionPath\\WebJobs.Extensions.RabbitMQ.csproj")
 $version = ([string]($xml.Project.PropertyGroup.Version)).Trim()
 

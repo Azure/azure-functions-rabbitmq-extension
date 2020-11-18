@@ -6,7 +6,7 @@
 
     <groupId>com.microsoft.azure.functions</groupId>
     <artifactId>azure-functions-java-library-rabbitmq</artifactId>
-    <version>1.0.0-beta</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <parent>
         <groupId>com.microsoft.maven</groupId>
@@ -126,6 +126,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc.version}</version>
+                <configuration>
+                    <doclint>none</doclint>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
