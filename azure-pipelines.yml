@@ -45,6 +45,7 @@ jobs:
     releaseVersionNumber: $[dependencies.InitializePipeline.outputs['Initialize.BuildNumber']]
     mvnPrefix: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackagePrefix']]
     buildCounter: $[counter(variables['releaseVersionNumber'], 1)]
+    mvnVersion: $[dependencies.InitializePipeline.outputs['Initialize.MvnPackageVersion']]
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -148,9 +149,9 @@ jobs:
       filePath: '$(Build.Repository.LocalPath)\build\mvnBuildAndPackage.ps1'
       arguments: '-mvnPrefix ''$(mvnPrefix)'''
   - publish: $(Build.Repository.LocalPath)\packages\Microsoft.Azure.WebJobs.Extensions.RabbitMQ
-    artifact: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.$(releaseVersionNumber)
+    artifact: NugetPackage
   - publish: $(Build.Repository.LocalPath)\binding-library\java\ToBePublished
-    artifact: $(mvnPrefix)
+    artifact: MavenPackage\$(mvnVersion)
 
 - job: RunTests
   pool:
