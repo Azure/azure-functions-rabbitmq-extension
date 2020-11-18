@@ -2,6 +2,9 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -71,6 +74,28 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             // Test formatted
             Assert.Equal(GetFormattedOption(options), options.Format());
+        }
+
+        [Fact]
+        public void TestJobHostHasTheRightConfiguration()
+        {
+            ushort expectedPrefetchCount = 10;
+
+            var builder = new HostBuilder()
+              .UseEnvironment("Development")
+              .ConfigureWebJobs(webJobsBuilder =>
+              {
+                  webJobsBuilder
+                  .AddRabbitMQ(a => a.PrefetchCount = expectedPrefetchCount); // set to non-default prefetch count
+              })
+              .UseConsoleLifetime();
+
+            var host = builder.Build();
+            using (host)
+            {
+                var config = host.Services.GetService<IOptions<RabbitMQOptions>>();
+                Assert.Equal(config.Value.PrefetchCount, expectedPrefetchCount);
+            }
         }
     }
 }
