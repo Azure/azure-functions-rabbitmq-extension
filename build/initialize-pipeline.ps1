@@ -20,9 +20,10 @@ $version = ([string]($xml.Project.PropertyGroup.Version)).Trim()
 
 $buildReason = $env:BUILD_REASON
 $branch = $env:BUILD_SOURCEBRANCH
-$buildArtifacts = $false
+$buildArtifacts = $true
 
 if ($buildReason -eq "PullRequest") {
+  $buildArtifacts = $false
   # parse PR title to see if we should pack this
   $response = Invoke-RestMethod api.github.com/repos/$env:BUILD_REPOSITORY_ID/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
   $title = $response.title.ToLowerInvariant()
