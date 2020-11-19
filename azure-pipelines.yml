@@ -2,13 +2,13 @@ pr:
   branches:
     include:
     - dev
-    - release/1*
+    - release/*
 
 trigger:
   branches:
     include:
     - dev
-    - release/1*
+    - release/*
     
 jobs:
 - job: InitializePipeline
