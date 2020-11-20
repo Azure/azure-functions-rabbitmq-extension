@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -9,7 +9,7 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>PublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
-    <Version>1.0.0-beta</Version>
+    <Version>1.1.0-beta</Version>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
     <Authors>Microsoft</Authors>
     <Product>Azure WebJobs RabbitMQ Extension</Product>
