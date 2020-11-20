@@ -3,7 +3,7 @@
 |dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-rabbitmq-extension?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=48&branchName=dev)|
 
 # RabbitMQ Binding Support for Azure Functions
-
+NuGet Package [Microsoft.Azure.WebJobs.Extensions.RabbitMQ](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.RabbitMQ)
 The Azure Functions RabbitMQ Binding extensions allows you to send and receive messages using the RabbitMQ API but by writing Functions code. The RabbitMQ output binding sends messages to a specific queue. The RabbitMQ trigger fires when it receives a message from a specific queue.
 
 [RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
