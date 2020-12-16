@@ -15,28 +15,41 @@ namespace Microsoft.Azure.WebJobs
 
     public sealed class RabbitMQAttribute : Attribute
     {
-        // <summary>
-        // Necessary for creating connections
-        // </summary>
+        /// <summary>
+        /// Gets or sets the HostName used to authenticate with RabbitMQ.
+        /// This is ignored if 'ConnectionStringSetting' is set.
+        /// </summary>
         [AutoResolve]
         public string HostName { get; set; }
 
-        // <summary>
-        // Necessary for sending and receiving messages
-        // Settings for creating and sending to/receiving from a queue.
-        // </summary>
+        /// <summary>
+        /// Gets or sets the QueueName to send messages to.
+        /// </summary>
         [AutoResolve]
         public string QueueName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the name of the app setting containing the username to authenticate with RabbitMQ. Eg: { UserName: "UserNameFromSettings" }
+        /// This is ignored if 'ConnectionStringSetting' is set.
+        /// </summary>
         [AppSetting]
         public string UserName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the name of the app setting containing the password to authenticate with RabbitMQ. Eg: { Password: "PasswordFromSettings" }
+        ///  This is ignored if 'ConnectionStringSetting' is set.
+        /// </summary>
         [AppSetting]
         public string Password { get; set; }
 
-        // Optional
+        /// <summary>
+        /// Gets or sets the Port used. Defaults to 0.
+        /// </summary>
         public int Port { get; set; }
 
+        /// <summary>
+        /// Gets or sets the name of app setting that contains the connection string to authenticate with RabbitMQ.
+        /// </summary>
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
     }
