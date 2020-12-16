@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs
         public string UserName { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the app setting containing the password to authenticate with RabbitMQ. Eg: { Password: "%PasswordFromSettings%" }
+        /// Gets or sets the name of the app setting containing the password to authenticate with RabbitMQ. Eg: { Password: "PasswordFromSettings" }
         ///  This is ignored if 'ConnectionStringSetting' is set.
         /// </summary>
         [AppSetting]
