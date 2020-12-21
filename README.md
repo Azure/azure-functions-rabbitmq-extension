@@ -9,7 +9,7 @@ Please note that the RabbitMQ extension is fully supported on Premium and Dedica
 
 [RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
 
-To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C#-Script), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
+To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-CSX), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
 
 # Samples
 
@@ -28,7 +28,7 @@ public static void RabbitMQTrigger_RabbitMQOutput(
 }
 ```
 
-The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnection." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabibtMQConnection". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
+The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnectionAppSetting." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabbitMQConnectionAppSetting". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
 
 
 ## Properties
