@@ -5,11 +5,11 @@
 # RabbitMQ Binding Support for Azure Functions
 NuGet Package [Microsoft.Azure.WebJobs.Extensions.RabbitMQ](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.RabbitMQ)
 
-The Azure Functions RabbitMQ Binding extensions allows you to send and receive messages using the RabbitMQ API but by writing Functions code. The RabbitMQ output binding sends messages to a specific queue. The RabbitMQ trigger fires when it receives a message from a specific queue.
+Please note that the RabbitMQ extension is fully supported on Premium and Dedicated plans. Consumption is not supported. The Azure Functions RabbitMQ Binding extensions allow you to send and receive messages using the RabbitMQ API but by writing Functions code. The RabbitMQ output binding sends messages to a specific queue. The RabbitMQ trigger fires when it receives a message from a specific queue.
 
 [RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
 
-To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java). If you would like a way to handle messages that error, check out our [guide to configuring a dead letter exchange](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Configuring-a-Dead-Letter-Exchange-and-Queue).
+To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C#-Script), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
 
 # Samples
 
@@ -17,14 +17,14 @@ See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-exte
 
 ```C#
 public static void RabbitMQTrigger_RabbitMQOutput(
-    [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQConnection")] string inputMessage,
+    [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQConnectionAppSetting")] string inputMessage,
     [RabbitMQ(
-        ConnectionStringSetting = "RabbitMQConnection",
+        ConnectionStringSetting = "RabbitMQConnectionAppSetting",
         QueueName = "hello")] out string outputMessage,
     ILogger logger)
 {
     outputMessage = inputMessage;
-    logger.LogInformation($"RabittMQ output binding function sent message: {outputMessage}");
+    logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
 }
 ```
 
@@ -36,10 +36,10 @@ The above sample waits on a trigger from the queue named "queue" connected to th
 |Property Name|Description|Example|
 |--|--|--|
 |ConnectionStringSetting|The connection string for the RabbitMQ queue|`amqp://user:password@url:port`|
-|QueueName|The name of the source or destination queue. To move failed messages to deadletter queue, please configure queue and exchange(https://www.rabbitmq.com/dlx.html)|`myQueue`|
-|HostName|(optional if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
-|UserName|(optional if using ConnectionStringSetting) User name to access queue|`user`|
-|Password|(optional if using ConnectionStringSetting) Password to access queue|`password1`|
+|QueueName|The name of the source or destination queue.|
+|HostName|(ignored if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
+|UserName|(ignored if using ConnectionStringSetting) User name to access queue|`user`|
+|Password|(ignored if using ConnectionStringSetting) Password to access queue|`password`|
 
 # Contributing
 
