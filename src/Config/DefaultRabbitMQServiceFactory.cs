@@ -5,9 +5,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class DefaultRabbitMQServiceFactory : IRabbitMQServiceFactory
     {
-        public IRabbitMQService CreateService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        public IRabbitMQService CreateService(string connectionString, string queueName, string exchangeName, string hostName,  string userName, string password, int port)
         {
-            return new RabbitMQService(connectionString, hostName, queueName, userName, password, port);
+            return new RabbitMQService(connectionString, queueName, exchangeName, hostName, userName, password, port);
         }
 
         public IRabbitMQService CreateService(string connectionString, string hostName, string userName, string password, int port)
