@@ -27,10 +27,7 @@ namespace Microsoft.Azure.WebJobs
         // </summary>
         [AutoResolve]
         public string QueueName { get; set; }
-
-        [AutoResolve]
-        public string ExchangeName { get; set; }
-
+        
         [AppSetting]
         public string UserName { get; set; }
 
@@ -42,5 +39,8 @@ namespace Microsoft.Azure.WebJobs
 
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
+		
+		[AutoResolve]
+        public string ExchangeName { get; set; }
     }
 }
