@@ -52,12 +52,11 @@ namespace Microsoft.Azure.WebJobs
         /// </summary>
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
-		
-		/// <summary>
+
+        /// <summary>
         /// Gets or sets the ExchangeName to send messages to.
         /// </summary>
-
-		[AutoResolve]
+        [AutoResolve]
         public string ExchangeName { get; set; }
     }
 }
