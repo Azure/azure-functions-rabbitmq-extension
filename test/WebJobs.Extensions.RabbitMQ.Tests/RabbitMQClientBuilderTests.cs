@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using RabbitMQ.Client;
 using Xunit;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
@@ -20,15 +21,39 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         public void Opens_Connection()
         {
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
-            var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(options, mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
-            var mockService = new Mock<IRabbitMQService>();
+            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
+            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(new Mock<IRabbitMQService>().Object);
+            RabbitMQAttribute attr = GetTestAttribute();
 
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(mockService.Object);
+            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
+            var model = clientBuilder.Convert(attr);
 
-            RabbitMQAttribute attr = new RabbitMQAttribute
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
+        }
+
+        [Fact]
+        public void TestWhetherConnectionIsPooled()
+        {
+            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
+            var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
+            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+                .Returns(GetRabbitMQService())
+                .Returns(GetRabbitMQService());
+            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
+            RabbitMQAttribute attr = GetTestAttribute();
+
+            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
+
+            var model = clientBuilder.Convert(attr);
+            var model2 = clientBuilder.Convert(attr);
+
+            Assert.Equal(model, model2);
+        }
+
+        private RabbitMQAttribute GetTestAttribute()
+        {
+            return new RabbitMQAttribute
             {
                 ConnectionStringSetting = string.Empty,
                 HostName = Constants.LocalHost,
@@ -36,12 +61,16 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 Password = "guest",
                 Port = 5672
             };
+        }
 
-            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
+        private IRabbitMQService GetRabbitMQService()
+        {
+            var mockService = new Mock<IRabbitMQService>();
+            mockService.Setup(a => a.Model).Returns(
+                new Mock<IModel>().Object
+            );
 
-            var model = clientBuilder.Convert(attr);
-
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
+            return mockService.Object;
         }
     }
 }

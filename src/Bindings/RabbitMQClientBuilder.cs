@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -11,14 +12,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly RabbitMQExtensionConfigProvider _configProvider;
         private readonly IOptions<RabbitMQOptions> _options;
+        private readonly IDictionary<RabbitMQAttribute, IModel> _rabbitMQAttributeToModel;
 
         public RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider, IOptions<RabbitMQOptions> options)
         {
             _configProvider = configProvider;
             _options = options;
+            _rabbitMQAttributeToModel = new Dictionary<RabbitMQAttribute, IModel>();
         }
 
         public IModel Convert(RabbitMQAttribute attribute)
+        {
+            return GetOrCreateModel(attribute);
+        }
+
+        private IModel CreateModelFromAttribute(RabbitMQAttribute attribute)
         {
             if (attribute == null)
             {
@@ -34,6 +42,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
 
             return service.Model;
+        }
+
+        private IModel GetOrCreateModel(RabbitMQAttribute attribute)
+        {
+            if (!_rabbitMQAttributeToModel.TryGetValue(attribute, out IModel rabbitMQModel))
+            {
+                rabbitMQModel = CreateModelFromAttribute(attribute);
+                _rabbitMQAttributeToModel.Add(attribute, rabbitMQModel);
+            }
+
+            return rabbitMQModel;
         }
     }
 }
