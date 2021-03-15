@@ -1,19 +1,26 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    public class RabbitMQModel : IRabbitMQModel
+    public class RabbitMQModel : IRabbitMQModel, IDisposable
     {
         private readonly IModel _model;
+        private readonly IConnection _connection;
 
-        public RabbitMQModel(IModel model)
+        private bool _disposed = false;
+
+        public RabbitMQModel(IConnection connection, IModel model)
         {
             _model = model;
+            _connection = connection;
         }
+
+        ~RabbitMQModel() => Dispose(false);
 
         public IModel Model => _model;
 
@@ -74,7 +81,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Close()
         {
+            _disposed = true;
             _model.Close();
+            _connection.Close();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            Close();
         }
     }
 }

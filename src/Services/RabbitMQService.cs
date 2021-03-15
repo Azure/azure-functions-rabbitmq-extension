@@ -9,6 +9,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     internal sealed class RabbitMQService : IRabbitMQService
     {
         private readonly IRabbitMQModel _rabbitMQModel;
+        private readonly IConnection _connection;
         private readonly IModel _model;
         private readonly IBasicPublishBatch _batch;
         private readonly string _connectionString;
@@ -27,14 +28,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _port = port;
 
             ConnectionFactory connectionFactory = GetConnectionFactory(_connectionString, _hostName, _userName, _password, _port);
-
-            _model = connectionFactory.CreateConnection().CreateModel();
+            _connection = connectionFactory.CreateConnection();
+            _model = _connection.CreateModel();
         }
 
         public RabbitMQService(string connectionString, string hostName, string queueName, string userName, string password, int port)
             : this(connectionString, hostName, userName, password, port)
         {
-            _rabbitMQModel = new RabbitMQModel(_model);
+            _rabbitMQModel = new RabbitMQModel(_connection, _model);
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
             _model.QueueDeclarePassive(_queueName); // Throws exception if queue doesn't exist
