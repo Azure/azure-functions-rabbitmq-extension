@@ -40,7 +40,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var collector = new RabbitMQAsyncCollector(context, logger);
 
             byte[] body = Encoding.UTF8.GetBytes("hi");
-            await collector.AddAsync(body);
+            await collector.AddAsync(new RabbitMQMessage(body));
 
             mockBatch.Verify(m => m.Add(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IBasicProperties>(), body), Times.Exactly(1));
         }

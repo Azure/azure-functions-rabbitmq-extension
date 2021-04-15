@@ -41,7 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(ValidateBinding);
-            rule.BindToCollector<byte[]>((attr) =>
+            rule.BindToCollector((attr) =>
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });

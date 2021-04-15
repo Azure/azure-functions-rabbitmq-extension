@@ -50,12 +50,12 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
         // So you can add items to the queue while the sample is running, and the trigger will be called until the queue is empty.
         public static async Task ProcessMessage_RabbitMQAsyncCollector(
             [QueueTrigger(@"samples-rabbitmq-messages")] string message,
-            [RabbitMQ(QueueName = "queue")] IAsyncCollector<byte[]> messages,
+            [RabbitMQ(QueueName = "queue")] IAsyncCollector<RabbitMQMessage> messages,
             ILogger logger)
         {
             logger.LogInformation($"Received queue trigger");
             byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
-            await messages.AddAsync(messageInBytes);
+            await messages.AddAsync(new RabbitMQMessage(messageInBytes) { RoutingKey = "custom-routing-key" });
         }
 
         // To run:

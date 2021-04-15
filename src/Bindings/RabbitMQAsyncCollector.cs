@@ -9,7 +9,7 @@ using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    internal class RabbitMQAsyncCollector : IAsyncCollector<byte[]>
+    internal class RabbitMQAsyncCollector : IAsyncCollector<RabbitMQMessage>
     {
         private readonly RabbitMQContext _context;
         private readonly IBasicPublishBatch _batch;
@@ -28,9 +28,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _batch = _context.Service.BasicPublishBatch;
         }
 
-        public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
+        public Task AddAsync(RabbitMQMessage message, CancellationToken cancellationToken = default)
         {
-            _batch.Add(exchange: string.Empty, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
+            _batch.Add(exchange: string.Empty, routingKey: message.RoutingKey ?? _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message.Body);
             _logger.LogDebug($"Adding message to batch for publishing...");
 
             return Task.CompletedTask;
