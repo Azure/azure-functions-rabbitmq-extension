@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Net.Security;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
@@ -61,12 +62,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             int port = attribute.Port;
 
+            SslPolicyErrors acceptablePolicyErrors = attribute.AcceptablePolicyErrors;
+
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
             {
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port);
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, acceptablePolicyErrors);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger, parameter.ParameterType, _options.Value.PrefetchCount));
         }

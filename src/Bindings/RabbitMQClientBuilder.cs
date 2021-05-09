@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -39,7 +40,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int resolvedPort = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
+            SslPolicyErrors acceptablePolicyErrors = attribute.AcceptablePolicyErrors;
+
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort, acceptablePolicyErrors);
 
             return service.Model;
         }

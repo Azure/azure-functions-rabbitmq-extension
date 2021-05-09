@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Net.Security;
 using Microsoft.Azure.WebJobs.Description;
 
 namespace Microsoft.Azure.WebJobs
@@ -52,5 +53,10 @@ namespace Microsoft.Azure.WebJobs
         /// </summary>
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
+
+        /// <summary>
+        /// Gets or sets the acceptable policy errors when connecting to RabbitMQ over TLS. Defaults to RemoteCertificateNameMismatch, which is the default for the .Net RabbitMQ client.
+        /// </summary>
+        public SslPolicyErrors AcceptablePolicyErrors { get; set; } = SslPolicyErrors.RemoteCertificateNameMismatch;
     }
 }

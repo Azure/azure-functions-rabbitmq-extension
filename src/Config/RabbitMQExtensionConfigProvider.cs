@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Net.Security;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -83,6 +84,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            SslPolicyErrors acceptablePolicyErrors = attribute.AcceptablePolicyErrors;
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -95,9 +97,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 UserName = userName,
                 Password = password,
                 Port = port,
+                AcceptablePolicyErrors = acceptablePolicyErrors,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, acceptablePolicyErrors);
 
             return new RabbitMQContext
             {
@@ -106,15 +109,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, SslPolicyErrors acceptablePolicyErrors)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, acceptablePolicyErrors);
         }
 
         // Overloaded method used only for getting the RabbitMQ client
-        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, SslPolicyErrors acceptablePolicyErrors)
         {
-            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port);
+            return _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port, acceptablePolicyErrors);
         }
     }
 }
