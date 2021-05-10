@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Net.Security;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using RabbitMQ.Client;
 using Xunit;
@@ -11,13 +12,14 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
     public class RabbitMQServiceTests
     {
         [Theory]
-        [InlineData("", "localhost", "guest", "guest", 5672, "", "localhost", "guest", "guest", 5672)]
-        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", null, null, null, null, "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672)]
-        [InlineData("", "localhost", null, null, 0, "", "localhost", "guest", "guest", -1)] // Should fill in "guest", "guest", 5672
-        public void Handles_Connection_Attributes_And_Options(string connectionString, string hostName, string userName, string password, int port,
-            string expectedConnectionString, string expectedHostName, string expectedUserName, string expectedPassword, int expectedPort)
+        [InlineData("", "localhost", "guest", "guest", 5672, SslPolicyErrors.RemoteCertificateNameMismatch, "", "localhost", "guest", "guest", 5672, SslPolicyErrors.RemoteCertificateNameMismatch)]
+        [InlineData("amqp://testUserName:testPassword@11.111.111.11:5672", null, null, null, null, SslPolicyErrors.RemoteCertificateNameMismatch, "amqp://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672, SslPolicyErrors.RemoteCertificateNameMismatch)]
+        [InlineData("amqps://testUserName:testPassword@11.111.111.11:5672", null, null, null, null, SslPolicyErrors.RemoteCertificateChainErrors | SslPolicyErrors.RemoteCertificateNameMismatch, "amqps://testUserName:testPassword@11.111.111.11:5672", "11.111.111.11", "testUserName", "testPassword", 5672, SslPolicyErrors.RemoteCertificateChainErrors | SslPolicyErrors.RemoteCertificateNameMismatch)]
+        [InlineData("", "localhost", null, null, 0, SslPolicyErrors.RemoteCertificateNameMismatch, "", "localhost", "guest", "guest", -1, SslPolicyErrors.RemoteCertificateNameMismatch)] // Should fill in "guest", "guest", 5672
+        public void Handles_Connection_Attributes_And_Options(string connectionString, string hostName, string userName, string password, int port, SslPolicyErrors acceptablePolicyErrors,
+            string expectedConnectionString, string expectedHostName, string expectedUserName, string expectedPassword, int expectedPort, SslPolicyErrors expectedAcceptablePolicyErrors)
         {
-            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString, hostName, userName, password, port);
+            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString, hostName, userName, password, port, acceptablePolicyErrors);
 
             if (String.IsNullOrEmpty(connectionString))
             {
@@ -34,6 +36,11 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 Assert.Equal(expectedUserName, factory.UserName);
                 Assert.Equal(expectedPassword, factory.Password);
                 Assert.Equal(expectedPort, factory.Port);
+
+                if (connectionString.StartsWith("amqps://"))
+                {
+                    Assert.Equal(expectedAcceptablePolicyErrors, factory.Ssl.AcceptablePolicyErrors);
+                }
             }
         }
     }
