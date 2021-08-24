@@ -23,7 +23,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly IRabbitMQServiceFactory _rabbitMQServiceFactory;
         private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
-        private readonly ConcurrentDictionary<string, IRabbitMQService> _connectionParamtersToService;
+        private readonly ConcurrentDictionary<string, IRabbitMQService> _connectionParametersToService;
 
         public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration)
         {
@@ -32,7 +32,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _rabbitMQServiceFactory = rabbitMQServiceFactory;
             _logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
             _configuration = configuration;
-            _connectionParamtersToService = new ConcurrentDictionary<string, IRabbitMQService>();
+            _connectionParametersToService = new ConcurrentDictionary<string, IRabbitMQService>();
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -112,14 +112,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
             string key = string.Join(connectionString, ",", hostName, ",", queueName, ",", userName, ",", password, ",", port);
-            return _connectionParamtersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
         internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
         {
             string key = string.Join(connectionString, ",", hostName, ",", userName, ",", password, ",", port);
-            return _connectionParamtersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port));
         }
     }
 }
