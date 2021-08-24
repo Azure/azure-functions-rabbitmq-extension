@@ -10,13 +10,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         private readonly IRabbitMQModel _rabbitMQModel;
         private readonly IModel _model;
-        private readonly IBasicPublishBatch _batch;
         private readonly string _connectionString;
         private readonly string _hostName;
         private readonly string _queueName;
         private readonly string _userName;
         private readonly string _password;
         private readonly int _port;
+
+        private IBasicPublishBatch _batch;
 
         public RabbitMQService(string connectionString, string hostName, string userName, string password, int port)
         {
@@ -46,6 +47,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public IModel Model => _model;
 
         public IBasicPublishBatch BasicPublishBatch => _batch;
+
+        // Typically called after a flush
+        public void ResetPublishBatch()
+        {
+            _batch = _model.CreateBasicPublishBatch();
+        }
 
         internal static ConnectionFactory GetConnectionFactory(string connectionString, string hostName, string userName, string password, int port)
         {
