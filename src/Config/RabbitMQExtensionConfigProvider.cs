@@ -111,14 +111,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
         {
-            string key = string.Join(connectionString, ",", hostName, ",", queueName, ",", userName, ",", password, ",", port);
+            string[] keyArray = { connectionString, hostName, queueName, userName, password, port.ToString() };
+            string key = string.Join(",", keyArray);
             return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
         internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
         {
-            string key = string.Join(connectionString, ",", hostName, ",", userName, ",", password, ",", port);
+            string[] keyArray = { connectionString, hostName, userName, password, port.ToString() };
+            string key = string.Join(",", keyArray);
             return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port));
         }
     }
