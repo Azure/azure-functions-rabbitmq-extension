@@ -13,6 +13,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         IBasicPublishBatch BasicPublishBatch { get; }
 
-        public void ResetPublishBatch();
+        object PublishBatchLock { get; }
+
+        void ResetPublishBatch();
     }
 }

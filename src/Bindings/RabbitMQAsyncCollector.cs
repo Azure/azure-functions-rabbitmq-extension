@@ -27,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             _logger.LogDebug($"Adding message to batch for publishing...");
 
-            lock (_context.Service)
+            lock (_context.Service.PublishBatchLock)
             {
                 _context.Service.BasicPublishBatch.Add(exchange: string.Empty, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
             }
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             _logger.LogDebug($"Publishing messages to queue.");
 
-            lock (_context.Service)
+            lock (_context.Service.PublishBatchLock)
             {
                 _context.Service.BasicPublishBatch.Publish();
                 _context.Service.ResetPublishBatch();
