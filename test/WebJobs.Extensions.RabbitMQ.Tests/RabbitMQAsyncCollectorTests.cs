@@ -19,9 +19,11 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public async Task AddAsync_AddsMessagesToQueue()
         {
+            var batchLock = new object();
             var mockRabbitMQService = new Mock<IRabbitMQService>(MockBehavior.Strict);
             var mockBatch = new Mock<IBasicPublishBatch>();
             mockRabbitMQService.Setup(m => m.BasicPublishBatch).Returns(mockBatch.Object);
+            mockRabbitMQService.Setup(m => m.PublishBatchLock).Returns(batchLock);
 
             var attribute = new RabbitMQAttribute
             {
