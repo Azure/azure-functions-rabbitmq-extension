@@ -90,12 +90,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
             }
 
-            var rabbitUri = new Uri(connectionString);
-
-            if (rabbitUri.AbsolutePath != "/")
+            if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                connectionFactory.Uri = new Uri(rabbitUri.AbsoluteUri.Replace(rabbitUri.AbsolutePath, default));
-                connectionFactory.VirtualHost = rabbitUri.AbsolutePath;
+                var rabbitUri = new Uri(connectionString);
+
+                if (rabbitUri.AbsolutePath != "/")
+                {
+                    connectionFactory.Uri = new Uri(rabbitUri.AbsoluteUri.Replace(rabbitUri.AbsolutePath, default));
+                    connectionFactory.VirtualHost = rabbitUri.AbsolutePath;
+                }
             }
 
             return connectionFactory;
