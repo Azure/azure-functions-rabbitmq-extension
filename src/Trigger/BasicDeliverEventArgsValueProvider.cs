@@ -28,9 +28,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 return Task.FromResult<object>(_input);
             }
-            else if (Type.Equals(typeof(byte[])))
+            else if (Type.Equals(typeof(ReadOnlyMemory<byte>)))
             {
                 return Task.FromResult<object>(_input.Body);
+            }
+            else if (Type.Equals(typeof(byte[])))
+            {
+                return Task.FromResult<object>(_input.Body.ToArray());
             }
 
             string inputValue = ToInvokeString();
@@ -55,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public string ToInvokeString()
         {
-            return Encoding.UTF8.GetString(_input.Body);
+            return Encoding.UTF8.GetString(_input.Body.ToArray());
         }
     }
 }

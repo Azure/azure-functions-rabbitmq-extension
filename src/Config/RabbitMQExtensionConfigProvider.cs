@@ -44,13 +44,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(ValidateBinding);
-            rule.BindToCollector<byte[]>((attr) =>
+            rule.BindToCollector<ReadOnlyMemory<byte>>((attr) =>
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
             rule.BindToInput<IModel>(new RabbitMQClientBuilder(this, _options));
-            rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
-            rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
+            rule.AddConverter<string, ReadOnlyMemory<byte>>(arg => Encoding.UTF8.GetBytes(arg));
+            rule.AddConverter<byte[], ReadOnlyMemory<byte>>(arg => arg);
+            rule.AddOpenConverter<OpenType.Poco, ReadOnlyMemory<byte>>(typeof(PocoToBytesConverter<>));
 
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
 

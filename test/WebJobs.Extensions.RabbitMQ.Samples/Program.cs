@@ -26,7 +26,8 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
                {
                    webJobsBuilder
                    .AddAzureStorageCoreServices()
-                   .AddAzureStorage()
+                   .AddAzureStorageBlobs()
+                   .AddAzureStorageQueues()
                    .AddRabbitMQ()
                    .AddTimers();
                })

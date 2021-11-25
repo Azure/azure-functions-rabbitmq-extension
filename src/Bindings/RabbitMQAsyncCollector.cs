@@ -5,10 +5,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    internal class RabbitMQAsyncCollector : IAsyncCollector<byte[]>
+    internal class RabbitMQAsyncCollector : IAsyncCollector<ReadOnlyMemory<byte>>
     {
         private readonly RabbitMQContext _context;
         private readonly ILogger _logger;
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
         }
 
-        public Task AddAsync(byte[] message, CancellationToken cancellationToken = default)
+        public Task AddAsync(ReadOnlyMemory<byte> message, CancellationToken cancellationToken = default)
         {
             _logger.LogDebug($"Adding message to batch for publishing...");
 
