@@ -9,7 +9,6 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>PublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
-    <Version>1.1.0</Version>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
     <Authors>Microsoft</Authors>
     <Product>Azure WebJobs RabbitMQ Extension</Product>
