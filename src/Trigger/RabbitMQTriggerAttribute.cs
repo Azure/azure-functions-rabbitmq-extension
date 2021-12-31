@@ -60,5 +60,10 @@ namespace Microsoft.Azure.WebJobs
         /// Gets or sets the Port used. Defaults to 0.
         /// </summary>
         public int Port { get; set; }
+
+        /// <summary>
+        /// Enable or disable ssl in RabbitMQ connection.
+        /// </summary>
+        public bool Ssl { get; set; }
     }
 }
