@@ -86,6 +86,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            bool ssl = Utility.FirstOrDefault(attribute.Ssl, _options.Value.Ssl);
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -98,9 +99,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 UserName = userName,
                 Password = password,
                 Port = port,
+                Ssl = ssl,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, ssl);
 
             return new RabbitMQContext
             {
@@ -109,19 +111,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, bool ssl)
         {
             string[] keyArray = { connectionString, hostName, queueName, userName, password, port.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, ssl));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
-        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, bool ssl)
         {
             string[] keyArray = { connectionString, hostName, userName, password, port.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port, ssl));
         }
     }
 }

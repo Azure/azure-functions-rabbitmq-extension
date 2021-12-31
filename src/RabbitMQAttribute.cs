@@ -52,5 +52,10 @@ namespace Microsoft.Azure.WebJobs
         /// </summary>
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
+
+        /// <summary>
+        /// Enable or disable ssl in RabbitMQ connection.
+        /// </summary>
+        public bool Ssl { get; set; }
     }
 }
