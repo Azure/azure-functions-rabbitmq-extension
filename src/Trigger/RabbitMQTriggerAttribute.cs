@@ -9,18 +9,20 @@ namespace Microsoft.Azure.WebJobs
     [Binding]
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
-        public RabbitMQTriggerAttribute(string queueName)
+        public RabbitMQTriggerAttribute(string queueName, bool ssl)
         {
             QueueName = queueName;
+            Ssl = ssl;
         }
 
-        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName)
+        public RabbitMQTriggerAttribute(string hostName, string userNameSetting, string passwordSetting, int port, string queueName, bool ssl)
         {
             HostName = hostName;
             UserNameSetting = userNameSetting;
             PasswordSetting = passwordSetting;
             Port = port;
             QueueName = queueName;
+            Ssl = ssl;
         }
 
         /// <summary>

@@ -74,6 +74,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     connectionFactory.Ssl = new SslOption
                     {
                         Enabled = true,
+                        // Set SNI in order to work for multiple RabbitMQ clusters located behind a LoadBalancer
                         ServerName = amqpUri.Host,
                     };
                 }
@@ -105,6 +106,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     connectionFactory.Ssl = new SslOption
                     {
                         Enabled = true,
+                        // Set SNI in order to work for multiple RabbitMQ clusters located behind a LoadBalancer
                         ServerName = hostName,
                     };
                 }
