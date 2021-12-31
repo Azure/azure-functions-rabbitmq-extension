@@ -28,6 +28,19 @@ namespace Microsoft.Azure.WebJobs.Extensions
             });
         }
 
+        internal static bool FirstOrDefault(params bool[] values)
+        {
+            return values.FirstOrDefault(v =>
+            {
+                if (v)
+                {
+                    return true;
+                }
+
+                return false;
+            });            
+        }
+
         internal static bool ValidateUserNamePassword(string userName, string password, string hostName)
         {
             if (!hostName.Equals(Constants.LocalHost, StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)))

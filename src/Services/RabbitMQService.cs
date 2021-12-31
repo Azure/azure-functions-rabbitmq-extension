@@ -74,7 +74,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     connectionFactory.Ssl = new SslOption
                     {
                         Enabled = true,
-                        ServerName = amqpUri.Host
+                        ServerName = amqpUri.Host,
                     };
                 }
             }
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     connectionFactory.Ssl = new SslOption
                     {
                         Enabled = true,
-                        ServerName = hostName
+                        ServerName = hostName,
                     };
                 }
             }

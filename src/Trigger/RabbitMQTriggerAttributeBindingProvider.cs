@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             string password = Resolve(attribute.PasswordSetting);
 
-            bool ssl = Resolve(attribute.Ssl);
+            bool ssl = attribute.Ssl;
 
             int port = attribute.Port;
 

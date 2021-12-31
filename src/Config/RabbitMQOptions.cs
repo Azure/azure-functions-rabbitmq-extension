@@ -48,6 +48,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public int Port { get; set; }
 
         /// <summary>
+        /// Enable or disable ssl in RabbitMQ connection.
+        /// </summary>
+        public bool Ssl { get; set; }
+
+        /// <summary>
         /// Gets or sets the prefetch count while creating the RabbitMQ QoS. This seting controls how many values are cached.
         /// </summary>
         public ushort PrefetchCount { get; set; }
