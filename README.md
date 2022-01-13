@@ -40,6 +40,8 @@ The above sample waits on a trigger from the queue named "queue" connected to th
 |HostName|(ignored if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
 |UserName|(ignored if using ConnectionStringSetting) User name to access queue|`user`|
 |Password|(ignored if using ConnectionStringSetting) Password to access queue|`password`|
+|Ssl|Bool to enable or disable SSL in AMQP connection (default false)|`true`|
+|InsecureSsl|Bool to enable or disable checking certificate when Ssl=true (default false. Not recommended for production)|`true`|
 
 # Contributing
 
