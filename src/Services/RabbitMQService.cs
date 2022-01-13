@@ -70,14 +70,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             // Only set these if specified by user. Otherwise, API will use default parameters.
             if (!string.IsNullOrEmpty(connectionString))
             {
-                amqpUri = new Uri(connectionString);
+                Uri amqpUri = new Uri(connectionString);
                 connectionFactory.Uri = amqpUri;
-                if (ssl)
-                {
-                    Uri amqpUri = new Uri(connectionString);
-                    connectionFactory.Uri = amqpUri;
-                    ConfigureSsl(connectionFactory, amqpUri.Host, ssl, insecureSsl);
-                }
+                ConfigureSsl(connectionFactory, amqpUri.Host, ssl, insecureSsl);
             }
             else
             {
