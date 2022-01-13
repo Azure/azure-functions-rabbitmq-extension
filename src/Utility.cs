@@ -38,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
                 }
 
                 return false;
-            });            
+            });
         }
 
         internal static bool ValidateUserNamePassword(string userName, string password, string hostName)

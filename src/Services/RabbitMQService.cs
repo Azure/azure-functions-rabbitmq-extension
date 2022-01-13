@@ -97,7 +97,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
 
                 ConfigureSsl(connectionFactory, hostName, ssl, insecureSsl);
-
             }
 
             return connectionFactory;
