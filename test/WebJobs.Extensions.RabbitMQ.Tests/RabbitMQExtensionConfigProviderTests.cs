@@ -26,7 +26,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                It.IsAny<string>(),
                It.IsAny<string>(),
                It.IsAny<string>(),
-               It.IsAny<int>())).Returns(new Mock<IRabbitMQService>().Object)
+               It.IsAny<int>(),
+               false,
+               false)).Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object);
@@ -36,7 +38,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                It.IsAny<string>(),
                It.IsAny<string>(),
                It.IsAny<string>(),
-               It.IsAny<int>())).Returns(new Mock<IRabbitMQService>().Object)
+               It.IsAny<int>(),
+               false,
+               false)).Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object)
                .Returns(new Mock<IRabbitMQService>().Object);
@@ -48,9 +52,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 NullLoggerFactory.Instance,
                 new Mock<IConfiguration>().Object);
 
-            var rabbitmqService1 = extensionConfigProvider.GetService("something", "something", "something", "something", 80);
-            var rabbitmqService2 = extensionConfigProvider.GetService("something", "something", "something", "something", 80);
-            var rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", "something", "something", "something", 80);
+            var rabbitmqService1 = extensionConfigProvider.GetService("something", "something", "something", "something", 80, false, false);
+            var rabbitmqService2 = extensionConfigProvider.GetService("something", "something", "something", "something", 80, false, false);
+            var rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", "something", "something", "something", 80, false, false);
 
             // 1 and 2 should be equal
             Assert.Equal(rabbitmqService1, rabbitmqService2);
@@ -59,9 +63,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.NotEqual(rabbitmqService1, rabbitmqService3);
             Assert.NotEqual(rabbitmqService2, rabbitmqService3);
 
-            var rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80);
-            var rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80);
-            var rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", "asomething", "asomething", "asomething", 80);
+            var rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80, false, false);
+            var rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80, false, false);
+            var rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", "asomething", "asomething", "asomething", 80, false, false);
 
             // 4 and 5 should be equal
             Assert.Equal(rabbitmqService4, rabbitmqService5);
