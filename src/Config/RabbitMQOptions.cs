@@ -53,6 +53,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public bool Ssl { get; set; }
 
         /// <summary>
+        /// Enable os disable checking certificate when Ssl is enabled (not recommended for production).
+        /// </summary>
+        public bool InsecureSsl { get; set; }
+
+        /// <summary>
         /// Gets or sets the prefetch count while creating the RabbitMQ QoS. This seting controls how many values are cached.
         /// </summary>
         public ushort PrefetchCount { get; set; }

@@ -61,6 +61,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             bool ssl = attribute.Ssl;
 
+            bool insecureSsl = attribute.InsecureSsl;
+
             int port = attribute.Port;
 
             if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
@@ -68,7 +70,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
             }
 
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, ssl);
+            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, ssl, insecureSsl);
 
             return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger, parameter.ParameterType, _options.Value.PrefetchCount));
         }

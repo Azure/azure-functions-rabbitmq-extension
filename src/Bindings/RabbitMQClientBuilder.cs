@@ -36,8 +36,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int resolvedPort = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
             bool resolvedSsl = Utility.FirstOrDefault(attribute.Ssl, _options.Value.Ssl);
+            bool resolvedInsecureSsl = Utility.FirstOrDefault(attribute.InsecureSsl, _options.Value.InsecureSsl);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort, resolvedSsl);
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort, resolvedSsl, resolvedInsecureSsl);
 
             return service.Model;
         }
