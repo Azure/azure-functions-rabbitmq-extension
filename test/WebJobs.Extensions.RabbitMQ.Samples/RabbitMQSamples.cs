@@ -106,7 +106,7 @@ namespace WebJobs.Extensions.RabbitMQ.Samples
             [RabbitMQTrigger("queue")] BasicDeliverEventArgs args,
             ILogger logger)
         {
-            logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body)}");
+            logger.LogInformation($"RabbitMQ queue trigger function processed message: {Encoding.UTF8.GetString(args.Body.ToArray())}");
         }
 
         // This sample should fail when running a console app that sends out a message incorrectly formatted.

@@ -19,7 +19,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             byte[] expectedRes = Encoding.UTF8.GetBytes(res);
 
             PocoToBytesConverter<TestClass> converter = new PocoToBytesConverter<TestClass>();
-            byte[] actualRes = converter.Convert(sampleObj);
+            byte[] actualRes = converter.Convert(sampleObj).ToArray();
 
             Assert.Equal(expectedRes, actualRes);
         }

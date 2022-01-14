@@ -50,12 +50,12 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object, 30);
 
-            var properties = new BasicProperties();
+            var properties = Mock.Of<IBasicProperties>();
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.CreateHeadersAndRepublish(args);
 
             _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
@@ -64,15 +64,12 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object, 30);
 
-            var properties = new BasicProperties()
-            {
-                Headers = new Dictionary<string, object>() { { "requeueCount", 1 } }
-            };
+            var properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 1 } });
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
             _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<byte[]>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
@@ -81,10 +78,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
             RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object, 30);
 
-            var properties = new BasicProperties()
-            {
-                Headers = new Dictionary<string, object>() { { "requeueCount", 6 } }
-            };
+            var properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 6 } });
             BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 

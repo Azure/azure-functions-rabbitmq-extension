@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using RabbitMQ.Client;
 
@@ -57,7 +58,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             _model.BasicReject(deliveryTag, requeue);
         }
 
-        public void BasicPublish(string exchange, string routingKey, IBasicProperties basicProperties, byte[] body)
+        public void BasicPublish(string exchange, string routingKey, IBasicProperties basicProperties, ReadOnlyMemory<byte> body)
         {
             _model.BasicPublish(exchange, routingKey, basicProperties, body);
         }

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using RabbitMQ.Client;
 using Xunit;
+using Constants = Microsoft.Azure.WebJobs.Extensions.Constants;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
