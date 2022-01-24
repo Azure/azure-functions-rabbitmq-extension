@@ -17,18 +17,25 @@ variables:
   isTagTriggered: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/')]
   prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
   version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
+  fileVersion: $[variables.version]
 
 pool:
   name: 1ES-Hosted-AzFunc
-  vmImage: MMS2019TLS # for windows-2019 or MMSUbuntu20.04TLS for ubuntu-20.04
+  demands:
+    - ImageOverride -equals MMS2022TLS
 
 jobs:
   - job: buildExtension
     displayName: Build WebJobs extension
     steps:
-      - script: |
-          SET tag=$(Build.SourceBranchName)
-          ECHO ##vso[task.setvariable variable=version]%tag:~1%
+      - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
+          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
+          if (-not $found) {
+            Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
+            exit 1
+          }
+          Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
+          Write-Host "##vso[task.setvariable variable=fileVersion]$($found.Matches.Groups[2].Value)"
         displayName: Extract version # e.g. 1.2.3
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
 
@@ -43,13 +50,13 @@ jobs:
         displayName: Build solution
         inputs:
           command: build
-          arguments: --configuration Release -property:Version=$(version) -property:CommitHash=$(Build.SourceVersion)
+          arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
 
       - task: DotNetCoreCLI@2
         displayName: Test extension
         inputs:
           command: test
-          projects: test/WebJobs.Extensions.RabbitMQ.Tests/WebJobs.Extensions.RabbitMQ.Tests.csproj
+          projects: test\WebJobs.Extensions.RabbitMQ.Tests\WebJobs.Extensions.RabbitMQ.Tests.csproj
           arguments: --configuration Debug
 
       - task: EsrpCodeSigning@1
@@ -57,7 +64,7 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           connectedServiceName: ESRP Service
-          folderPath: src/bin/Release/netstandard2.0
+          folderPath: src\bin\Release\netstandard2.0
           pattern: WebJobs.Extensions.RabbitMQ.dll
           signConfigType: inlineSignParams
           inlineOperation: |
@@ -89,11 +96,12 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           command: pack
-          searchPatternPack: src/WebJobs.Extensions.RabbitMQ.csproj
+          searchPatternPack: src\WebJobs.Extensions.RabbitMQ.csproj
           configurationToPack: Release
           buildProperties: Version=$(version);CommitHash=$(Build.SourceVersion)
-          outputDir: $(Build.ArtifactStagingDirectory)
+          outputDir: $(Build.ArtifactStagingDirectory)\$(version)
           nobuild: true
+          includesymbols: true
           verbosityPack: minimal
 
       - task: EsrpCodeSigning@1
@@ -101,7 +109,7 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           connectedServiceName: ESRP Service
-          folderPath: $(Build.ArtifactStagingDirectory)
+          folderPath: $(Build.ArtifactStagingDirectory)\$(version)
           pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg
           signConfigType: inlineSignParams
           inlineOperation: |
@@ -126,7 +134,7 @@ jobs:
         displayName: Cleanup staging directory
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
-          sourceFolder: $(Build.ArtifactStagingDirectory)
+          sourceFolder: $(Build.ArtifactStagingDirectory)\$(version)
           # contents: '!(Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg)'
           contents: CodeSignSummary-*.md
 
@@ -134,7 +142,7 @@ jobs:
         displayName: Generate SBOM manifest
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
-          buildDropPath: $(System.ArtifactsDirectory)
+          buildDropPath: $(Build.ArtifactStagingDirectory)\$(version)
           packageName: Azure Functions RabbitMQ Extension
           packageVersion: $(version)
 
@@ -146,32 +154,39 @@ jobs:
   - job: buildJavaBindings
     displayName: Build Java library
     steps:
-      - script: |
-          SET tag=$(Build.SourceBranchName)
-          ECHO ##vso[task.setvariable variable=version]%tag:~1%
+      - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
+          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
+          if (-not $found) {
+            Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
+            exit 1
+          }
+          Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
         displayName: Extract version # e.g. 1.2.3
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
 
       - task: Maven@3
         displayName: Set library version
         inputs:
-          mavenPomFile: binding-library/java/pom.xml
+          mavenPomFile: binding-library\java\pom.xml
           goals: versions:set
           options: --define=newVersion=$(version)
 
       - task: Maven@3
         displayName: Build library
         inputs:
-          mavenPomFile: binding-library/java/pom.xml
+          mavenPomFile: binding-library\java\pom.xml
           options: --batch-mode --define=gpg.skip --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
 
-      - script: |
-          SET PREFIX=azure-functions-java-library-rabbitmq-$(version)
-          CD binding-library\java
-          COPY pom.xml "$(Build.ArtifactStagingDirectory)\%PREFIX%.pom"
-          COPY "target\%PREFIX%.jar" "$(Build.ArtifactStagingDirectory)\%PREFIX%.jar"
-          COPY "target\%PREFIX%-javadoc.jar" "$(Build.ArtifactStagingDirectory)\%PREFIX%-javadoc.jar"
-          COPY "target\%PREFIX%-sources.jar" "$(Build.ArtifactStagingDirectory)\%PREFIX%-sources.jar"
+      - powershell: |
+          $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
+          $source = 'binding-library\java'
+          $destination = '$(Build.ArtifactStagingDirectory)\$(version)'
+
+          New-Item $destination -ItemType Directory
+          Copy-Item "$source\pom.xml" "$destination\$prefix.pom"
+          Copy-Item "$source\target\$prefix.jar" "$destination\$prefix.jar"
+          Copy-Item "$source\target\$prefix-javadoc.jar" "$destination\$prefix-javadoc.jar"
+          Copy-Item "$source\target\$prefix-sources.jar" "$destination\$prefix-sources.jar"
         displayName: Copy output files
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
 
@@ -179,7 +194,7 @@ jobs:
         displayName: Generate SBOM manifest
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
-          buildDropPath: $(System.ArtifactsDirectory)
+          buildDropPath: $(Build.ArtifactStagingDirectory)\$(version)
           packageName: Azure Functions RabbitMQ Java Bindings
           packageVersion: $(version)
 
