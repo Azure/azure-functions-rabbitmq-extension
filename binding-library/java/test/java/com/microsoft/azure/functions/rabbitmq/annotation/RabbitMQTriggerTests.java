@@ -19,6 +19,7 @@ public class RabbitMQTriggerTests {
         EasyMock.expect(triggerInterface.passwordSetting()).andReturn("randomPassword");
         EasyMock.expect(triggerInterface.queueName()).andReturn("randomQueueName");
         EasyMock.expect(triggerInterface.userNameSetting()).andReturn("randomUserName");
+        EasyMock.expect(triggerInterface.virtualHost()).andReturn("randomVirtualHost");
         EasyMock.expect(triggerInterface.connectionStringSetting()).andReturn("randomConnectionStringSetting");
         EasyMock.expect(triggerInterface.port()).andReturn(123);
 

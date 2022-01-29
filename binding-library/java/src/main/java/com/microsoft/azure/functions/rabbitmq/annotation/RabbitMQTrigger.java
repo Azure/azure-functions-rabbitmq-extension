@@ -72,6 +72,13 @@ public @interface RabbitMQTrigger {
     String passwordSetting() default "";
 
     /**
+     * The VirtualHost used on the rabbitMQ Server.
+     * @see <a href="https://www.rabbitmq.com/vhosts.html">Virtual Hosts</a>
+     * @return The VirtualHost used on the rabbitMQ Server.
+     */
+    String virtualHostSetting() default "";
+
+    /**
      * The port to attach.
      * @return The port to attach.
      */

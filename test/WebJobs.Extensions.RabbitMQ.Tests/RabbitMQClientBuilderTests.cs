@@ -1,8 +1,7 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -24,13 +23,13 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(new Mock<IRabbitMQService>().Object);
+            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>())).Returns(new Mock<IRabbitMQService>().Object);
             RabbitMQAttribute attr = GetTestAttribute();
 
             RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672, "vhost"), Times.Exactly(1));
         }
 
         [Fact]
@@ -38,7 +37,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()))
                 .Returns(GetRabbitMQService())
                 .Returns(GetRabbitMQService());
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
@@ -60,7 +59,8 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 HostName = Constants.LocalHost,
                 UserName = "guest",
                 Password = "guest",
-                Port = 5672
+                Port = 5672,
+                VirtualHost = "vhost"
             };
         }
 

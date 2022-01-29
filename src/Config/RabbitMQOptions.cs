@@ -38,6 +38,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public string Password { get; set; }
 
         /// <summary>
+        /// Gets or sets the VirtualHost used on the RabbitMQ Server.
+        /// <see href="https://www.rabbitmq.com/vhosts.html" />.
+        /// </summary>
+        public string VirtualHost { get; set; }
+
+        /// <summary>
         /// Gets or sets the ConnectionString used to authenticate with RabbitMQ.
         /// </summary>
         public string ConnectionString { get; set; }
@@ -59,6 +65,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 { nameof(HostName), HostName },
                 { nameof(QueueName), QueueName },
                 { nameof(Port), Port },
+                { nameof(VirtualHost), VirtualHost },
                 { nameof(PrefetchCount), PrefetchCount },
             };
 

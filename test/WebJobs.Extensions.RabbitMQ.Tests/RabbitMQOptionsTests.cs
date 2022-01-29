@@ -21,6 +21,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 { nameof(option.QueueName), option.QueueName },
                 { nameof(option.Port), option.Port },
                 { nameof(option.PrefetchCount), option.PrefetchCount },
+                { nameof(option.VirtualHost), option.VirtualHost },
             };
 
             return options.ToString(Formatting.Indented);
@@ -38,6 +39,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.Null(options.UserName);
             Assert.Null(options.Password);
             Assert.Null(options.ConnectionString);
+            Assert.Null(options.VirtualHost);
 
             // Test formatted
             Assert.Equal(GetFormattedOption(options), options.Format());
@@ -53,6 +55,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             string expectedUserName = "someUserName";
             string expectedPassword = "somePassword";
             string expectedConnectionString = "someConnectionString";
+            string expectedVirtualHost = "someVirtualHost";
             RabbitMQOptions options = new RabbitMQOptions()
             {
                 Port = expectedPort,
@@ -62,6 +65,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 Password = expectedPassword,
                 ConnectionString = expectedConnectionString,
                 PrefetchCount = expectedPrefetchCount,
+                VirtualHost = expectedVirtualHost,
             };
 
             Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
@@ -71,6 +75,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.Equal(expectedUserName, options.UserName);
             Assert.Equal(expectedPassword, options.Password);
             Assert.Equal(expectedConnectionString, options.ConnectionString);
+            Assert.Equal(expectedVirtualHost, options.VirtualHost);
 
             // Test formatted
             Assert.Equal(GetFormattedOption(options), options.Format());

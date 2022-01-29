@@ -19,6 +19,7 @@ public class RabbitMQOutputTests {
         EasyMock.expect(outputInterface.password()).andReturn("randomPassword");
         EasyMock.expect(outputInterface.queueName()).andReturn("randomQueueName");
         EasyMock.expect(outputInterface.userName()).andReturn("randomUserName");
+        EasyMock.expect(outputInterface.virtualHost()).andReturn("randomVirtualHost");
         EasyMock.expect(outputInterface.connectionStringSetting()).andReturn("randomConnectionStringSetting");
         EasyMock.expect(outputInterface.port()).andReturn(123);
 

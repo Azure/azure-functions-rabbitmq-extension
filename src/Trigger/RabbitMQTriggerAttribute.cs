@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
@@ -60,5 +60,11 @@ namespace Microsoft.Azure.WebJobs
         /// Gets or sets the Port used. Defaults to 0.
         /// </summary>
         public int Port { get; set; }
+
+        /// <summary>
+        /// Gets or sets the vhost to use when connecting to RabbitMQ using HostName / UserName / Password
+        /// <see href="https://www.rabbitmq.com/vhosts.html"/>.
+        /// </summary>
+        public string VirtualHost { get; set; }
     }
 }
