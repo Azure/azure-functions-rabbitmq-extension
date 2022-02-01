@@ -21,6 +21,8 @@ public class RabbitMQTriggerTests {
         EasyMock.expect(triggerInterface.userNameSetting()).andReturn("randomUserName");
         EasyMock.expect(triggerInterface.connectionStringSetting()).andReturn("randomConnectionStringSetting");
         EasyMock.expect(triggerInterface.port()).andReturn(123);
+        EasyMock.expect(triggerInterface.enableSsl()).andReturn(false);
+        EasyMock.expect(triggerInterface.skipCertificateValidation()).andReturn(false);
 
         EasyMock.replay(triggerInterface);
     }
