@@ -7,6 +7,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         IRabbitMQService CreateService(string connectionString, string hostName, string queueName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation);
 
-        IRabbitMQService CreateService(string connectionString, string hostName, string userName, string password, int port, bool enableSsl, bool kipCertificateValidation);
+        IRabbitMQService CreateService(string connectionString, string hostName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation);
     }
 }

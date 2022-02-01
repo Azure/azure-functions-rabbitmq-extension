@@ -81,11 +81,11 @@ public @interface RabbitMQTrigger {
      * Enable or disable ssl in RabbitMQ connection.
      * @return A bool to enable Ssl.
      */
-    bool enableSsl() default false;
+    boolean enableSsl() default false;
 
     /**
      * Enable os disable checking certificate when Ssl is enabled (not recommended for production).
      * @return A bool to enable checking certificates when Ssl is enabled.
      */
-    bool skipCertificateValidation() default false;
+    boolean skipCertificateValidation() default false;
 }
