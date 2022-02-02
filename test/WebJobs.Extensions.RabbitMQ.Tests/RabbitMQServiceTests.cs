@@ -17,7 +17,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         public void Handles_Connection_Attributes_And_Options(string connectionString, string hostName, string userName, string password, int port,
             string expectedConnectionString, string expectedHostName, string expectedUserName, string expectedPassword, int expectedPort)
         {
-            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString, hostName, userName, password, port);
+            ConnectionFactory factory = RabbitMQService.GetConnectionFactory(connectionString, hostName, userName, password, port, false, false);
 
             if (String.IsNullOrEmpty(connectionString))
             {

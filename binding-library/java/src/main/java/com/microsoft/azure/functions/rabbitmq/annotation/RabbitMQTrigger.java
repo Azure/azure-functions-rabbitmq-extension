@@ -76,4 +76,16 @@ public @interface RabbitMQTrigger {
      * @return The port to attach.
      */
     int port() default 0;
+
+    /**
+     * Enable or disable ssl in RabbitMQ connection.
+     * @return A bool to enable Ssl.
+     */
+    boolean enableSsl() default false;
+
+    /**
+     * Enable os disable checking certificate when Ssl is enabled (not recommended for production).
+     * @return A bool to enable checking certificates when Ssl is enabled.
+     */
+    boolean skipCertificateValidation() default false;
 }

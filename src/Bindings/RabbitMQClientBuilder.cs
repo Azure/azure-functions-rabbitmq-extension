@@ -35,8 +35,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string resolvedUserName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string resolvedPassword = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int resolvedPort = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            bool resolvedEnableSsl = Utility.FirstOrDefault(attribute.EnableSsl, _options.Value.EnableSsl);
+            bool resolvedSkipCertificateValidation = Utility.FirstOrDefault(attribute.SkipCertificateValidation, _options.Value.SkipCertificateValidation);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort);
+            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedHostName, resolvedUserName, resolvedPassword, resolvedPort, resolvedEnableSsl, resolvedSkipCertificateValidation);
 
             return service.Model;
         }
