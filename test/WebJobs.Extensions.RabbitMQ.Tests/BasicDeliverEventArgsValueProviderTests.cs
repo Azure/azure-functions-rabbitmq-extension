@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Framing;
 using Xunit;
-
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
@@ -56,7 +54,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", new BasicProperties(), stringInBytes);
+            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
             BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(BasicDeliverEventArgs));
 
             BasicDeliverEventArgs actualObject = (BasicDeliverEventArgs)await testValueProvider.GetValueAsync();
@@ -71,13 +69,27 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", new BasicProperties(), stringInBytes);
+            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
             BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(byte[]));
 
             byte[] actualResult = (byte[])await testValueProvider.GetValueAsync();
 
             Assert.Equal(expectedString, Encoding.UTF8.GetString(actualResult));
             Assert.Equal(typeof(byte[]), testValueProvider.Type);
+        }
+
+        [Fact]
+        public async Task ReadOnlyMemory_Byte_Conversion_Succeeds()
+        {
+            string expectedString = "someString";
+            byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
+            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
+            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(ReadOnlyMemory<byte>));
+
+            ReadOnlyMemory<byte> actualResult = (ReadOnlyMemory<byte>)await testValueProvider.GetValueAsync();
+
+            Assert.Equal(expectedString, Encoding.UTF8.GetString(actualResult.ToArray()));
+            Assert.Equal(typeof(ReadOnlyMemory<byte>), testValueProvider.Type);
         }
 
         [Fact]

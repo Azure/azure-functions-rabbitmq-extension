@@ -44,13 +44,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
             rule.AddValidator(ValidateBinding);
-            rule.BindToCollector<byte[]>((attr) =>
+            rule.BindToCollector<ReadOnlyMemory<byte>>((attr) =>
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
             });
             rule.BindToInput<IModel>(new RabbitMQClientBuilder(this, _options));
-            rule.AddConverter<string, byte[]>(msg => Encoding.UTF8.GetBytes(msg));
-            rule.AddOpenConverter<OpenType.Poco, byte[]>(typeof(PocoToBytesConverter<>));
+            rule.AddConverter<string, ReadOnlyMemory<byte>>(arg => Encoding.UTF8.GetBytes(arg));
+            rule.AddConverter<byte[], ReadOnlyMemory<byte>>(arg => arg);
+            rule.AddOpenConverter<OpenType.Poco, ReadOnlyMemory<byte>>(typeof(PocoToBytesConverter<>));
 
             var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
 
@@ -86,6 +87,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
             string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
             int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
+            bool enableSsl = Utility.FirstOrDefault(attribute.EnableSsl, _options.Value.EnableSsl);
+            bool skipCertificateValidation = Utility.FirstOrDefault(attribute.SkipCertificateValidation, _options.Value.SkipCertificateValidation);
 
             RabbitMQAttribute resolvedAttribute;
             IRabbitMQService service;
@@ -98,9 +101,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 UserName = userName,
                 Password = password,
                 Port = port,
+                EnableSsl = enableSsl,
+                SkipCertificateValidation = skipCertificateValidation,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port);
+            service = GetService(connectionString, hostName, queueName, userName, password, port, enableSsl, skipCertificateValidation);
 
             return new RabbitMQContext
             {
@@ -109,19 +114,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation)
         {
             string[] keyArray = { connectionString, hostName, queueName, userName, password, port.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, enableSsl, skipCertificateValidation));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
-        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port)
+        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation)
         {
             string[] keyArray = { connectionString, hostName, userName, password, port.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port, enableSsl, skipCertificateValidation));
         }
     }
 }

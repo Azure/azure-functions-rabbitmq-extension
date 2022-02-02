@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using RabbitMQ.Client;
 using Xunit;
+using Constants = Microsoft.Azure.WebJobs.Extensions.Constants;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
@@ -23,13 +24,13 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(new Mock<IRabbitMQService>().Object);
+            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), false, false)).Returns(new Mock<IRabbitMQService>().Object);
             RabbitMQAttribute attr = GetTestAttribute();
 
             RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672, false, false), Times.Exactly(1));
         }
 
         [Fact]
@@ -37,7 +38,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), false, false))
                 .Returns(GetRabbitMQService())
                 .Returns(GetRabbitMQService());
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);

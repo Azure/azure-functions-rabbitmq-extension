@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RabbitMQ.Client;
 using Xunit;
+using Constants = Microsoft.Azure.WebJobs.Extensions.Constants;
 
 namespace WebJobs.Extensions.RabbitMQ.Tests
 {
@@ -44,7 +45,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             byte[] body = Encoding.UTF8.GetBytes("hi");
             await collector.AddAsync(body);
 
+#pragma warning disable 618
             mockBatch.Verify(m => m.Add(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IBasicProperties>(), body), Times.Exactly(1));
+#pragma warning restore 618
         }
     }
 }

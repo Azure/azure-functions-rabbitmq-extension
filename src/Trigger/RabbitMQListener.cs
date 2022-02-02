@@ -81,6 +81,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Cancel()
         {
+            if (!_started)
+            {
+                return;
+            }
+
             StopAsync(CancellationToken.None).Wait();
         }
 

@@ -17,15 +17,12 @@ namespace Microsoft.Azure.WebJobs.Extensions
 
         internal static int FirstOrDefault(params int[] values)
         {
-            return values.FirstOrDefault(v =>
-            {
-                if (v != 0)
-                {
-                    return true;
-                }
+            return values.FirstOrDefault(v => v != 0);
+        }
 
-                return false;
-            });
+        internal static bool FirstOrDefault(params bool[] values)
+        {
+            return values.FirstOrDefault(v => v);
         }
 
         internal static bool ValidateUserNamePassword(string userName, string password, string hostName)

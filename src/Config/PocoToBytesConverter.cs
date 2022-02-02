@@ -7,9 +7,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
-    internal class PocoToBytesConverter<T> : IConverter<T, byte[]>
+    internal class PocoToBytesConverter<T> : IConverter<T, ReadOnlyMemory<byte>>
     {
-        public byte[] Convert(T input)
+        public ReadOnlyMemory<byte> Convert(T input)
         {
             if (input == null)
             {

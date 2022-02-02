@@ -81,7 +81,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             contract.Add("Exchange", typeof(string));
             contract.Add("RoutingKey", typeof(string));
             contract.Add("BasicProperties", typeof(IBasicProperties));
-            contract.Add("Body", typeof(byte[]));
+            contract.Add("Body", typeof(ReadOnlyMemory<byte>));
 
             return contract;
         }
