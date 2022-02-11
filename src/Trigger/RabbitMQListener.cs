@@ -158,7 +158,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
             _logger.LogDebug("Republishing message");
-            _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+            _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: _queueName, basicProperties: ea.BasicProperties, body: ea.Body);
             _rabbitMQModel.BasicAck(ea.DeliveryTag, false);
         }
 
@@ -173,7 +173,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount]) < 5)
             {
                 _logger.LogDebug("Republishing message");
-                _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: ea.RoutingKey, basicProperties: ea.BasicProperties, body: ea.Body);
+                _rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: _queueName, basicProperties: ea.BasicProperties, body: ea.Body);
                 _rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but ack after resend
             }
             else

@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
@@ -46,30 +46,31 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void CreatesHeadersAndRepublishes()
         {
+            var queueName = "blah";
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
-
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object, 30);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, queueName, _mockLogger.Object, _mockDescriptor.Object, 30);
 
             var properties = Mock.Of<IBasicProperties>();
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
+            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.CreateHeadersAndRepublish(args);
 
             _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
         public void RepublishesMessages()
         {
+            var queueName = "blah";
             _mockService.Setup(m => m.RabbitMQModel).Returns(_mockModel.Object);
-            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, "blah", _mockLogger.Object, _mockDescriptor.Object, 30);
+            RabbitMQListener listener = new RabbitMQListener(_mockExecutor.Object, _mockService.Object, queueName, _mockLogger.Object, _mockDescriptor.Object, 30);
 
             var properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 1 } });
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", properties, Encoding.UTF8.GetBytes("hello world"));
+            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
             _mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
+            _mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
