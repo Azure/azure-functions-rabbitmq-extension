@@ -7,7 +7,6 @@
 package com.microsoft.azure.functions.rabbitmq.annotation;
 
 import com.microsoft.azure.functions.annotation.CustomBinding;
-import com.microsoft.azure.functions.rabbitmq.SslPolicyErrors;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,9 +15,9 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * Java annotation for RabbitMQ output binding. The type of parameter can be a
- * native Java type such as <code>int</code>, <code>String</code> or
- * <code>byte[]</code> or a POJO.
+ * Java annotation used to bind a parameter to RabbitMQ output message. The type
+ * of parameter can be a native Java type such as <code>int</code>,
+ * <code>String</code> or <code>byte[]</code> or a POJO.
  * </p>
  *
  * <p>
@@ -53,7 +52,8 @@ public @interface RabbitMQOutput {
     String queueName() default "";
 
     /**
-     * Array of TLS policy (peer verification) errors that are deemed acceptable.
+     * Whether certificate validation should be disabled. Not recommended for
+     * production. Does not apply when SSL is disabled.
      */
-    SslPolicyErrors[] acceptablePolicyErrors() default { SslPolicyErrors.NONE };
+    boolean disableCertificateValidation() default false;
 }

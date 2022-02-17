@@ -14,7 +14,7 @@
   </parent>
 
   <name>Microsoft Azure Functions Java RabbitMQ Types</name>
-  <description>This package contains all Java interfaces and annotations to interact with Microsoft Azure Functions runtime for RabbitMQ Service.</description>
+  <description>This package contains all Java interfaces and annotations to interact with Microsoft Azure Functions runtime for RabbitMQ service.</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
