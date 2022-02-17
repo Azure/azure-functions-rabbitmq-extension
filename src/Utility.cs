@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions
 {
@@ -15,24 +14,10 @@ namespace Microsoft.Azure.WebJobs.Extensions
             return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
         }
 
-        internal static int FirstOrDefault(params int[] values)
+        internal static TValue FirstOrDefault<TValue>(params TValue[] values)
+            where TValue : IEquatable<TValue>
         {
-            return values.FirstOrDefault(v => v != 0);
-        }
-
-        internal static bool FirstOrDefault(params bool[] values)
-        {
-            return values.FirstOrDefault(v => v);
-        }
-
-        internal static bool ValidateUserNamePassword(string userName, string password, string hostName)
-        {
-            if (!hostName.Equals(Constants.LocalHost, StringComparison.InvariantCultureIgnoreCase) && (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)))
-            {
-                return false;
-            }
-
-            return true;
+            return values.FirstOrDefault(v => !v.Equals(default));
         }
 
         internal static string ResolveConnectionString(string attributeConnectionStringKey, string optionsConnectionString, IConfiguration configuration)
@@ -47,7 +32,7 @@ namespace Microsoft.Azure.WebJobs.Extensions
             }
             catch (Exception)
             {
-                // Do Nothing
+                // Do nothing.
             }
 
             return optionsConnectionString;

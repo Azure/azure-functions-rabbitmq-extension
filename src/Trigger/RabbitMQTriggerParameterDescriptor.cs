@@ -9,8 +9,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQTriggerParameterDescriptor : TriggerParameterDescriptor
     {
-        public string Hostname { get; set; }
-
         public string QueueName { get; set; }
 
         public override string GetTriggerReason(IDictionary<string, string> arguments)

@@ -43,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             var rule = context.AddBindingRule<RabbitMQAttribute>();
-            rule.AddValidator(ValidateBinding);
+
             rule.BindToCollector<ReadOnlyMemory<byte>>((attr) =>
             {
                 return new RabbitMQAsyncCollector(CreateContext(attr), _logger);
@@ -64,48 +64,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     _configuration));
         }
 
-        public void ValidateBinding(RabbitMQAttribute attribute, Type type)
-        {
-            string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
-            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName) ?? Constants.LocalHost;
-            _logger.LogInformation("Setting hostName to localhost since it was not specified");
-
-            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
-            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
-
-            if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
-            {
-                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
-            }
-        }
-
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
             string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
-            string hostName = Utility.FirstOrDefault(attribute.HostName, _options.Value.HostName);
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
-            string userName = Utility.FirstOrDefault(attribute.UserName, _options.Value.UserName);
-            string password = Utility.FirstOrDefault(attribute.Password, _options.Value.Password);
-            int port = Utility.FirstOrDefault(attribute.Port, _options.Value.Port);
-            bool enableSsl = Utility.FirstOrDefault(attribute.EnableSsl, _options.Value.EnableSsl);
-            bool skipCertificateValidation = Utility.FirstOrDefault(attribute.SkipCertificateValidation, _options.Value.SkipCertificateValidation);
+            bool disableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, _options.Value.DisableCertificateValidation);
 
-            RabbitMQAttribute resolvedAttribute;
-            IRabbitMQService service;
-
-            resolvedAttribute = new RabbitMQAttribute
+            RabbitMQAttribute resolvedAttribute = new RabbitMQAttribute
             {
                 ConnectionStringSetting = connectionString,
-                HostName = hostName,
                 QueueName = queueName,
-                UserName = userName,
-                Password = password,
-                Port = port,
-                EnableSsl = enableSsl,
-                SkipCertificateValidation = skipCertificateValidation,
+                DisableCertificateValidation = disableCertificateValidation,
             };
 
-            service = GetService(connectionString, hostName, queueName, userName, password, port, enableSsl, skipCertificateValidation);
+            IRabbitMQService service = GetService(connectionString, queueName, disableCertificateValidation);
 
             return new RabbitMQContext
             {
@@ -114,19 +86,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             };
         }
 
-        internal IRabbitMQService GetService(string connectionString, string hostName, string queueName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation)
+        internal IRabbitMQService GetService(string connectionString, string queueName, bool disableCertificateValidation)
         {
-            string[] keyArray = { connectionString, hostName, queueName, userName, password, port.ToString() };
+            string[] keyArray = { connectionString, queueName, disableCertificateValidation.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, queueName, userName, password, port, enableSsl, skipCertificateValidation));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
-        internal IRabbitMQService GetService(string connectionString, string hostName, string userName, string password, int port, bool enableSsl, bool skipCertificateValidation)
+        internal IRabbitMQService GetService(string connectionString, bool disableCertificateValidation)
         {
-            string[] keyArray = { connectionString, hostName, userName, password, port.ToString() };
+            string[] keyArray = { connectionString, disableCertificateValidation.ToString() };
             string key = string.Join(",", keyArray);
-            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, hostName, userName, password, port, enableSsl, skipCertificateValidation));
+            return _connectionParametersToService.GetOrAdd(key, _ => _rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation));
         }
     }
 }

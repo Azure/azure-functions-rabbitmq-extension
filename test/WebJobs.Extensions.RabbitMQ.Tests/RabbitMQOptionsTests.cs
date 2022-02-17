@@ -13,14 +13,14 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQOptionsTests
     {
+        // TODO: Do not immitate source code.
         private string GetFormattedOption(RabbitMQOptions option)
         {
             JObject options = new JObject
             {
-                { nameof(option.HostName), option.HostName },
                 { nameof(option.QueueName), option.QueueName },
-                { nameof(option.Port), option.Port },
                 { nameof(option.PrefetchCount), option.PrefetchCount },
+                { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
             };
 
             return options.ToString(Formatting.Indented);
@@ -31,13 +31,10 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             RabbitMQOptions options = new RabbitMQOptions();
 
-            Assert.Equal<ushort>(30, options.PrefetchCount);
-            Assert.Equal(0, options.Port);
-            Assert.Null(options.HostName);
-            Assert.Null(options.QueueName);
-            Assert.Null(options.UserName);
-            Assert.Null(options.Password);
             Assert.Null(options.ConnectionString);
+            Assert.Null(options.QueueName);
+            Assert.Equal<ushort>(30, options.PrefetchCount);
+            Assert.False(options.DisableCertificateValidation);
 
             // Test formatted
             Assert.Equal(GetFormattedOption(options), options.Format());
@@ -46,31 +43,23 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void TestConfiguredRabbitMQOptions()
         {
-            ushort expectedPrefetchCount = 100;
-            int expectedPort = 8080;
-            string expectedHostName = "someHostName";
-            string expectedQueueName = "someQueueName";
-            string expectedUserName = "someUserName";
-            string expectedPassword = "somePassword";
             string expectedConnectionString = "someConnectionString";
+            string expectedQueueName = "someQueueName";
+            ushort expectedPrefetchCount = 100;
+            bool expectedDisableCertificateValidation = true;
+
             RabbitMQOptions options = new RabbitMQOptions()
             {
-                Port = expectedPort,
-                HostName = expectedHostName,
-                QueueName = expectedQueueName,
-                UserName = expectedUserName,
-                Password = expectedPassword,
                 ConnectionString = expectedConnectionString,
+                QueueName = expectedQueueName,
                 PrefetchCount = expectedPrefetchCount,
+                DisableCertificateValidation = expectedDisableCertificateValidation,
             };
 
-            Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
-            Assert.Equal(expectedPort, options.Port);
-            Assert.Equal(expectedHostName, options.HostName);
-            Assert.Equal(expectedQueueName, options.QueueName);
-            Assert.Equal(expectedUserName, options.UserName);
-            Assert.Equal(expectedPassword, options.Password);
             Assert.Equal(expectedConnectionString, options.ConnectionString);
+            Assert.Equal(expectedQueueName, options.QueueName);
+            Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
+            Assert.Equal(expectedDisableCertificateValidation, options.DisableCertificateValidation);
 
             // Test formatted
             Assert.Equal(GetFormattedOption(options), options.Format());

@@ -20,14 +20,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         private readonly ILogger _logger;
         private readonly Type _parameterType;
         private readonly string _queueName;
-        private readonly string _hostName;
         private readonly ushort _prefetchCount;
 
-        public RabbitMQTriggerBinding(IRabbitMQService service, string hostname, string queueName, ILogger logger, Type parameterType, ushort prefetchCount)
+        public RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount)
         {
             _service = service;
             _queueName = queueName;
-            _hostName = hostname;
             _logger = logger;
             _parameterType = parameterType;
             _prefetchCount = prefetchCount;
@@ -66,7 +64,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             return new RabbitMQTriggerParameterDescriptor
             {
-                Hostname = _hostName,
                 QueueName = _queueName,
             };
         }
