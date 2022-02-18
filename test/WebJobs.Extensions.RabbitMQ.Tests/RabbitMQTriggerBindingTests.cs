@@ -3,12 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Xunit;
 
-namespace WebJobs.Extensions.RabbitMQ.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQTriggerBindingTests
     {

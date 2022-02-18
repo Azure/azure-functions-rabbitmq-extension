@@ -4,6 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
+    <AssemblyName>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests</AssemblyName>
+    <RootNamespace>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

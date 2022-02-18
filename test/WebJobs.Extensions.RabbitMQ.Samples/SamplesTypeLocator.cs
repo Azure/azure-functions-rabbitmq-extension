@@ -3,9 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Azure.WebJobs;
 
-namespace WebJobs.Extensions.RabbitMQ.Samples
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
     public class SamplesTypeLocator : ITypeLocator
     {

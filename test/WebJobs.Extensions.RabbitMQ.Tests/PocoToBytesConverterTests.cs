@@ -3,11 +3,10 @@
 
 using System;
 using System.Text;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace WebJobs.Extensions.RabbitMQ.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class PocoToBytesConverterTests
     {
