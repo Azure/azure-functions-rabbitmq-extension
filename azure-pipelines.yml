@@ -26,7 +26,7 @@ pool:
 
 jobs:
   - job: buildExtension
-    displayName: Build WebJobs extension
+    displayName: WebJobs extension
     steps:
       - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
           $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
@@ -152,7 +152,7 @@ jobs:
         artifact: drop-extension
 
   - job: buildJavaBindings
-    displayName: Build Java library
+    displayName: Java library
     steps:
       - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
           $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
@@ -167,19 +167,19 @@ jobs:
       - task: Maven@3
         displayName: Set library version
         inputs:
-          mavenPomFile: binding-library\java\pom.xml
+          mavenPomFile: java-library\pom.xml
           goals: versions:set
           options: --define=newVersion=$(version)
 
       - task: Maven@3
         displayName: Build library
         inputs:
-          mavenPomFile: binding-library\java\pom.xml
+          mavenPomFile: java-library\pom.xml
           options: --batch-mode --define=gpg.skip --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
 
       - powershell: |
           $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
-          $source = 'binding-library\java'
+          $source = 'java-library'
           $destination = '$(Build.ArtifactStagingDirectory)\$(version)'
 
           New-Item $destination -ItemType Directory

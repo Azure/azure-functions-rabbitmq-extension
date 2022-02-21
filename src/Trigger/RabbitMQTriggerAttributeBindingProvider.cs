@@ -50,29 +50,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, _options.Value.ConnectionString, _configuration);
-
             string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+            bool disableCertificateValidation = attribute.DisableCertificateValidation || _options.Value.DisableCertificateValidation;
 
-            string hostName = Resolve(attribute.HostName) ?? Constants.LocalHost;
+            IRabbitMQService service = _provider.GetService(connectionString, queueName, disableCertificateValidation);
 
-            string userName = Resolve(attribute.UserNameSetting);
-
-            string password = Resolve(attribute.PasswordSetting);
-
-            bool enableSsl = attribute.EnableSsl;
-
-            bool skipCertificateValidation = attribute.SkipCertificateValidation;
-
-            int port = attribute.Port;
-
-            if (string.IsNullOrEmpty(connectionString) && !Utility.ValidateUserNamePassword(userName, password, hostName))
-            {
-                throw new InvalidOperationException("RabbitMQ username and password required if not connecting to localhost");
-            }
-
-            IRabbitMQService service = _provider.GetService(connectionString, hostName, queueName, userName, password, port, enableSsl, skipCertificateValidation);
-
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, hostName, queueName, _logger, parameter.ParameterType, _options.Value.PrefetchCount));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, _logger, parameter.ParameterType, _options.Value.PrefetchCount));
         }
 
         private string Resolve(string name)

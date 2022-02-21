@@ -12,64 +12,34 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     /// </summary>
     public class RabbitMQOptions : IOptionsFormatter
     {
-        public RabbitMQOptions()
-        {
-            PrefetchCount = 30;
-        }
-
         /// <summary>
-        /// Gets or sets the HostName used to authenticate with RabbitMQ.
-        /// </summary>
-        public string HostName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the QueueName to receive messages from or enqueue messages to.
-        /// </summary>
-        public string QueueName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the UserName used to authenticate with RabbitMQ.
-        /// </summary>
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Password used to authenticate with RabbitMQ.
-        /// </summary>
-        public string Password { get; set; }
-
-        /// <summary>
-        /// Gets or sets the ConnectionString used to authenticate with RabbitMQ.
+        /// Gets or sets the RabbitMQ connection URI.
         /// </summary>
         public string ConnectionString { get; set; }
 
         /// <summary>
-        /// Gets or sets the Port used. Defaults to 0.
+        /// Gets the RabbitMQ queue name.
         /// </summary>
-        public int Port { get; set; }
+        public string QueueName { get; set; }
 
         /// <summary>
-        /// Enable or disable ssl in RabbitMQ connection.
+        /// Gets or sets the RabbitMQ QoS prefetch-count setting. It controls the number of RabbitMQ messages cached.
         /// </summary>
-        public bool EnableSsl { get; set; }
+        public ushort PrefetchCount { get; set; } = 30;
 
         /// <summary>
-        /// Enable os disable checking certificate when Ssl is enabled (not recommended for production).
+        /// Gets or sets a value indicating whether certificate validation should be disabled. Not recommended for
+        /// production. Does not apply when SSL is disabled.
         /// </summary>
-        public bool SkipCertificateValidation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the prefetch count while creating the RabbitMQ QoS. This seting controls how many values are cached.
-        /// </summary>
-        public ushort PrefetchCount { get; set; }
+        public bool DisableCertificateValidation { get; set; }
 
         public string Format()
         {
-            JObject options = new JObject
+            var options = new JObject
             {
-                { nameof(HostName), HostName },
-                { nameof(QueueName), QueueName },
-                { nameof(Port), Port },
-                { nameof(PrefetchCount), PrefetchCount },
+                [nameof(QueueName)] = QueueName,
+                [nameof(PrefetchCount)] = PrefetchCount,
+                [nameof(DisableCertificateValidation)] = DisableCertificateValidation,
             };
 
             return options.ToString(Formatting.Indented);

@@ -21,25 +21,24 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Opens_Connection()
         {
-            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
+            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
-            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), false, false)).Returns(new Mock<IRabbitMQService>().Object);
+            mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false)).Returns(new Mock<IRabbitMQService>().Object);
             RabbitMQAttribute attr = GetTestAttribute();
 
             RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
             var model = clientBuilder.Convert(attr);
 
-            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), Constants.LocalHost, "guest", "guest", 5672, false, false), Times.Exactly(1));
+            mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), false), Times.Exactly(1));
         }
 
         [Fact]
         public void TestWhetherConnectionIsPooled()
         {
-            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions { HostName = Constants.LocalHost });
+            var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), false, false))
-                .Returns(GetRabbitMQService())
+            mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), false))
                 .Returns(GetRabbitMQService());
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
             RabbitMQAttribute attr = GetTestAttribute();
@@ -56,11 +55,7 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         {
             return new RabbitMQAttribute
             {
-                ConnectionStringSetting = string.Empty,
-                HostName = Constants.LocalHost,
-                UserName = "guest",
-                Password = "guest",
-                Port = 5672
+                ConnectionStringSetting = "amqp://guest:guest@localhost:5672",
             };
         }
 

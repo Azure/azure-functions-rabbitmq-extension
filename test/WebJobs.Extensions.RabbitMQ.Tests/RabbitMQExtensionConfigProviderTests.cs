@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using System;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Configuration;
@@ -20,30 +19,13 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var rabbitmqServiceFactory = new Mock<IRabbitMQServiceFactory>();
 
 
-            rabbitmqServiceFactory.SetupSequence(a => a.CreateService(
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<int>(),
-               false,
-               false)).Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object);
+            rabbitmqServiceFactory
+                .SetupSequence(a => a.CreateService(It.IsAny<string>(), It.IsAny<string>(), false))
+                .Returns(new Mock<IRabbitMQService>().Object);
 
-            rabbitmqServiceFactory.SetupSequence(a => a.CreateService(
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<string>(),
-               It.IsAny<int>(),
-               false,
-               false)).Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object)
-               .Returns(new Mock<IRabbitMQService>().Object);
+            rabbitmqServiceFactory
+                .SetupSequence(a => a.CreateService(It.IsAny<string>(), false))
+                .Returns(new Mock<IRabbitMQService>().Object);
 
             RabbitMQExtensionConfigProvider extensionConfigProvider = new RabbitMQExtensionConfigProvider(
                 new Mock<IOptions<RabbitMQOptions>>().Object,
@@ -52,9 +34,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
                 NullLoggerFactory.Instance,
                 new Mock<IConfiguration>().Object);
 
-            var rabbitmqService1 = extensionConfigProvider.GetService("something", "something", "something", "something", 80, false, false);
-            var rabbitmqService2 = extensionConfigProvider.GetService("something", "something", "something", "something", 80, false, false);
-            var rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", "something", "something", "something", 80, false, false);
+            var rabbitmqService1 = extensionConfigProvider.GetService("something", false);
+            var rabbitmqService2 = extensionConfigProvider.GetService("something", false);
+            var rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", false);
 
             // 1 and 2 should be equal
             Assert.Equal(rabbitmqService1, rabbitmqService2);
@@ -63,9 +45,9 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             Assert.NotEqual(rabbitmqService1, rabbitmqService3);
             Assert.NotEqual(rabbitmqService2, rabbitmqService3);
 
-            var rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80, false, false);
-            var rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", "asomething", "asomething", "asomething", 80, false, false);
-            var rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", "asomething", "asomething", "asomething", 80, false, false);
+            var rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", false);
+            var rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", false);
+            var rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", false);
 
             // 4 and 5 should be equal
             Assert.Equal(rabbitmqService4, rabbitmqService5);

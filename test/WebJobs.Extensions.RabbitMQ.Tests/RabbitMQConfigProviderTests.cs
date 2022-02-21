@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions;
 using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -19,45 +18,34 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Creates_Context_Correctly()
         {
-            var options = new RabbitMQOptions { HostName = Constants.LocalHost, QueueName = "hello" };
+            var options = new RabbitMQOptions { ConnectionString = "connectionStringFromOptions", QueueName = "queueNameFromOptions" };
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
-            var attribute = new RabbitMQAttribute { HostName = "131.107.174.10", QueueName = "queue" };
+            var attribute = new RabbitMQAttribute { ConnectionStringSetting = "connectionStringSettingFromAttribute", QueueName = "queueNameFromAttributes" };
 
             var actualContext = config.CreateContext(attribute);
 
-            RabbitMQAttribute attr = new RabbitMQAttribute
-            {
-                HostName = "131.107.174.10",
-                QueueName = "queue",
-            };
-
-            RabbitMQContext expectedContext = new RabbitMQContext
-            {
-                ResolvedAttribute = attr,
-            };
-
-            Assert.Equal(actualContext.ResolvedAttribute.HostName, expectedContext.ResolvedAttribute.HostName);
-            Assert.Equal(actualContext.ResolvedAttribute.QueueName, expectedContext.ResolvedAttribute.QueueName);
+            Assert.Equal("connectionStringSettingFromAttribute", actualContext.ResolvedAttribute.ConnectionStringSetting);
+            Assert.Equal("queueNameFromAttributes", actualContext.ResolvedAttribute.QueueName);
         }
 
         [Theory]
-        [InlineData(Constants.LocalHost, "queue", null, null)]
-        [InlineData(null, "hello", Constants.LocalHost, null)]
-        [InlineData(null, null, Constants.LocalHost, "name")]
-        public void Handles_Null_Attributes_And_Options(string attrHostname, string attrQueueName, string optHostname, string optQueueName)
+        [InlineData("connectionStringSettingFromAttribute", "queueNameFromAttribute", null, null)]
+        [InlineData(null, "queueNameFromAttribute", "connectionStringFromOptions", null)]
+        [InlineData(null, null, "connectionStringFromOptions", "queueNameFromOptions")]
+        public void Handles_Null_Attributes_And_Options(string attrConnectionStringSetting, string attrQueueName, string optConnectionString, string optQueueName)
         {
             RabbitMQAttribute attr = new RabbitMQAttribute
             {
-                HostName = attrHostname,
+                ConnectionStringSetting = attrConnectionStringSetting,
                 QueueName = attrQueueName,
             };
 
             RabbitMQOptions opt = new RabbitMQOptions
             {
-                HostName = optHostname,
+                ConnectionString = optConnectionString,
                 QueueName = optQueueName,
             };
 
@@ -67,20 +55,20 @@ namespace WebJobs.Extensions.RabbitMQ.Tests
             var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
             var actualContext = config.CreateContext(attr);
 
-            if (optHostname == null && optQueueName == null)
+            if (optConnectionString == null && optQueueName == null)
             {
-                Assert.Equal(actualContext.ResolvedAttribute.HostName, attrHostname);
-                Assert.Equal(actualContext.ResolvedAttribute.QueueName, attrQueueName);
+                Assert.Equal(attrConnectionStringSetting, actualContext.ResolvedAttribute.ConnectionStringSetting);
+                Assert.Equal(attrQueueName, actualContext.ResolvedAttribute.QueueName);
             }
-            else if (attrHostname == null && optQueueName == null)
+            else if (attrConnectionStringSetting == null && optQueueName == null)
             {
-                Assert.Equal(actualContext.ResolvedAttribute.HostName, optHostname);
-                Assert.Equal(actualContext.ResolvedAttribute.QueueName, attrQueueName);
+                Assert.Equal(optConnectionString, actualContext.ResolvedAttribute.ConnectionStringSetting);
+                Assert.Equal(attrQueueName, actualContext.ResolvedAttribute.QueueName);
             }
             else
             {
-                Assert.Equal(actualContext.ResolvedAttribute.HostName, optHostname);
-                Assert.Equal(actualContext.ResolvedAttribute.QueueName, optQueueName);
+                Assert.Equal(optConnectionString, actualContext.ResolvedAttribute.ConnectionStringSetting);
+                Assert.Equal(optQueueName, actualContext.ResolvedAttribute.QueueName);
             }
         }
     }
