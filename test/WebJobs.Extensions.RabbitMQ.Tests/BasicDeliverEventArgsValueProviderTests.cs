@@ -4,12 +4,11 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 using Xunit;
 
-namespace WebJobs.Extensions.RabbitMQ.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class BasicDeliverEventArgsValueProviderTests
     {

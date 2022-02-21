@@ -3,13 +3,12 @@
 
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace WebJobs.Extensions.RabbitMQ.Samples
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
     public static class RabbitMQSamples
     {
