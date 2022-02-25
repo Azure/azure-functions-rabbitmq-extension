@@ -65,7 +65,7 @@ jobs:
         inputs:
           connectedServiceName: ESRP Service
           folderPath: src\bin\Release\netstandard2.0
-          pattern: WebJobs.Extensions.RabbitMQ.dll
+          pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.dll
           signConfigType: inlineSignParams
           inlineOperation: |
             [
