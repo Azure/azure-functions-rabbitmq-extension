@@ -22,6 +22,7 @@ namespace Microsoft.Azure.WebJobs
         /// <summary>
         /// Gets or sets the RabbitMQ queue name.
         /// </summary>
+        [AutoResolve]
         public string QueueName { get; set; }
 
         /// <summary>
