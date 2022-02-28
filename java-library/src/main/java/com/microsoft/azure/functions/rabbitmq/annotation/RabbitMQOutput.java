@@ -34,7 +34,6 @@ import java.lang.annotation.Target;
  *     output.setValue(message);
  * }
  * </pre>
- *
  */
 
 @Retention(RetentionPolicy.RUNTIME)

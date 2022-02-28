@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  * </p>
  *
  * <p>
- * Example function that uses a RabbitMQ trigger:
+ * Example function that uses a RabbitMQ trigger binding:
  * </p>
  *
  * <pre>
