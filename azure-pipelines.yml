@@ -29,7 +29,7 @@ jobs:
     displayName: WebJobs extension
     steps:
       - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
+          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v(((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?:-\w+)?)$'
           if (-not $found) {
             Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
             exit 1
@@ -97,8 +97,7 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           command: pack
-          workingDirectory: extension
-          searchPatternPack: WebJobs.Extensions.RabbitMQ\WebJobs.Extensions.RabbitMQ.csproj
+          searchPatternPack: extension\WebJobs.Extensions.RabbitMQ\WebJobs.Extensions.RabbitMQ.csproj
           configurationToPack: Release
           buildProperties: Version=$(version);CommitHash=$(Build.SourceVersion)
           outputDir: $(Build.ArtifactStagingDirectory)\$(version)
