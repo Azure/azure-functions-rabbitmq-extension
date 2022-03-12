@@ -22,7 +22,7 @@
     │       ├───Microsoft.Azure.WebJobs.Extensions.RabbitMQ.2.0.0-preview.symbols.nupkg
     │       └───_manifest
     │           └───<files>
-    └───drop-java-bindings
+    └───drop-java-library
         └───2.0.0-preview
             ├───_manifest
             │   └───<files>

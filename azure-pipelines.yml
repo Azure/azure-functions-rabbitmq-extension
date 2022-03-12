@@ -29,7 +29,7 @@ jobs:
     displayName: WebJobs extension
     steps:
       - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
+          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
           if (-not $found) {
             Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
             exit 1
@@ -50,13 +50,14 @@ jobs:
         displayName: Build solution
         inputs:
           command: build
+          workingDirectory: extension
           arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
 
       - task: DotNetCoreCLI@2
         displayName: Test extension
         inputs:
           command: test
-          projects: test\WebJobs.Extensions.RabbitMQ.Tests\WebJobs.Extensions.RabbitMQ.Tests.csproj
+          workingDirectory: extension
           arguments: --configuration Debug
 
       - task: EsrpCodeSigning@1
@@ -64,7 +65,7 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           connectedServiceName: ESRP Service
-          folderPath: src\bin\Release\netstandard2.0
+          folderPath: extension\WebJobs.Extensions.RabbitMQ\bin\Release\netstandard2.0
           pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.dll
           signConfigType: inlineSignParams
           inlineOperation: |
@@ -96,7 +97,8 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         inputs:
           command: pack
-          searchPatternPack: src\WebJobs.Extensions.RabbitMQ.csproj
+          workingDirectory: extension
+          searchPatternPack: WebJobs.Extensions.RabbitMQ\WebJobs.Extensions.RabbitMQ.csproj
           configurationToPack: Release
           buildProperties: Version=$(version);CommitHash=$(Build.SourceVersion)
           outputDir: $(Build.ArtifactStagingDirectory)\$(version)
@@ -151,11 +153,11 @@ jobs:
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
         artifact: drop-extension
 
-  - job: buildJavaBindings
+  - job: buildJavaLibrary
     displayName: Java library
     steps:
       - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((\d+\.\d+\.\d+)(?:-\w+))*$'
+          $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
           if (-not $found) {
             Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
             exit 1
@@ -201,4 +203,4 @@ jobs:
       - publish: $(Build.ArtifactStagingDirectory)
         displayName: Publish library package
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
-        artifact: drop-java-bindings
+        artifact: drop-java-library
