@@ -27,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 Uri = new Uri(connectionString),
             };
-            
+
             connectionFactory.AutomaticRecoveryEnabled = true;
 
             if (disableCertificateValidation && connectionFactory.Ssl.Enabled)
