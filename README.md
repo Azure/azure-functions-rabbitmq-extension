@@ -1,58 +1,52 @@
-|Branch|Status|
-|---|---|
-|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-rabbitmq-extension?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=48&branchName=dev)|
+# RabbitMQ Extension for Azure Functions
 
-# RabbitMQ Binding Support for Azure Functions
-NuGet Package [Microsoft.Azure.WebJobs.Extensions.RabbitMQ](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.RabbitMQ)
+[![Build Status](https://dev.azure.com/azfunc/Azure%20Functions/_apis/build/status/Azure.azure-functions-rabbitmq-extension?branchName=dev)](https://dev.azure.com/azfunc/Azure%20Functions/_build/latest?definitionId=48&branchName=dev)
 
-Please note that the RabbitMQ extension is fully supported on Premium and Dedicated plans. Consumption is not supported. The Azure Functions RabbitMQ Binding extensions allow you to send and receive messages using the RabbitMQ API but by writing Functions code. The RabbitMQ output binding sends messages to a specific queue. The RabbitMQ trigger fires when it receives a message from a specific queue.
+This repository hosts RabbitMQ trigger and output bindings to interact with RabbitMQ in your [Azure Functions](https://azure.microsoft.com/services/functions/)
+and [WebJobs](https://docs.microsoft.com/azure/app-service/webjobs-sdk-how-to). More specifically, the trigger binding enables invoking a function when a message arrives at the RabbitMQ queue. The triggered function can consume this message and take required action. Similarly, the output binding facilitates publishing of messages on the RabbitMQ queue.
 
-[RabbitMQ Documentation for the .NET Client](https://www.rabbitmq.com/dotnet-api-guide.html)
+## Usage
 
-To get started with developing with this extension, make sure you first [set up a RabbitMQ endpoint](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Setting-up-a-RabbitMQ-Endpoint). Then you can go ahead and begin developing your functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-CSX), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
+The following example shows a [C# function](https://docs.microsoft.com/azure/azure-functions/functions-dotnet-class-library) that gets invoked (by virtue of the trigger binding) when a message is added to a RabbitMQ queue named `inputQueue`. The function then logs the message string, composes an output message and returns it. This value is then published to the queue named `outputQueue` through the output binding. The example function dictates that the connection URI for the RabbitMQ service is the one with key `RabbitMqConnectionString` in the [Application Settings](https://docs.microsoft.com/azure/azure-functions/functions-develop-local#local-settings-file).
 
-# Samples
-
-See the repository [wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for more detailed samples of bindings to different types.
-
-```C#
-public static void RabbitMQTrigger_RabbitMQOutput(
-    [RabbitMQTrigger("queue", ConnectionStringSetting = "RabbitMQConnectionAppSetting")] string inputMessage,
-    [RabbitMQ(
-        ConnectionStringSetting = "RabbitMQConnectionAppSetting",
-        QueueName = "hello")] out string outputMessage,
+```cs
+[FunctionName("RabbitMqExample")]
+[return: RabbitMQ(QueueName = "outputQueue", ConnectionStringSetting = "RabbitMqConnectionString")]
+public static string Run(
+    [RabbitMQTrigger(queueName: "inputQueue" ConnectionStringSetting = "RabbitMqConnectionString")] string name,
     ILogger logger)
 {
-    outputMessage = inputMessage;
-    logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
+    logger.LogInformation($"Message received: {name}.");
+    return $"Hello, {name}.";
 }
 ```
 
-The above sample waits on a trigger from the queue named "queue" connected to the connection string value of key "RabbitMQConnectionAppSetting." The output binding takes the messages from the trigger queue and outputs them to queue "hello" connected to the connection configured by the key "RabbitMQConnectionAppSetting". When running locally, add the connection string setting to local.settings.json file. When running in Azure, add this setting as [Application Setting](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings) for your app.
+Along with `string` type, the extension also allows binding to the input arguments and returned values of `byte[]` type, POCO objects, and `BasicDeliverEventArgs` type. The last type is particularly useful for fetching of RabbitMQ message headers and other message properties. See the [repository wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for detailed samples of bindings to different types.
 
+## Getting Started
 
-## Properties
+Before working with the RabbitMQ extension, you must [set up your RabbitMQ endpoint](https://www.rabbitmq.com/download.html). Then you can get started by following the sample functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-CSX), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
 
-|Property Name|Description|Example|
-|--|--|--|
-|ConnectionStringSetting|The connection string for the RabbitMQ queue|`amqp://user:password@url:port`|
-|QueueName|The name of the source or destination queue.|
-|HostName|(ignored if using ConnectionStringSetting) Hostname of the queue|`10.26.45.210`|
-|UserName|(ignored if using ConnectionStringSetting) User name to access queue|`user`|
-|Password|(ignored if using ConnectionStringSetting) Password to access queue|`password`|
-|EnableSsl|Bool to enable or disable SSL in AMQP connection (default false)|`true`|
-|SkipCertificateValidation|Bool to enable or disable checking certificate when EnableSsl=true. It will accept RemoteCertificateChainErrors and RemoteCertificateNameMismatch errors (default false. Not recommended for production)|`true`|
+To learn about creating an application that works with RabbitMQ, see the [getting started](https://www.rabbitmq.com/getstarted.html) page. For general documentation on .NET RabbitMQ client usage, see the [.NET/C# client API guide](https://www.rabbitmq.com/dotnet-api-guide.html).
 
-# Contributing
+## Attributes
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+The following attributes are common to both RabbitMQ trigger and output bindings.
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+| Attribute Name | Type | Description |
+|---|---|---|
+| `ConnectionStringSetting` | string | The setting name for RabbitMQ connection URI. An example setting value would be `amqp://user:pass@host:10000/vhost`. |
+| `QueueName` | string | The RabbitMQ queue name. |
+| `DisableCertificateValidation` | boolean | Indicates whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is disabled. |
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+## Further Reading
+
+Please refer to the Microsoft Docs page on [RabbitMQ bindings for Azure Functions overview](https://docs.microsoft.com/azure/azure-functions/functions-bindings-rabbitmq). It contains install instructions for all the supported programming languages, information on setting up and configuring the function app, and the  list of Azure App Service plans that support hosting of the function apps with RabbitMQ bindings.
+
+## Contributing
+
+This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
+
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repositories using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
