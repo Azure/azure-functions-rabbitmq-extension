@@ -6,6 +6,8 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>

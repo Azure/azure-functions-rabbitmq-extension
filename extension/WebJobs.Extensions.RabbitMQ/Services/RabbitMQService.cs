@@ -9,21 +9,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private readonly IRabbitMQModel _rabbitMQModel;
-        private readonly IModel _model;
-        private readonly string _connectionString;
         private readonly string _queueName;
-        private readonly bool _disableCertificateValidation;
-        private readonly object _publishBatchLock;
-
-        private IBasicPublishBatch _batch;
 
         public RabbitMQService(string connectionString, bool disableCertificateValidation)
         {
-            _connectionString = connectionString;
-            _disableCertificateValidation = disableCertificateValidation;
-
-            ConnectionFactory connectionFactory = new ConnectionFactory
+            var connectionFactory = new ConnectionFactory
             {
                 Uri = new Uri(connectionString),
             };
@@ -33,32 +23,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 connectionFactory.Ssl.AcceptablePolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
             }
 
-            _model = connectionFactory.CreateConnection().CreateModel();
-            _publishBatchLock = new object();
+            Model = connectionFactory.CreateConnection().CreateModel();
+            PublishBatchLock = new object();
         }
 
         public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
             : this(connectionString, disableCertificateValidation)
         {
-            _rabbitMQModel = new RabbitMQModel(_model);
+            RabbitMQModel = new RabbitMQModel(Model);
             _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
-            _model.QueueDeclarePassive(_queueName); // Throws exception if queue doesn't exist
-            _batch = _model.CreateBasicPublishBatch();
+            Model.QueueDeclarePassive(_queueName); // Throws exception if queue doesn't exist
+            BasicPublishBatch = Model.CreateBasicPublishBatch();
         }
 
-        public IRabbitMQModel RabbitMQModel => _rabbitMQModel;
+        public IRabbitMQModel RabbitMQModel { get; }
 
-        public IModel Model => _model;
+        public IModel Model { get; }
 
-        public IBasicPublishBatch BasicPublishBatch => _batch;
+        public IBasicPublishBatch BasicPublishBatch { get; private set; }
 
-        public object PublishBatchLock => _publishBatchLock;
+        public object PublishBatchLock { get; }
 
         // Typically called after a flush
         public void ResetPublishBatch()
         {
-            _batch = _model.CreateBasicPublishBatch();
+            BasicPublishBatch = Model.CreateBasicPublishBatch();
         }
     }
 }

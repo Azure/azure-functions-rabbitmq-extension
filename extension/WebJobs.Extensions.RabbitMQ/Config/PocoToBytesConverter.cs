@@ -11,10 +11,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         public ReadOnlyMemory<byte> Convert(T input)
         {
-            if (input == null)
-            {
-                throw new ArgumentNullException();
-            }
+            _ = input ?? throw new ArgumentNullException(nameof(input));
 
             string res = JsonConvert.SerializeObject(input);
             return Encoding.UTF8.GetBytes(res);

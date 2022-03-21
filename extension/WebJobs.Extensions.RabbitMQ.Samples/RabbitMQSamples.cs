@@ -52,7 +52,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             [RabbitMQ(QueueName = "queue")] IAsyncCollector<byte[]> messages,
             ILogger logger)
         {
-            logger.LogInformation($"Received queue trigger");
+            logger.LogInformation("Received queue trigger");
             byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
             await messages.AddAsync(messageInBytes);
         }

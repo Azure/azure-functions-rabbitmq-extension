@@ -1,58 +1,65 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Common properties (see https://docs.microsoft.com/visualstudio/msbuild/common-msbuild-project-properties) -->
+    <!-- Compiler options (see https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-options) -->
+    <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</RootNamespace>
-    <ApplicationIcon />
-    <OutputType>Library</OutputType>
-    <StartupObject />
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>PublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>All</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- <Nullable>enable</Nullable> -->
+
+    <!-- NuGet package metadata (see https://docs.microsoft.com/nuget/reference/msbuild-targets#pack-target) -->
     <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
     <Authors>Microsoft</Authors>
-    <Product>Azure WebJobs RabbitMQ Extension</Product>
     <Description>This package contains binding extensions for RabbitMQ.</Description>
-    <RepositoryUrl>https://github.com/Azure/azure-functions-rabbitmq-extension</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>Microsoft Azure WebJobs AzureFunctions</PackageTags>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Azure/azure-functions-rabbitmq-extension/wiki</PackageProjectUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-   
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' or '$(Configuration)|$(Platform)'=='Debug|Any CPU'">
-    <LangVersion>latest</LangVersion>
-	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PackageIcon>webjobs.png</PackageIcon>
+    <PackageTags>Microsoft Azure WebJobs AzureFunctions</PackageTags>
+
+    <!-- Use Source Link (see https://devblogs.microsoft.com/dotnet/producing-packages-with-source-link/) -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' or '$(Configuration)|$(Platform)'=='Release|Any CPU'">
-    <LangVersion>latest</LangVersion>
-	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <CodeAnalysisRuleSet>WebJobs.Extensions.RabbitMQ.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <CodeAnalysisRuleSet>WebJobs.Extensions.RabbitMQ.ruleset</CodeAnalysisRuleSet>
+  <!-- Produce deterministic assembly (see https://devblogs.microsoft.com/dotnet/producing-packages-with-source-link/) -->
+  <PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
+    <None Include="webjobs.png" Pack="true" Visible="false" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.14" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
+    <AdditionalFiles Include="..\stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.31" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Json" Version="4.5.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="all" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.4" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.Json" Version="4.7.1" />
   </ItemGroup>
 
 </Project>

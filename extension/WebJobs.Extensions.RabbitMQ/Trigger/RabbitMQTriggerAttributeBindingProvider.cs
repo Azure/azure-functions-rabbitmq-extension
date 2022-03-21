@@ -36,10 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
+            _ = context ?? throw new ArgumentNullException(nameof(context));
 
             ParameterInfo parameter = context.Parameter;
             RabbitMQTriggerAttribute attribute = parameter.GetCustomAttribute<RabbitMQTriggerAttribute>(inherit: false);

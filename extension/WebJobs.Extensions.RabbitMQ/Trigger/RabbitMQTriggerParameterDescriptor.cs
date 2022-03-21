@@ -13,7 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public override string GetTriggerReason(IDictionary<string, string> arguments)
         {
-            return string.Format("RabbitMQ message detected from queue: {0} at {1}", QueueName, DateTime.Now);
+            return $"RabbitMQ message detected from queue: {QueueName} at {DateTime.Now}";
         }
     }
 }

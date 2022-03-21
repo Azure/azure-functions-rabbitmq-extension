@@ -17,16 +17,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            if (_context.Service == null)
-            {
-                throw new ArgumentNullException("context.service");
-            }
+            _ = context ?? throw new ArgumentNullException(nameof(context));
+            _ = context.Service ?? throw new ArgumentException("Value cannot be null. Parameter name: context.Service");
+            _context = context;
         }
 
         public Task AddAsync(ReadOnlyMemory<byte> message, CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug($"Adding message to batch for publishing...");
+            _logger.LogDebug("Adding message to batch for publishing...");
 
             lock (_context.Service.PublishBatchLock)
             {
@@ -36,14 +34,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return Task.CompletedTask;
         }
 
-        public async Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task FlushAsync(CancellationToken cancellationToken = default)
         {
-            await PublishAsync();
+            return PublishAsync();
         }
 
         internal Task PublishAsync()
         {
-            _logger.LogDebug($"Publishing messages to queue.");
+            _logger.LogDebug("Publishing messages to queue.");
 
             lock (_context.Service.PublishBatchLock)
             {
