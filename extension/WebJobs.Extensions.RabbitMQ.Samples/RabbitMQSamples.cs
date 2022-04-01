@@ -35,7 +35,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
              [RabbitMQ(QueueName = "queue")] out TestClass outputMessage,
              ILogger logger)
         {
-            outputMessage = new TestClass(1, 1);
+            outputMessage = new TestClass { X = 1, Y = 1 };
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
@@ -120,15 +120,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 
         public class TestClass
         {
-            public TestClass(int value1, int value2)
-            {
-                Property1 = value1;
-                Property2 = value2;
-            }
+            public int X { get; set; }
 
-            public int Property1 { get; }
-
-            public int Property2 { get; }
+            public int Y { get; set; }
         }
     }
 }

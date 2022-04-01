@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             {
                 var jobHost = (JobHost)host.Services.GetService<IJobHost>();
 
-                await host.RunAsync().ConfigureAwait(false);
+                await host.RunAsync();
             }
         }
     }

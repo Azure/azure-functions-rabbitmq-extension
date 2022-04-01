@@ -12,17 +12,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class BasicDeliverEventArgsValueProviderTests
     {
-
         [Fact]
         public async Task Poco_Conversion_Succeeds()
         {
-            TestClass expectedObject = new TestClass(1, 1);
+            var expectedObject = new TestClass { X = 1, Y = 1 };
             string expectedStringifiedJson = JsonConvert.SerializeObject(expectedObject);
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedStringifiedJson);
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
+            var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
 
-            TestClass actualObject = (TestClass)await testValueProvider.GetValueAsync();
+            var actualObject = (TestClass)await testValueProvider.GetValueAsync();
 
             Assert.Equal(expectedStringifiedJson, JsonConvert.SerializeObject(actualObject));
             Assert.Equal(typeof(TestClass), testValueProvider.Type);
@@ -33,14 +32,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public async Task StringifiedJson_Conversion_Succeeds()
         {
-            TestClass expectedObject = new TestClass(1, 1);
+            var expectedObject = new TestClass { X = 1, Y = 1 };
             string expectedStringifiedJson = JsonConvert.SerializeObject(expectedObject);
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedStringifiedJson);
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
+            var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
 
             string actualStringifiedJson = (string)await testValueProvider.GetValueAsync();
-            TestClass actualObject = (TestClass)JsonConvert.DeserializeObject(actualStringifiedJson, typeof(TestClass));
+            var actualObject = (TestClass)JsonConvert.DeserializeObject(actualStringifiedJson, typeof(TestClass));
 
             Assert.Equal(expectedStringifiedJson, actualStringifiedJson);
             Assert.Equal(typeof(string), testValueProvider.Type);
@@ -53,13 +52,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(BasicDeliverEventArgs));
+            var exceptedObject = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(BasicDeliverEventArgs));
 
-            BasicDeliverEventArgs actualObject = (BasicDeliverEventArgs)await testValueProvider.GetValueAsync();
+            var actualObject = (BasicDeliverEventArgs)await testValueProvider.GetValueAsync();
 
             Assert.Equal(actualObject, exceptedObject);
-            Assert.True(Object.ReferenceEquals(actualObject, exceptedObject));
+            Assert.True(object.ReferenceEquals(actualObject, exceptedObject));
             Assert.Equal(typeof(BasicDeliverEventArgs), testValueProvider.Type);
         }
 
@@ -68,8 +67,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(byte[]));
+            var exceptedObject = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(byte[]));
 
             byte[] actualResult = (byte[])await testValueProvider.GetValueAsync();
 
@@ -82,10 +81,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs exceptedObject = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(ReadOnlyMemory<byte>));
+            var exceptedObject = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(exceptedObject, typeof(ReadOnlyMemory<byte>));
 
-            ReadOnlyMemory<byte> actualResult = (ReadOnlyMemory<byte>)await testValueProvider.GetValueAsync();
+            var actualResult = (ReadOnlyMemory<byte>)await testValueProvider.GetValueAsync();
 
             Assert.Equal(expectedString, Encoding.UTF8.GetString(actualResult.ToArray()));
             Assert.Equal(typeof(ReadOnlyMemory<byte>), testValueProvider.Type);
@@ -96,8 +95,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] stringInBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, stringInBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
+            var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, stringInBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(string));
 
             string actualString = (string)await testValueProvider.GetValueAsync();
 
@@ -110,21 +109,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             string expectedString = "someString";
             byte[] objJsonBytes = Encoding.UTF8.GetBytes(expectedString);
-            BasicDeliverEventArgs args = new BasicDeliverEventArgs("tag", 1, false, "", "queue", null, objJsonBytes);
-            BasicDeliverEventArgsValueProvider testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
+            var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, objJsonBytes);
+            var testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => testValueProvider.GetValueAsync());
         }
 
-        public class TestClass
+        private class TestClass
         {
-            public int X, Y;
+            public int X { get; set; }
 
-            public TestClass(int x, int y)
-            {
-                X = x;
-                Y = y;
-            }
+            public int Y { get; set; }
         }
     }
 }

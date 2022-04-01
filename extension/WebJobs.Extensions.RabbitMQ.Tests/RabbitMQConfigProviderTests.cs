@@ -20,10 +20,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
             var attribute = new RabbitMQAttribute { ConnectionStringSetting = "connectionStringSettingFromAttribute", QueueName = "queueNameFromAttributes" };
 
-            var actualContext = config.CreateContext(attribute);
+            RabbitMQContext actualContext = config.CreateContext(attribute);
 
             Assert.Equal("connectionStringSettingFromAttribute", actualContext.ResolvedAttribute.ConnectionStringSetting);
             Assert.Equal("queueNameFromAttributes", actualContext.ResolvedAttribute.QueueName);
@@ -35,13 +35,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [InlineData(null, null, "connectionStringFromOptions", "queueNameFromOptions")]
         public void Handles_Null_Attributes_And_Options(string attrConnectionStringSetting, string attrQueueName, string optConnectionString, string optQueueName)
         {
-            RabbitMQAttribute attr = new RabbitMQAttribute
+            var attr = new RabbitMQAttribute
             {
                 ConnectionStringSetting = attrConnectionStringSetting,
                 QueueName = attrQueueName,
             };
 
-            RabbitMQOptions opt = new RabbitMQOptions
+            var opt = new RabbitMQOptions
             {
                 ConnectionString = optConnectionString,
                 QueueName = optQueueName,
@@ -50,8 +50,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, (ILoggerFactory)loggerFactory, _emptyConfig);
-            var actualContext = config.CreateContext(attr);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
+            RabbitMQContext actualContext = config.CreateContext(attr);
 
             if (optConnectionString == null && optQueueName == null)
             {

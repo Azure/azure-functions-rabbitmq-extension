@@ -23,8 +23,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false)).Returns(new Mock<IRabbitMQService>().Object);
             RabbitMQAttribute attr = GetTestAttribute();
 
-            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
-            var model = clientBuilder.Convert(attr);
+            var clientBuilder = new RabbitMQClientBuilder(config, options);
+            IModel model = clientBuilder.Convert(attr);
 
             mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), false), Times.Exactly(1));
         }
@@ -39,15 +39,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
             RabbitMQAttribute attr = GetTestAttribute();
 
-            RabbitMQClientBuilder clientBuilder = new RabbitMQClientBuilder(config, options);
+            var clientBuilder = new RabbitMQClientBuilder(config, options);
 
-            var model = clientBuilder.Convert(attr);
-            var model2 = clientBuilder.Convert(attr);
+            IModel model = clientBuilder.Convert(attr);
+            IModel model2 = clientBuilder.Convert(attr);
 
             Assert.Equal(model, model2);
         }
 
-        private RabbitMQAttribute GetTestAttribute()
+        private static RabbitMQAttribute GetTestAttribute()
         {
             return new RabbitMQAttribute
             {
@@ -55,13 +55,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             };
         }
 
-        private IRabbitMQService GetRabbitMQService()
+        private static IRabbitMQService GetRabbitMQService()
         {
             var mockService = new Mock<IRabbitMQService>();
-            mockService.Setup(a => a.Model).Returns(
-                new Mock<IModel>().Object
-            );
-
+            mockService.Setup(a => a.Model).Returns(new Mock<IModel>().Object);
             return mockService.Object;
         }
     }
