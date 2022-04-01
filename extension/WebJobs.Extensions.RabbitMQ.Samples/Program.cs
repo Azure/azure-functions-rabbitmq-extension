@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
     public static class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task Main()
         {
             // Add or remove types from this list to choose which functions will
             // be indexed by the JobHost.
@@ -18,13 +18,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             var typeLocator = new SamplesTypeLocator(
                 typeof(RabbitMQSamples));
 
-            var builder = new HostBuilder()
+            IHostBuilder builder = new HostBuilder()
                .UseEnvironment("Development")
                .ConfigureWebJobs(webJobsBuilder =>
                {
                    webJobsBuilder
                    .AddAzureStorageCoreServices()
-                   .AddAzureStorageBlobs()
                    .AddAzureStorageQueues()
                    .AddRabbitMQ()
                    .AddTimers();
@@ -40,12 +39,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
                })
                .UseConsoleLifetime();
 
-            var host = builder.Build();
+            IHost host = builder.Build();
             using (host)
             {
                 var jobHost = (JobHost)host.Services.GetService<IJobHost>();
 
-                await host.RunAsync();
+                await host.RunAsync().ConfigureAwait(false);
             }
         }
     }

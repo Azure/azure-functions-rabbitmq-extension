@@ -10,7 +10,7 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
-    public static class RabbitMQSamples
+    internal static class RabbitMQSamples
     {
         // Output samples
         // To run this sample with a specified amqp connection string, create a file called "appsettings.json" in the same directory.
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
         {
             logger.LogInformation("Received queue trigger");
             byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
-            await messages.AddAsync(messageInBytes);
+            await messages.AddAsync(messageInBytes).ConfigureAwait(false);
         }
 
         // To run:
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             [RabbitMQ(ConnectionStringSetting = "rabbitMQ")] IModel client,
             ILogger logger)
         {
-            QueueDeclareOk queue = client.QueueDeclare("hello", false, false, false, null);
+            _ = client.QueueDeclare("hello", false, false, false, null);
             logger.LogInformation("Opening connection and creating queue!");
         }
 
@@ -120,14 +120,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 
         public class TestClass
         {
-            private readonly int _x;
-            private readonly int _y;
-
-            public TestClass(int x, int y)
+            public TestClass(int value1, int value2)
             {
-                _x = x;
-                _y = y;
+                Property1 = value1;
+                Property2 = value2;
             }
+
+            public int Property1 { get; }
+
+            public int Property2 { get; }
         }
     }
 }

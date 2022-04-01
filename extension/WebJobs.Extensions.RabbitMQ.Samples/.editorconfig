@@ -1,0 +1,10 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+[*.{cs,vb}]
+###############################
+# Code Analysis Suppressions  #
+###############################
+dotnet_diagnostic.CA1707.severity = none # Identifiers should not contain underscores
+dotnet_diagnostic.IDE0060.severity = none # Remove unused parameter

@@ -9,8 +9,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQService : IRabbitMQService
     {
-        private readonly string _queueName;
-
         public RabbitMQService(string connectionString, bool disableCertificateValidation)
         {
             var connectionFactory = new ConnectionFactory
@@ -31,9 +29,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             : this(connectionString, disableCertificateValidation)
         {
             RabbitMQModel = new RabbitMQModel(Model);
-            _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+            _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
-            Model.QueueDeclarePassive(_queueName); // Throws exception if queue doesn't exist
+            Model.QueueDeclarePassive(queueName); // Throws exception if queue doesn't exist
             BasicPublishBatch = Model.CreateBasicPublishBatch();
         }
 

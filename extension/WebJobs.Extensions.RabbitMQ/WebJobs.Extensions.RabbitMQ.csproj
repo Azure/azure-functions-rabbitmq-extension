@@ -15,7 +15,6 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>All</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <!-- <Nullable>enable</Nullable> -->
 
     <!-- NuGet package metadata (see https://docs.microsoft.com/nuget/reference/msbuild-targets#pack-target) -->
     <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
