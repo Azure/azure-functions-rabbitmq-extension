@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                     return resolvedString;
                 }
             }
-            catch (Exception)
+            catch (InvalidOperationException)
             {
                 // Do nothing.
             }

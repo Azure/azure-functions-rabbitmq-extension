@@ -1,0 +1,9 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+[*.{cs,vb}]
+###############################
+# Code Analysis Suppressions  #
+###############################
+dotnet_diagnostic.IDE0060.severity = none # Remove unused parameter

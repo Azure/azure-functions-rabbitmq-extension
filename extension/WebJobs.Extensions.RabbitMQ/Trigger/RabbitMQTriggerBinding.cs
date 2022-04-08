@@ -32,19 +32,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             BindingDataContract = CreateBindingDataContract();
         }
 
-        public Type TriggerValueType
-        {
-            get
-            {
-                return typeof(BasicDeliverEventArgs);
-            }
-        }
+        public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
         public IReadOnlyDictionary<string, Type> BindingDataContract { get; } = new Dictionary<string, Type>();
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
-            BasicDeliverEventArgs message = value as BasicDeliverEventArgs;
+            var message = (BasicDeliverEventArgs)value;
             IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
 
             return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, _parameterType), bindingData));
@@ -52,10 +46,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
+            _ = context ?? throw new ArgumentNullException(nameof(context));
 
             return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _prefetchCount));
         }
@@ -70,15 +61,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal static IReadOnlyDictionary<string, Type> CreateBindingDataContract()
         {
-            var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-
-            contract.Add("ConsumerTag", typeof(string));
-            contract.Add("DeliveryTag", typeof(ulong));
-            contract.Add("Redelivered", typeof(bool));
-            contract.Add("Exchange", typeof(string));
-            contract.Add("RoutingKey", typeof(string));
-            contract.Add("BasicProperties", typeof(IBasicProperties));
-            contract.Add("Body", typeof(ReadOnlyMemory<byte>));
+            var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ConsumerTag"] = typeof(string),
+                ["DeliveryTag"] = typeof(ulong),
+                ["Redelivered"] = typeof(bool),
+                ["Exchange"] = typeof(string),
+                ["RoutingKey"] = typeof(string),
+                ["BasicProperties"] = typeof(IBasicProperties),
+                ["Body"] = typeof(ReadOnlyMemory<byte>),
+            };
 
             return contract;
         }
@@ -104,7 +96,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 addValue();
             }
-            catch
+            catch (ArgumentException)
             {
                 // some message property getters can throw, based on the
                 // state of the message

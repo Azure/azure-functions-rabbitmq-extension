@@ -13,9 +13,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
     public class RabbitMQOptionsTests
     {
         // TODO: Do not immitate source code.
-        private string GetFormattedOption(RabbitMQOptions option)
+        private static string GetFormattedOption(RabbitMQOptions option)
         {
-            JObject options = new JObject
+            var options = new JObject
             {
                 { nameof(option.QueueName), option.QueueName },
                 { nameof(option.PrefetchCount), option.PrefetchCount },
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void TestDefaultOptions()
         {
-            RabbitMQOptions options = new RabbitMQOptions();
+            var options = new RabbitMQOptions();
 
             Assert.Null(options.ConnectionString);
             Assert.Null(options.QueueName);
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             ushort expectedPrefetchCount = 100;
             bool expectedDisableCertificateValidation = true;
 
-            RabbitMQOptions options = new RabbitMQOptions()
+            var options = new RabbitMQOptions()
             {
                 ConnectionString = expectedConnectionString,
                 QueueName = expectedQueueName,
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             ushort expectedPrefetchCount = 10;
 
-            var builder = new HostBuilder()
+            IHostBuilder builder = new HostBuilder()
               .UseEnvironment("Development")
               .ConfigureWebJobs(webJobsBuilder =>
               {
@@ -77,10 +77,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
               })
               .UseConsoleLifetime();
 
-            var host = builder.Build();
+            IHost host = builder.Build();
             using (host)
             {
-                var config = host.Services.GetService<IOptions<RabbitMQOptions>>();
+                IOptions<RabbitMQOptions> config = host.Services.GetService<IOptions<RabbitMQOptions>>();
                 Assert.Equal(config.Value.PrefetchCount, expectedPrefetchCount);
             }
         }

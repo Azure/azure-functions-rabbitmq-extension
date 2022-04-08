@@ -16,7 +16,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         {
             var rabbitmqServiceFactory = new Mock<IRabbitMQServiceFactory>();
 
-
             rabbitmqServiceFactory
                 .SetupSequence(a => a.CreateService(It.IsAny<string>(), It.IsAny<string>(), false))
                 .Returns(new Mock<IRabbitMQService>().Object);
@@ -25,16 +24,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 .SetupSequence(a => a.CreateService(It.IsAny<string>(), false))
                 .Returns(new Mock<IRabbitMQService>().Object);
 
-            RabbitMQExtensionConfigProvider extensionConfigProvider = new RabbitMQExtensionConfigProvider(
+            var extensionConfigProvider = new RabbitMQExtensionConfigProvider(
                 new Mock<IOptions<RabbitMQOptions>>().Object,
                 new Mock<INameResolver>().Object,
                 rabbitmqServiceFactory.Object,
                 NullLoggerFactory.Instance,
                 new Mock<IConfiguration>().Object);
 
-            var rabbitmqService1 = extensionConfigProvider.GetService("something", false);
-            var rabbitmqService2 = extensionConfigProvider.GetService("something", false);
-            var rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", false);
+            IRabbitMQService rabbitmqService1 = extensionConfigProvider.GetService("something", false);
+            IRabbitMQService rabbitmqService2 = extensionConfigProvider.GetService("something", false);
+            IRabbitMQService rabbitmqService3 = extensionConfigProvider.GetService("somethingElse", false);
 
             // 1 and 2 should be equal
             Assert.Equal(rabbitmqService1, rabbitmqService2);
@@ -43,9 +42,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             Assert.NotEqual(rabbitmqService1, rabbitmqService3);
             Assert.NotEqual(rabbitmqService2, rabbitmqService3);
 
-            var rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", false);
-            var rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", false);
-            var rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", false);
+            IRabbitMQService rabbitmqService4 = extensionConfigProvider.GetService("asomething", "asomething", false);
+            IRabbitMQService rabbitmqService5 = extensionConfigProvider.GetService("asomething", "asomething", false);
+            IRabbitMQService rabbitmqService6 = extensionConfigProvider.GetService("asomethingElse", "asomething", false);
 
             // 4 and 5 should be equal
             Assert.Equal(rabbitmqService4, rabbitmqService5);

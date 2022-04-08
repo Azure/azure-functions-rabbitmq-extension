@@ -14,16 +14,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Verify_BindingDataContract_Types()
         {
-            var expectedContract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-            expectedContract.Add("ConsumerTag", typeof(string));
-            expectedContract.Add("DeliveryTag", typeof(ulong));
-            expectedContract.Add("Redelivered", typeof(bool));
-            expectedContract.Add("Exchange", typeof(string));
-            expectedContract.Add("RoutingKey", typeof(string));
-            expectedContract.Add("BasicProperties", typeof(IBasicProperties));
-            expectedContract.Add("Body", typeof(ReadOnlyMemory<byte>));
+            var expectedContract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ConsumerTag"] = typeof(string),
+                ["DeliveryTag"] = typeof(ulong),
+                ["Redelivered"] = typeof(bool),
+                ["Exchange"] = typeof(string),
+                ["RoutingKey"] = typeof(string),
+                ["BasicProperties"] = typeof(IBasicProperties),
+                ["Body"] = typeof(ReadOnlyMemory<byte>),
+            };
 
-            var actualContract = RabbitMQTriggerBinding.CreateBindingDataContract();
+            IReadOnlyDictionary<string, Type> actualContract = RabbitMQTriggerBinding.CreateBindingDataContract();
 
             foreach (KeyValuePair<string, Type> item in actualContract)
             {
@@ -34,27 +36,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public void Verify_BindingDataContract_Values()
         {
-            var data = new Dictionary<string, Object>(StringComparer.OrdinalIgnoreCase);
-            data.Add("ConsumerTag", "ConsumerName");
             ulong deliveryTag = 1;
-            data.Add("DeliveryTag", deliveryTag);
-            data.Add("Redelivered", false);
-            data.Add("RoutingKey", "QueueName");
 
-            Random rand = new Random();
+            var rand = new Random();
             byte[] buffer = new byte[10];
             rand.NextBytes(buffer);
 
             ReadOnlyMemory<byte> body = buffer;
-            data.Add("Body", body);
+            var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
 
-            BasicDeliverEventArgs eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
-            data.Add("Exchange", eventArgs.Exchange);
-            data.Add("BasicProperties", eventArgs.BasicProperties);
+            var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ConsumerTag"] = "ConsumerName",
+                ["DeliveryTag"] = deliveryTag,
+                ["Redelivered"] = false,
+                ["RoutingKey"] = "QueueName",
+                ["Body"] = body,
+                ["Exchange"] = eventArgs.Exchange,
+                ["BasicProperties"] = eventArgs.BasicProperties,
+            };
 
-            var actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs);
+            IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs);
 
-            foreach (KeyValuePair<string, Object> item in actualContract)
+            foreach (KeyValuePair<string, object> item in actualContract)
             {
                 Assert.Equal(data[item.Key], item.Value);
             }

@@ -1,4 +1,4 @@
-﻿﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.Configuration;
@@ -8,7 +8,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class UtilityTests
     {
-        private IConfiguration _emptyConfig = new ConfigurationBuilder().AddJsonFile("testappsettings.json").Build();
+        private readonly IConfiguration _emptyConfig = new ConfigurationBuilder().AddJsonFile("testappsettings.json").Build();
 
         [Theory]
         [InlineData("", "hello", "hello")]

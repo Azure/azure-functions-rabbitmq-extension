@@ -37,12 +37,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Initialize(ExtensionConfigContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException("context");
-            }
+            _ = context ?? throw new ArgumentNullException(nameof(context));
 
-            var rule = context.AddBindingRule<RabbitMQAttribute>();
+#pragma warning disable 0618
+            FluentBindingRule<RabbitMQAttribute> rule = context.AddBindingRule<RabbitMQAttribute>();
+#pragma warning restore 0618
 
             rule.BindToCollector<ReadOnlyMemory<byte>>((attr) =>
             {
@@ -53,7 +52,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             rule.AddConverter<byte[], ReadOnlyMemory<byte>>(arg => arg);
             rule.AddOpenConverter<OpenType.Poco, ReadOnlyMemory<byte>>(typeof(PocoToBytesConverter<>));
 
-            var triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
+#pragma warning disable 0618
+            FluentBindingRule<RabbitMQTriggerAttribute> triggerRule = context.AddBindingRule<RabbitMQTriggerAttribute>();
+#pragma warning restore 0618
 
             // More details about why the BindToTrigger was chosen instead of BindToTrigger<BasicDeliverEventArgs> detailed here https://github.com/Azure/azure-functions-rabbitmq-extension/issues/110
             triggerRule.BindToTrigger(new RabbitMQTriggerAttributeBindingProvider(
@@ -70,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             string queueName = Utility.FirstOrDefault(attribute.QueueName, _options.Value.QueueName);
             bool disableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, _options.Value.DisableCertificateValidation);
 
-            RabbitMQAttribute resolvedAttribute = new RabbitMQAttribute
+            var resolvedAttribute = new RabbitMQAttribute
             {
                 ConnectionStringSetting = connectionString,
                 QueueName = queueName,

@@ -1,0 +1,10 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+[*.{cs,vb}]
+###############################
+# Code Analysis Suppressions  #
+###############################
+dotnet_diagnostic.CA1001.severity = none # Types that own disposable fields should be disposable
+dotnet_diagnostic.CA1707.severity = none # Identifiers should not contain underscores

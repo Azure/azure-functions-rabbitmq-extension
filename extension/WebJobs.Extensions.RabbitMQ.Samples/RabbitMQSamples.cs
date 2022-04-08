@@ -10,7 +10,7 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
-    public static class RabbitMQSamples
+    internal static class RabbitMQSamples
     {
         // Output samples
         // To run this sample with a specified amqp connection string, create a file called "appsettings.json" in the same directory.
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
              [RabbitMQ(QueueName = "queue")] out TestClass outputMessage,
              ILogger logger)
         {
-            outputMessage = new TestClass(1, 1);
+            outputMessage = new TestClass { X = 1, Y = 1 };
             logger.LogInformation($"RabbitMQ output binding message: {JsonConvert.SerializeObject(outputMessage)}");
         }
 
@@ -52,9 +52,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             [RabbitMQ(QueueName = "queue")] IAsyncCollector<byte[]> messages,
             ILogger logger)
         {
-            logger.LogInformation($"Received queue trigger");
+            logger.LogInformation("Received queue trigger");
             byte[] messageInBytes = Encoding.UTF8.GetBytes(message);
-            await messages.AddAsync(messageInBytes);
+            await messages.AddAsync(messageInBytes).ConfigureAwait(false);
         }
 
         // To run:
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
             [RabbitMQ(ConnectionStringSetting = "rabbitMQ")] IModel client,
             ILogger logger)
         {
-            QueueDeclareOk queue = client.QueueDeclare("hello", false, false, false, null);
+            _ = client.QueueDeclare("hello", false, false, false, null);
             logger.LogInformation("Opening connection and creating queue!");
         }
 
@@ -120,14 +120,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 
         public class TestClass
         {
-            private readonly int _x;
-            private readonly int _y;
+            public int X { get; set; }
 
-            public TestClass(int x, int y)
-            {
-                _x = x;
-                _y = y;
-            }
+            public int Y { get; set; }
         }
     }
 }
