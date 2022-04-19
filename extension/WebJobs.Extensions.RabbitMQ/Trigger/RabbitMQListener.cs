@@ -54,23 +54,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public ScaleMonitorDescriptor Descriptor { get; }
 
-        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
-        {
-            Debug.Assert(count > 1, "count must be greater than 1.");
-            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
-
-            // Walks through the list from left to right starting at len(samples) - count.
-            for (int i = samples.Count - count; i < samples.Count - 1; i++)
-            {
-                if (!predicate(samples[i], samples[i + 1]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         public void Cancel()
         {
             if (!started)
@@ -142,6 +125,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             return Task.CompletedTask;
         }
 
+        async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
+        {
+            return await GetMetricsAsync().ConfigureAwait(false);
+        }
+
+        public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
+        {
+            QueueDeclareOk queueInfo = rabbitMQModel.QueueDeclarePassive(queueName);
+            var metrics = new RabbitMQTriggerMetrics
+            {
+                QueueLength = queueInfo.MessageCount,
+                Timestamp = DateTime.UtcNow,
+            };
+
+            return Task.FromResult(metrics);
+        }
+
+        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
+        {
+            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
+        }
+
+        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
+        {
+            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+        }
+
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
         {
             if (ea.BasicProperties.Headers == null)
@@ -177,31 +187,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
         }
 
-        async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
+        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
         {
-            return await GetMetricsAsync().ConfigureAwait(false);
-        }
+            Debug.Assert(count > 1, "count must be greater than 1.");
+            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
 
-        public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
-        {
-            QueueDeclareOk queueInfo = rabbitMQModel.QueueDeclarePassive(queueName);
-            var metrics = new RabbitMQTriggerMetrics
+            // Walks through the list from left to right starting at len(samples) - count.
+            for (int i = samples.Count - count; i < samples.Count - 1; i++)
             {
-                QueueLength = queueInfo.MessageCount,
-                Timestamp = DateTime.UtcNow,
-            };
+                if (!predicate(samples[i], samples[i + 1]))
+                {
+                    return false;
+                }
+            }
 
-            return Task.FromResult(metrics);
-        }
-
-        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
-        {
-            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
-        }
-
-        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
-        {
-            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+            return true;
         }
 
         private void ThrowIfDisposed()

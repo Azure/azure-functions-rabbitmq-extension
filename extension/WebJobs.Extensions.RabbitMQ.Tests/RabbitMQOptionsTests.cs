@@ -12,19 +12,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQOptionsTests
     {
-        // TODO: Do not immitate source code.
-        private static string GetFormattedOption(RabbitMQOptions option)
-        {
-            var options = new JObject
-            {
-                { nameof(option.QueueName), option.QueueName },
-                { nameof(option.PrefetchCount), option.PrefetchCount },
-                { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
-            };
-
-            return options.ToString(Formatting.Indented);
-        }
-
         [Fact]
         public void TestDefaultOptions()
         {
@@ -83,6 +70,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 IOptions<RabbitMQOptions> config = host.Services.GetService<IOptions<RabbitMQOptions>>();
                 Assert.Equal(config.Value.PrefetchCount, expectedPrefetchCount);
             }
+        }
+
+        // TODO: Do not immitate source code.
+        private static string GetFormattedOption(RabbitMQOptions option)
+        {
+            var options = new JObject
+            {
+                { nameof(option.QueueName), option.QueueName },
+                { nameof(option.PrefetchCount), option.PrefetchCount },
+                { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
+            };
+
+            return options.ToString(Formatting.Indented);
         }
     }
 }
