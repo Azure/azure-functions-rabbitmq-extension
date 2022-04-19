@@ -12,11 +12,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     public class BasicDeliverEventArgsValueProvider : IValueProvider
     {
-        private readonly BasicDeliverEventArgs _input;
+        private readonly BasicDeliverEventArgs input;
 
         public BasicDeliverEventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType)
         {
-            _input = input;
+            this.input = input;
             Type = destinationType;
         }
 
@@ -26,15 +26,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             if (Type.Equals(typeof(BasicDeliverEventArgs)))
             {
-                return Task.FromResult<object>(_input);
+                return Task.FromResult<object>(input);
             }
             else if (Type.Equals(typeof(ReadOnlyMemory<byte>)))
             {
-                return Task.FromResult<object>(_input.Body);
+                return Task.FromResult<object>(input.Body);
             }
             else if (Type.Equals(typeof(byte[])))
             {
-                return Task.FromResult<object>(_input.Body.ToArray());
+                return Task.FromResult<object>(input.Body.ToArray());
             }
 
             string inputValue = ToInvokeString();
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public string ToInvokeString()
         {
-            return Encoding.UTF8.GetString(_input.Body.ToArray());
+            return Encoding.UTF8.GetString(input.Body.ToArray());
         }
     }
 }

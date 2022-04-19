@@ -16,19 +16,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQTriggerBinding : ITriggerBinding
     {
-        private readonly IRabbitMQService _service;
-        private readonly ILogger _logger;
-        private readonly Type _parameterType;
-        private readonly string _queueName;
-        private readonly ushort _prefetchCount;
+        private readonly IRabbitMQService service;
+        private readonly ILogger logger;
+        private readonly Type parameterType;
+        private readonly string queueName;
+        private readonly ushort prefetchCount;
 
         public RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount)
         {
-            _service = service;
-            _queueName = queueName;
-            _logger = logger;
-            _parameterType = parameterType;
-            _prefetchCount = prefetchCount;
+            this.service = service;
+            this.queueName = queueName;
+            this.logger = logger;
+            this.parameterType = parameterType;
+            this.prefetchCount = prefetchCount;
             BindingDataContract = CreateBindingDataContract();
         }
 
@@ -41,21 +41,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             var message = (BasicDeliverEventArgs)value;
             IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
 
-            return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, _parameterType), bindingData));
+            return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, parameterType), bindingData));
         }
 
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
         {
             _ = context ?? throw new ArgumentNullException(nameof(context));
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, _service, _queueName, _logger, context.Descriptor, _prefetchCount));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, service, queueName, logger, context.Descriptor, prefetchCount));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
         {
             return new RabbitMQTriggerParameterDescriptor
             {
-                QueueName = _queueName,
+                QueueName = queueName,
             };
         }
 

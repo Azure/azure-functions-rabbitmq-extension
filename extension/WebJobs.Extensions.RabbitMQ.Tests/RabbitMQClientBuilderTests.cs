@@ -12,14 +12,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQClientBuilderTests
     {
-        private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
+        private static readonly IConfiguration EmptyConfig = new ConfigurationBuilder().Build();
 
         [Fact]
         public void Opens_Connection()
         {
             var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
+            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig);
             mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false)).Returns(new Mock<IRabbitMQService>().Object);
             RabbitMQAttribute attr = GetTestAttribute();
 
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), false))
                 .Returns(GetRabbitMQService());
-            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), _emptyConfig);
+            var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig);
             RabbitMQAttribute attr = GetTestAttribute();
 
             var clientBuilder = new RabbitMQClientBuilder(config, options);

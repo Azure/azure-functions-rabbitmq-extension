@@ -9,13 +9,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQClientBuilder : IConverter<RabbitMQAttribute, IModel>
     {
-        private readonly RabbitMQExtensionConfigProvider _configProvider;
-        private readonly IOptions<RabbitMQOptions> _options;
+        private readonly RabbitMQExtensionConfigProvider configProvider;
+        private readonly IOptions<RabbitMQOptions> options;
 
         public RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider, IOptions<RabbitMQOptions> options)
         {
-            _configProvider = configProvider;
-            _options = options;
+            this.configProvider = configProvider;
+            this.options = options;
         }
 
         public IModel Convert(RabbitMQAttribute attribute)
@@ -30,10 +30,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException(nameof(attribute));
             }
 
-            string resolvedConnectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, _options.Value.ConnectionString);
-            bool resolvedDisableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, _options.Value.DisableCertificateValidation);
+            string resolvedConnectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, options.Value.ConnectionString);
+            bool resolvedDisableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, options.Value.DisableCertificateValidation);
 
-            IRabbitMQService service = _configProvider.GetService(resolvedConnectionString, resolvedDisableCertificateValidation);
+            IRabbitMQService service = configProvider.GetService(resolvedConnectionString, resolvedDisableCertificateValidation);
 
             return service.Model;
         }

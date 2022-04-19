@@ -78,7 +78,6 @@ dotnet_diagnostic.IDE0130.severity = none # Namespace does not match folder stru
 dotnet_diagnostic.SA0001.severity = none # XML comment analysis is disabled (to be removed)
 dotnet_diagnostic.SA1101.severity = none # Prefix local calls with this
 dotnet_diagnostic.SA1202.severity = none # Elements must be ordered by access (to be removed)
-dotnet_diagnostic.SA1309.severity = none # Field name should not begin with an underscore (to be removed)
 
 ###############################
 # C# Coding Conventions       #

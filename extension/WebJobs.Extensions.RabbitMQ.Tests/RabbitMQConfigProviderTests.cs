@@ -11,7 +11,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 {
     public class RabbitMQConfigProviderTests
     {
-        private static readonly IConfiguration _emptyConfig = new ConfigurationBuilder().Build();
+        private static readonly IConfiguration EmptyConfig = new ConfigurationBuilder().Build();
 
         [Fact]
         public void Creates_Context_Correctly()
@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig);
             var attribute = new RabbitMQAttribute { ConnectionStringSetting = "connectionStringSettingFromAttribute", QueueName = "queueNameFromAttributes" };
 
             RabbitMQContext actualContext = config.CreateContext(attribute);
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var loggerFactory = new LoggerFactory();
             var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
             var mockNameResolver = new Mock<INameResolver>();
-            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, _emptyConfig);
+            var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig);
             RabbitMQContext actualContext = config.CreateContext(attr);
 
             if (optConnectionString == null && optQueueName == null)
