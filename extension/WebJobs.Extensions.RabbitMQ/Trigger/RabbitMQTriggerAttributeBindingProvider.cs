@@ -46,18 +46,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, options.Value.ConnectionString, configuration);
-            string queueName = Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
-            bool disableCertificateValidation = attribute.DisableCertificateValidation || options.Value.DisableCertificateValidation;
+            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, this.options.Value.ConnectionString, this.configuration);
+            string queueName = this.Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+            bool disableCertificateValidation = attribute.DisableCertificateValidation || this.options.Value.DisableCertificateValidation;
 
-            IRabbitMQService service = provider.GetService(connectionString, queueName, disableCertificateValidation);
+            IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation);
 
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, logger, parameter.ParameterType, options.Value.PrefetchCount));
+            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount));
         }
 
         private string Resolve(string name)
         {
-            return nameResolver.ResolveWholeString(name) ?? name;
+            return this.nameResolver.ResolveWholeString(name) ?? name;
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             this.logger = logger;
             this.parameterType = parameterType;
             this.prefetchCount = prefetchCount;
-            BindingDataContract = CreateBindingDataContract();
+            this.BindingDataContract = CreateBindingDataContract();
         }
 
         public Type TriggerValueType => typeof(BasicDeliverEventArgs);
@@ -41,21 +41,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             var message = (BasicDeliverEventArgs)value;
             IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
 
-            return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, parameterType), bindingData));
+            return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, this.parameterType), bindingData));
         }
 
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
         {
             _ = context ?? throw new ArgumentNullException(nameof(context));
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, service, queueName, logger, context.Descriptor, prefetchCount));
+            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, this.service, this.queueName, this.logger, context.Descriptor, this.prefetchCount));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
         {
             return new RabbitMQTriggerParameterDescriptor
             {
-                QueueName = queueName,
+                QueueName = this.queueName,
             };
         }
 

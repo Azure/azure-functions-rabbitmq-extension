@@ -17,7 +17,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 
         public IReadOnlyList<Type> GetTypes()
         {
-            return types;
+            return this.types;
         }
     }
 }

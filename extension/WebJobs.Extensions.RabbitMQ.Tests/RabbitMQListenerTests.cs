@@ -27,72 +27,72 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
 
         public RabbitMQListenerTests()
         {
-            mockExecutor = new Mock<ITriggeredFunctionExecutor>();
-            mockService = new Mock<IRabbitMQService>();
-            mockLogger = new Mock<ILogger>();
-            mockModel = new Mock<IRabbitMQModel>();
-            mockDescriptor = new Mock<FunctionDescriptor>();
+            this.mockExecutor = new Mock<ITriggeredFunctionExecutor>();
+            this.mockService = new Mock<IRabbitMQService>();
+            this.mockLogger = new Mock<ILogger>();
+            this.mockModel = new Mock<IRabbitMQModel>();
+            this.mockDescriptor = new Mock<FunctionDescriptor>();
 
-            mockService.Setup(m => m.RabbitMQModel).Returns(mockModel.Object);
+            this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
             var queueInfo = new QueueDeclareOk("blah", 5, 1);
-            mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
+            this.mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
 
-            testListener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
+            this.testListener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "blah", this.mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
         }
 
         [Fact]
         public void CreatesHeadersAndRepublishes()
         {
             string queueName = "blah";
-            mockService.Setup(m => m.RabbitMQModel).Returns(mockModel.Object);
-            var listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, queueName, mockLogger.Object, mockDescriptor.Object, 30);
+            this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
+            var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, queueName, this.mockLogger.Object, this.mockDescriptor.Object, 30);
 
             IBasicProperties properties = Mock.Of<IBasicProperties>();
             var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.CreateHeadersAndRepublish(args);
 
-            mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
+            this.mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
+            this.mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
         public void RepublishesMessages()
         {
             string queueName = "blah";
-            mockService.Setup(m => m.RabbitMQModel).Returns(mockModel.Object);
-            var listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, queueName, mockLogger.Object, mockDescriptor.Object, 30);
+            this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
+            var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, queueName, this.mockLogger.Object, this.mockDescriptor.Object, 30);
 
             IBasicProperties properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 1 } });
             var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
-            mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-            mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
+            this.mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
+            this.mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
         }
 
         [Fact]
         public void RejectsStaleMessages()
         {
-            mockService.Setup(m => m.RabbitMQModel).Returns(mockModel.Object);
-            var listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "blah", mockLogger.Object, mockDescriptor.Object, 30);
+            this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
+            var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "blah", this.mockLogger.Object, this.mockDescriptor.Object, 30);
 
             IBasicProperties properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 6 } });
             var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", properties, Encoding.UTF8.GetBytes("hello world"));
             listener.RepublishMessages(args);
 
-            mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
+            this.mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
         }
 
         [Fact]
         public void ScaleMonitor_Id_ReturnsExpectedValue()
         {
-            Assert.Equal("testfunction-rabbitmqtrigger-blah", testListener.Descriptor.Id);
+            Assert.Equal("testfunction-rabbitmqtrigger-blah", this.testListener.Descriptor.Id);
         }
 
         [Fact]
         public async Task GetMetrics_ReturnsExpectedResult()
         {
-            var listener = new RabbitMQListener(mockExecutor.Object, mockService.Object, "listener_test_queue", mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
+            var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "listener_test_queue", this.mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
             RabbitMQTriggerMetrics metrics = await listener.GetMetricsAsync();
 
             Assert.Equal(5U, metrics.QueueLength);
@@ -107,10 +107,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 WorkerCount = 1,
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
             Assert.Equal(ScaleVote.None, status.Vote);
 
-            status = ((IScaleMonitor)testListener).GetScaleStatus(context);
+            status = ((IScaleMonitor)this.testListener).GetScaleStatus(context);
             Assert.Equal(ScaleVote.None, status.Vote);
         }
 
@@ -135,7 +135,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 Metrics = metrics,
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
             Assert.Equal(ScaleVote.ScaleOut, status.Vote);
 
             // verify again with a non generic context instance
@@ -145,7 +145,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 Metrics = metrics,
             };
 
-            status = ((IScaleMonitor)testListener).GetScaleStatus(context2);
+            status = ((IScaleMonitor)this.testListener).GetScaleStatus(context2);
             Assert.Equal(ScaleVote.ScaleOut, status.Vote);
         }
 
@@ -168,7 +168,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 },
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
 
             Assert.Equal(ScaleVote.ScaleOut, status.Vote);
         }
@@ -192,7 +192,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 },
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
 
             Assert.Equal(ScaleVote.ScaleIn, status.Vote);
         }
@@ -216,7 +216,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 },
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
 
             Assert.Equal(ScaleVote.None, status.Vote);
         }
@@ -240,7 +240,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 },
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
 
             Assert.Equal(ScaleVote.ScaleIn, status.Vote);
         }
@@ -257,7 +257,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
                 },
             };
 
-            ScaleStatus status = testListener.GetScaleStatus(context);
+            ScaleStatus status = this.testListener.GetScaleStatus(context);
 
             Assert.Equal(ScaleVote.None, status.Vote);
         }

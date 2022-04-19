@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public IModel Convert(RabbitMQAttribute attribute)
         {
-            return CreateModelFromAttribute(attribute);
+            return this.CreateModelFromAttribute(attribute);
         }
 
         private IModel CreateModelFromAttribute(RabbitMQAttribute attribute)
@@ -30,10 +30,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 throw new ArgumentNullException(nameof(attribute));
             }
 
-            string resolvedConnectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, options.Value.ConnectionString);
-            bool resolvedDisableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, options.Value.DisableCertificateValidation);
+            string resolvedConnectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, this.options.Value.ConnectionString);
+            bool resolvedDisableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, this.options.Value.DisableCertificateValidation);
 
-            IRabbitMQService service = configProvider.GetService(resolvedConnectionString, resolvedDisableCertificateValidation);
+            IRabbitMQService service = this.configProvider.GetService(resolvedConnectionString, resolvedDisableCertificateValidation);
 
             return service.Model;
         }

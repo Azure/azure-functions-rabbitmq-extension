@@ -45,10 +45,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             this.service = service;
             this.queueName = queueName;
             this.logger = logger;
-            rabbitMQModel = this.service.RabbitMQModel;
+            this.rabbitMQModel = this.service.RabbitMQModel;
             _ = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
-            functionId = functionDescriptor.Id;
-            Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{this.queueName}".ToLowerInvariant());
+            this.functionId = functionDescriptor.Id;
+            this.Descriptor = new ScaleMonitorDescriptor($"{this.functionId}-RabbitMQTrigger-{this.queueName}".ToLowerInvariant());
             this.prefetchCount = prefetchCount;
         }
 
@@ -56,12 +56,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public void Cancel()
         {
-            if (!started)
+            if (!this.started)
             {
                 return;
             }
 
-            StopAsync(CancellationToken.None).Wait();
+            this.StopAsync(CancellationToken.None).Wait();
         }
 
         public void Dispose()
@@ -70,69 +70,69 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            if (started)
+            if (this.started)
             {
                 throw new InvalidOperationException("The listener has already been started.");
             }
 
-            rabbitMQModel.BasicQos(0, prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
-            consumer = new EventingBasicConsumer(rabbitMQModel.Model);
+            this.rabbitMQModel.BasicQos(0, this.prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
+            this.consumer = new EventingBasicConsumer(this.rabbitMQModel.Model);
 
-            consumer.Received += async (model, ea) =>
+            this.consumer.Received += async (model, ea) =>
             {
                 var input = new TriggeredFunctionData() { TriggerValue = ea };
-                FunctionResult result = await executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
+                FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
 
                 if (result.Succeeded)
                 {
-                    rabbitMQModel.BasicAck(ea.DeliveryTag, false);
+                    this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
                 }
                 else
                 {
                     if (ea.BasicProperties.Headers == null || !ea.BasicProperties.Headers.ContainsKey(Constants.RequeueCount))
                     {
-                        CreateHeadersAndRepublish(ea);
+                        this.CreateHeadersAndRepublish(ea);
                     }
                     else
                     {
-                        RepublishMessages(ea);
+                        this.RepublishMessages(ea);
                     }
                 }
             };
 
-            consumerTag = rabbitMQModel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+            this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
 
-            started = true;
+            this.started = true;
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
 
-            if (!started)
+            if (!this.started)
             {
                 throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
             }
 
-            rabbitMQModel.BasicCancel(consumerTag);
-            rabbitMQModel.Close();
-            started = false;
-            disposed = true;
+            this.rabbitMQModel.BasicCancel(this.consumerTag);
+            this.rabbitMQModel.Close();
+            this.started = false;
+            this.disposed = true;
             return Task.CompletedTask;
         }
 
         async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
         {
-            return await GetMetricsAsync().ConfigureAwait(false);
+            return await this.GetMetricsAsync().ConfigureAwait(false);
         }
 
         public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
         {
-            QueueDeclareOk queueInfo = rabbitMQModel.QueueDeclarePassive(queueName);
+            QueueDeclareOk queueInfo = this.rabbitMQModel.QueueDeclarePassive(this.queueName);
             var metrics = new RabbitMQTriggerMetrics
             {
                 QueueLength = queueInfo.MessageCount,
@@ -144,12 +144,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
         {
-            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
+            return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
         }
 
         public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
         {
-            return GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+            return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
         }
 
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
@@ -160,9 +160,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
 
             ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
-            logger.LogDebug("Republishing message");
-            rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: queueName, basicProperties: ea.BasicProperties, body: ea.Body);
-            rabbitMQModel.BasicAck(ea.DeliveryTag, false);
+            this.logger.LogDebug("Republishing message");
+            this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, basicProperties: ea.BasicProperties, body: ea.Body);
+            this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
         }
 
         internal void RepublishMessages(BasicDeliverEventArgs ea)
@@ -175,15 +175,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             if (requeueCount < 5)
             {
-                logger.LogDebug("Republishing message");
-                rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: queueName, basicProperties: ea.BasicProperties, body: ea.Body);
-                rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but ack after resend
+                this.logger.LogDebug("Republishing message");
+                this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, basicProperties: ea.BasicProperties, body: ea.Body);
+                this.rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but ack after resend
             }
             else
             {
                 // Add message to dead letter exchange
-                logger.LogDebug("Requeue count exceeded: rejecting message");
-                rabbitMQModel.BasicReject(ea.DeliveryTag, false);
+                this.logger.LogDebug("Requeue count exceeded: rejecting message");
+                this.rabbitMQModel.BasicReject(ea.DeliveryTag, false);
             }
         }
 
@@ -206,7 +206,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         private void ThrowIfDisposed()
         {
-            if (disposed)
+            if (this.disposed)
             {
                 throw new ObjectDisposedException(null);
             }
@@ -233,8 +233,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (latestQueueLength > workerCount * targetQueueLength)
             {
                 status.Vote = ScaleVote.ScaleOut;
-                logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
-                logger.LogInformation($"Length of queue ({queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
+                this.logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
+                this.logger.LogInformation($"Length of queue ({this.queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
                 return status;
             }
 
@@ -243,7 +243,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueIsIdle)
             {
                 status.Vote = ScaleVote.ScaleIn;
-                logger.LogInformation($"Queue '{queueName}' is idle");
+                this.logger.LogInformation($"Queue '{this.queueName}' is idle");
                 return status;
             }
 
@@ -256,7 +256,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueLengthIncreasing)
             {
                 status.Vote = ScaleVote.ScaleOut;
-                logger.LogInformation($"Queue length is increasing for '{queueName}'");
+                this.logger.LogInformation($"Queue length is increasing for '{this.queueName}'");
                 return status;
             }
 
@@ -269,10 +269,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (queueLengthDecreasing)
             {
                 status.Vote = ScaleVote.ScaleIn;
-                logger.LogInformation($"Queue length is decreasing for '{queueName}'");
+                this.logger.LogInformation($"Queue length is decreasing for '{this.queueName}'");
             }
 
-            logger.LogInformation($"Queue '{queueName}' is steady");
+            this.logger.LogInformation($"Queue '{this.queueName}' is steady");
             return status;
         }
     }

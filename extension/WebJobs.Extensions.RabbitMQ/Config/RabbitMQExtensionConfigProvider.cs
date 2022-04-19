@@ -29,9 +29,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             this.options = options;
             this.nameResolver = nameResolver;
             this.rabbitMQServiceFactory = rabbitMQServiceFactory;
-            logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
+            this.logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
             this.configuration = configuration;
-            connectionParametersToService = new ConcurrentDictionary<string, IRabbitMQService>();
+            this.connectionParametersToService = new ConcurrentDictionary<string, IRabbitMQService>();
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -44,9 +44,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             rule.BindToCollector((attr) =>
             {
-                return new RabbitMQAsyncCollector(CreateContext(attr), logger);
+                return new RabbitMQAsyncCollector(this.CreateContext(attr), this.logger);
             });
-            rule.BindToInput(new RabbitMQClientBuilder(this, options));
+            rule.BindToInput(new RabbitMQClientBuilder(this, this.options));
             rule.AddConverter<string, ReadOnlyMemory<byte>>(arg => Encoding.UTF8.GetBytes(arg));
             rule.AddConverter<byte[], ReadOnlyMemory<byte>>(arg => arg);
             rule.AddOpenConverter<OpenType.Poco, ReadOnlyMemory<byte>>(typeof(PocoToBytesConverter<>));
@@ -57,18 +57,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             // More details about why the BindToTrigger was chosen instead of BindToTrigger<BasicDeliverEventArgs> detailed here https://github.com/Azure/azure-functions-rabbitmq-extension/issues/110
             triggerRule.BindToTrigger(new RabbitMQTriggerAttributeBindingProvider(
-                    nameResolver,
+                    this.nameResolver,
                     this,
-                    logger,
-                    options,
-                    configuration));
+                    this.logger,
+                    this.options,
+                    this.configuration));
         }
 
         internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
         {
-            string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, options.Value.ConnectionString);
-            string queueName = Utility.FirstOrDefault(attribute.QueueName, options.Value.QueueName);
-            bool disableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, options.Value.DisableCertificateValidation);
+            string connectionString = Utility.FirstOrDefault(attribute.ConnectionStringSetting, this.options.Value.ConnectionString);
+            string queueName = Utility.FirstOrDefault(attribute.QueueName, this.options.Value.QueueName);
+            bool disableCertificateValidation = Utility.FirstOrDefault(attribute.DisableCertificateValidation, this.options.Value.DisableCertificateValidation);
 
             var resolvedAttribute = new RabbitMQAttribute
             {
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 DisableCertificateValidation = disableCertificateValidation,
             };
 
-            IRabbitMQService service = GetService(connectionString, queueName, disableCertificateValidation);
+            IRabbitMQService service = this.GetService(connectionString, queueName, disableCertificateValidation);
 
             return new RabbitMQContext
             {
@@ -90,7 +90,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             string[] keyArray = { connectionString, queueName, disableCertificateValidation.ToString() };
             string key = string.Join(",", keyArray);
-            return connectionParametersToService.GetOrAdd(key, _ => rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
+            return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
         }
 
         // Overloaded method used only for getting the RabbitMQ client
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             string[] keyArray = { connectionString, disableCertificateValidation.ToString() };
             string key = string.Join(",", keyArray);
-            return connectionParametersToService.GetOrAdd(key, _ => rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation));
+            return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation));
         }
     }
 }

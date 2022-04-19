@@ -24,11 +24,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task AddAsync(ReadOnlyMemory<byte> message, CancellationToken cancellationToken = default)
         {
-            logger.LogDebug("Adding message to batch for publishing...");
+            this.logger.LogDebug("Adding message to batch for publishing...");
 
-            lock (context.Service.PublishBatchLock)
+            lock (this.context.Service.PublishBatchLock)
             {
-                context.Service.BasicPublishBatch.Add(exchange: string.Empty, routingKey: context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
+                this.context.Service.BasicPublishBatch.Add(exchange: string.Empty, routingKey: this.context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
             }
 
             return Task.CompletedTask;
@@ -36,17 +36,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task FlushAsync(CancellationToken cancellationToken = default)
         {
-            return PublishAsync();
+            return this.PublishAsync();
         }
 
         internal Task PublishAsync()
         {
-            logger.LogDebug("Publishing messages to queue.");
+            this.logger.LogDebug("Publishing messages to queue.");
 
-            lock (context.Service.PublishBatchLock)
+            lock (this.context.Service.PublishBatchLock)
             {
-                context.Service.BasicPublishBatch.Publish();
-                context.Service.ResetPublishBatch();
+                this.context.Service.BasicPublishBatch.Publish();
+                this.context.Service.ResetPublishBatch();
             }
 
             return Task.CompletedTask;

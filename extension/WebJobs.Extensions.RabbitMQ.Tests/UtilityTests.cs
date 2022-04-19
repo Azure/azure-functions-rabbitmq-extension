@@ -15,7 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [InlineData("rabbitMQTest", "hello", "amqp://guest:guest@tada:5672")]
         public void ResolveConnectionString(string attributeConnectionString, string optionsConnectionString, string expectedResolvedString)
         {
-            string resolvedString = Utility.ResolveConnectionString(attributeConnectionString, optionsConnectionString, emptyConfig);
+            string resolvedString = Utility.ResolveConnectionString(attributeConnectionString, optionsConnectionString, this.emptyConfig);
             Assert.Equal(expectedResolvedString, resolvedString);
         }
     }

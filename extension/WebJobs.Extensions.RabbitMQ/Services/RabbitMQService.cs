@@ -21,18 +21,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 connectionFactory.Ssl.AcceptablePolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
             }
 
-            Model = connectionFactory.CreateConnection().CreateModel();
-            PublishBatchLock = new object();
+            this.Model = connectionFactory.CreateConnection().CreateModel();
+            this.PublishBatchLock = new object();
         }
 
         public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
             : this(connectionString, disableCertificateValidation)
         {
-            RabbitMQModel = new RabbitMQModel(Model);
+            this.RabbitMQModel = new RabbitMQModel(this.Model);
             _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
-            Model.QueueDeclarePassive(queueName); // Throws exception if queue doesn't exist
-            BasicPublishBatch = Model.CreateBasicPublishBatch();
+            this.Model.QueueDeclarePassive(queueName); // Throws exception if queue doesn't exist
+            this.BasicPublishBatch = this.Model.CreateBasicPublishBatch();
         }
 
         public IRabbitMQModel RabbitMQModel { get; }
@@ -46,7 +46,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         // Typically called after a flush
         public void ResetPublishBatch()
         {
-            BasicPublishBatch = Model.CreateBasicPublishBatch();
+            this.BasicPublishBatch = this.Model.CreateBasicPublishBatch();
         }
     }
 }

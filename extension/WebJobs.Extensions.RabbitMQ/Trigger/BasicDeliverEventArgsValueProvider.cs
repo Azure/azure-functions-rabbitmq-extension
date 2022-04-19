@@ -17,28 +17,28 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public BasicDeliverEventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType)
         {
             this.input = input;
-            Type = destinationType;
+            this.Type = destinationType;
         }
 
         public Type Type { get; }
 
         public Task<object> GetValueAsync()
         {
-            if (Type.Equals(typeof(BasicDeliverEventArgs)))
+            if (this.Type.Equals(typeof(BasicDeliverEventArgs)))
             {
-                return Task.FromResult<object>(input);
+                return Task.FromResult<object>(this.input);
             }
-            else if (Type.Equals(typeof(ReadOnlyMemory<byte>)))
+            else if (this.Type.Equals(typeof(ReadOnlyMemory<byte>)))
             {
-                return Task.FromResult<object>(input.Body);
+                return Task.FromResult<object>(this.input.Body);
             }
-            else if (Type.Equals(typeof(byte[])))
+            else if (this.Type.Equals(typeof(byte[])))
             {
-                return Task.FromResult<object>(input.Body.ToArray());
+                return Task.FromResult<object>(this.input.Body.ToArray());
             }
 
-            string inputValue = ToInvokeString();
-            if (Type.Equals(typeof(string)))
+            string inputValue = this.ToInvokeString();
+            if (this.Type.Equals(typeof(string)))
             {
                 return Task.FromResult<object>(inputValue);
             }
@@ -46,12 +46,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 try
                 {
-                    return Task.FromResult(JsonConvert.DeserializeObject(inputValue, Type));
+                    return Task.FromResult(JsonConvert.DeserializeObject(inputValue, this.Type));
                 }
                 catch (JsonException e)
                 {
                     // Give useful error if object in queue is not deserialized properly.
-                    string msg = $@"Binding parameters to complex objects (such as '{Type.Name}') uses Json.NET serialization. The JSON parser failed: {e.Message}";
+                    string msg = $@"Binding parameters to complex objects (such as '{this.Type.Name}') uses Json.NET serialization. The JSON parser failed: {e.Message}";
                     throw new InvalidOperationException(msg, e);
                 }
             }
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public string ToInvokeString()
         {
-            return Encoding.UTF8.GetString(input.Body.ToArray());
+            return Encoding.UTF8.GetString(this.input.Body.ToArray());
         }
     }
 }
