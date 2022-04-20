@@ -11,24 +11,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal class RabbitMQAsyncCollector : IAsyncCollector<ReadOnlyMemory<byte>>
     {
-        private readonly RabbitMQContext _context;
-        private readonly ILogger _logger;
+        private readonly RabbitMQContext context;
+        private readonly ILogger logger;
 
         public RabbitMQAsyncCollector(RabbitMQContext context, ILogger logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = context ?? throw new ArgumentNullException(nameof(context));
             _ = context.Service ?? throw new ArgumentException("Value cannot be null. Parameter name: context.Service");
-            _context = context;
+            this.context = context;
         }
 
         public Task AddAsync(ReadOnlyMemory<byte> message, CancellationToken cancellationToken = default)
         {
-            _logger.LogDebug("Adding message to batch for publishing...");
+            this.logger.LogDebug("Adding message to batch for publishing...");
 
-            lock (_context.Service.PublishBatchLock)
+            lock (this.context.Service.PublishBatchLock)
             {
-                _context.Service.BasicPublishBatch.Add(exchange: string.Empty, routingKey: _context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
+                this.context.Service.BasicPublishBatch.Add(exchange: string.Empty, routingKey: this.context.ResolvedAttribute.QueueName, mandatory: false, properties: null, body: message);
             }
 
             return Task.CompletedTask;
@@ -36,17 +36,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         public Task FlushAsync(CancellationToken cancellationToken = default)
         {
-            return PublishAsync();
+            return this.PublishAsync();
         }
 
         internal Task PublishAsync()
         {
-            _logger.LogDebug("Publishing messages to queue.");
+            this.logger.LogDebug("Publishing messages to queue.");
 
-            lock (_context.Service.PublishBatchLock)
+            lock (this.context.Service.PublishBatchLock)
             {
-                _context.Service.BasicPublishBatch.Publish();
-                _context.Service.ResetPublishBatch();
+                this.context.Service.BasicPublishBatch.Publish();
+                this.context.Service.ResetPublishBatch();
             }
 
             return Task.CompletedTask;

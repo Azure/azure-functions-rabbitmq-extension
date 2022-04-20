@@ -58,7 +58,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
             var actualObject = (BasicDeliverEventArgs)await testValueProvider.GetValueAsync();
 
             Assert.Equal(actualObject, exceptedObject);
-            Assert.True(object.ReferenceEquals(actualObject, exceptedObject));
+            Assert.True(ReferenceEquals(actualObject, exceptedObject));
             Assert.Equal(typeof(BasicDeliverEventArgs), testValueProvider.Type);
         }
 

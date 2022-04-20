@@ -14,12 +14,12 @@ namespace Microsoft.Azure.WebJobs
     public sealed class RabbitMQTriggerAttribute : Attribute
     {
         /// <summary>
-        /// Constructs a new instance.
+        /// Initializes a new instance of the <see cref="RabbitMQTriggerAttribute"/> class.
         /// </summary>
         /// <param name="queueName">RabbitMQ queue name.</param>
         public RabbitMQTriggerAttribute(string queueName)
         {
-            QueueName = queueName;
+            this.QueueName = queueName;
         }
 
         /// <summary>

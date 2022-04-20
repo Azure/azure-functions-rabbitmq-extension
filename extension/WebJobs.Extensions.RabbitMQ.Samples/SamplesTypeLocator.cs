@@ -8,16 +8,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples
 {
     public class SamplesTypeLocator : ITypeLocator
     {
-        private readonly Type[] _types;
+        private readonly Type[] types;
 
         public SamplesTypeLocator(params Type[] types)
         {
-            _types = types;
+            this.types = types;
         }
 
         public IReadOnlyList<Type> GetTypes()
         {
-            return _types;
+            return this.types;
         }
     }
 }

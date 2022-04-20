@@ -18,7 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public string ConnectionString { get; set; }
 
         /// <summary>
-        /// Gets the RabbitMQ queue name.
+        /// Gets or sets the RabbitMQ queue name.
         /// </summary>
         public string QueueName { get; set; }
 
@@ -37,9 +37,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         {
             var options = new JObject
             {
-                [nameof(QueueName)] = QueueName,
-                [nameof(PrefetchCount)] = PrefetchCount,
-                [nameof(DisableCertificateValidation)] = DisableCertificateValidation,
+                [nameof(this.QueueName)] = this.QueueName,
+                [nameof(this.PrefetchCount)] = this.PrefetchCount,
+                [nameof(this.DisableCertificateValidation)] = this.DisableCertificateValidation,
             };
 
             return options.ToString(Formatting.Indented);
