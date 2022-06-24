@@ -22,17 +22,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal static string ResolveConnectionString(string attributeConnectionStringKey, string optionsConnectionString, IConfiguration configuration)
         {
-            try
+            // Is the connection-string key present in the binding attribute?
+            if (attributeConnectionStringKey != null)
             {
                 string resolvedString = configuration.GetConnectionStringOrSetting(attributeConnectionStringKey);
+
+                // Is there a value associated with the key?
                 if (!string.IsNullOrEmpty(resolvedString))
                 {
                     return resolvedString;
                 }
-            }
-            catch (InvalidOperationException)
-            {
-                // Do nothing.
             }
 
             return optionsConnectionString;
