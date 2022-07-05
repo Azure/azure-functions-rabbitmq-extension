@@ -1,6 +1,6 @@
 # Release Process
 
-> **Note:** The steps below are only meant to be followed by contributors having write permission to the repository and having access to Microsoft internal resources. The commands were run from PowerShell 7.2.1.
+> **Note:** The steps below are only meant to be followed by contributors having write permission to the repository and having access to Microsoft internal resources. The tag name `v2.0.0-preview` and the version number `2.0.0-preview` should be replaced to match with the package that is about to be released. The commands were run from PowerShell 7.2.5.
 
 1. Choose the branch/commit as per your requirement. Create a tag and push it to GitHub repository. The tag should match patterns like `v2.0.0`, `v2.0.0-beta`, `v2.0.0-preview2`, etc. Tags like `2.0.0`, `v2.0` or `v2.0.0beta` will result in failed builds.
 
@@ -36,7 +36,7 @@
 
 5. Test the NuGet package.
     1. Add package to local NuGet feed.
-        ```ps1
+        ```console
         > nuget sources Add -Name 'local' -Source 'C:\Source\nuget'
         > nuget add 'C:\Users\<user>\Downloads\drop-extension\2.0.0-preview\Microsoft.Azure.WebJobs.Extensions.RabbitMQ.2.0.0-preview.nupkg' -Source 'C:\Source\nuget'
         ```
@@ -44,15 +44,18 @@
         ```xml
         <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.RabbitMQ" Version="2.0.0-preview" />
         ```
-    3. Make sure that the assembly gets restored and the test application runs as expected.
+    3. Follow the steps in the sample repository's Readme file. Make sure that the assembly gets restored and the test application runs as expected.
     4. Perform cleanup.
         ```console
         > nuget sources Remove -Name 'local'
+        > Remove-Item 'C:\Source\nuget' -Recurse
+        > Remove-Item 'C:\Users\<user>\.nuget\packages\microsoft.azure.webjobs.extensions.rabbitmq\2.0.0-preview' -Recurse
         ```
+
 6. Test the Java library.
     1. Add library files to local Maven repository.
-        ```ps1
-        > Copy-Item 'C:\Users\<user>\Downloads\drop-java-bindings\2.0.0-preview' 'C:\Users\<user>\.m2\repository\com\microsoft\azure\functions\azure-functions-java-library-rabbitmq\' -Recurse
+        ```console
+        > Copy-Item 'C:\Users\<user>\Downloads\drop-java-library\2.0.0-preview' 'C:\Users\<user>\.m2\repository\com\microsoft\azure\functions\azure-functions-java-library-rabbitmq\' -Recurse
         ```
     2. Update the package reference in your test application project such as in [this sample](https://github.com/JatinSanghvi/rabbitmq-java-functionapp).
         - **`pom.xml`**
@@ -67,9 +70,9 @@
             ```xml
             <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.RabbitMQ" Version="2.0.0-preview" />
             ```
-    3. Make sure that the assembly and java library gets restored and the test application runs as expected.
+    3. Follow the steps in the sample repository's Readme file. Make sure that the assembly and java library gets restored and the test application runs as expected.
     4. Perform cleanup.
-        ```ps1
+        ```console
         > Remove-Item 'C:\Users\<user>\.m2\repository\com\microsoft\azure\functions\azure-functions-java-library-rabbitmq\2.0.0-preview' -Recurse
         ```
 
@@ -94,6 +97,7 @@
     It may take few days for Maven artifacts to be listed on [MVN Repository](https://mvnrepository.com/artifact/com.microsoft.azure.functions/azure-functions-java-library-rabbitmq) and on [Maven Central Repository](https://search.maven.org/artifact/com.microsoft.azure.functions/azure-functions-java-library-rabbitmq) but that should not be a concern; the artifacts should be available for consumption.
 
 10. Repeat the step to test the NuGet package, but with the package sourced from public NuGet gallery this time.
+
 11. Repeat the step to test the Java library sourced from Maven Central this time.
 
 12. Publish the release on GitHub.
