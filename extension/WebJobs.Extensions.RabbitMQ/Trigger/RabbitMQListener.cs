@@ -170,7 +170,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             else
             {
                 activity = ActivitySource.StartActivity("Trigger", ActivityKind.Server);
-                if (ea.BasicProperties.Headers == null)
+ea.BasicProperties.Headers ??= new Dictionary<string, object>();
                 {
                     ea.BasicProperties.Headers = new Dictionary<string, object>();
                 }
