@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -20,6 +21,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
     {
+#pragma warning disable SA1000
+        private static readonly ActivitySource Source = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
+#pragma warning restore SA1000
         private readonly ITriggeredFunctionExecutor executor;
         private readonly string queueName;
         private readonly ushort prefetchCount;
@@ -82,6 +86,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
             this.consumer.Received += async (model, ea) =>
             {
+                Activity activity = StartActivity(ea); // create activity object
+
                 var input = new TriggeredFunctionData() { TriggerValue = ea };
                 FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
 
@@ -100,6 +106,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                         this.RepublishMessages(ea);
                     }
                 }
+
+                activity?.Stop();
             };
 
             this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
@@ -150,6 +158,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
         public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
         {
             return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+        }
+
+        internal static Activity StartActivity(BasicDeliverEventArgs ea)
+        {
+            Activity activity;
+            if (ea.BasicProperties.Headers != null && ea.BasicProperties.Headers.ContainsKey("traceparent"))
+            {
+                // check if traceId present in header
+                byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
+                string traceparentId = Encoding.Default.GetString(traceParentIdInBytes);
+                activity = Source.StartActivity("RabbitMQ.function.trigger", ActivityKind.Consumer, traceparentId);
+            }
+            else
+            {
+                // create new traceId, StartActivity will create and start new activity
+                activity = Source.StartActivity("RabbitMQ.function.trigger", ActivityKind.Server);
+                if (ea.BasicProperties.Headers == null)
+                {
+                    ea.BasicProperties.Headers = new Dictionary<string, object>();
+                }
+
+                byte[] traceParentIdInBytes = Encoding.Default.GetBytes(activity?.Id);
+                ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes; // add trace-id to header
+            }
+
+            return activity;
         }
 
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
