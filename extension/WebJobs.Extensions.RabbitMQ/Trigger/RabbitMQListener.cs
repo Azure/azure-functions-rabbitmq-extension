@@ -164,14 +164,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             if (ea.BasicProperties.Headers != null && ea.BasicProperties.Headers.ContainsKey("traceparent"))
             {
                 byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
-                string traceparentId = Encoding.Default.GetString(traceParentIdInBytes);
+                string traceparentId = Encoding.UTF8.GetString(traceParentIdInBytes);
                 activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
             }
             else
             {
                 activity = ActivitySource.StartActivity("Trigger", ActivityKind.Server);
                 ea.BasicProperties.Headers ??= new Dictionary<string, object>();
-                byte[] traceParentIdInBytes = Encoding.Default.GetBytes(activity.Id);
+                byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
                 ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
             }
 
