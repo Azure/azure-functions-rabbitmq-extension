@@ -169,7 +169,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             }
             else
             {
-                activity = ActivitySource.StartActivity("Trigger", ActivityKind.Server);
+                activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
                 ea.BasicProperties.Headers ??= new Dictionary<string, object>();
                 byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
                 ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
