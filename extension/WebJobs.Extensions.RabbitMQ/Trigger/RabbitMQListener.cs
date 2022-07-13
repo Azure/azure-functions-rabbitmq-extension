@@ -21,9 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
     {
-#pragma warning disable SA1000
         private static readonly ActivitySource ActivitySource = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
-#pragma warning restore SA1000
         private readonly ITriggeredFunctionExecutor executor;
         private readonly string queueName;
         private readonly ushort prefetchCount;
