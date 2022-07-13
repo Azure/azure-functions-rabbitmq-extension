@@ -16,9 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
         [Fact]
         public async Task AddAsync_AddsMessagesToQueue()
         {
-#pragma warning disable SA1000
             object batchLock = new();
-#pragma warning restore SA1000
             var mockRabbitMQService = new Mock<IRabbitMQService>(MockBehavior.Strict);
             var mockBatch = new Mock<IBasicPublishBatch>();
             mockRabbitMQService.Setup(m => m.BasicPublishBatch).Returns(mockBatch.Object);
