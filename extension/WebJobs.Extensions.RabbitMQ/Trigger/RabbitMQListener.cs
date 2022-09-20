@@ -158,22 +158,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 
         internal static Activity StartActivity(BasicDeliverEventArgs ea)
         {
-            Activity activity;
-            if (ea.BasicProperties.Headers != null && ea.BasicProperties.Headers.ContainsKey("traceparent"))
+            // Ideally, we would have used string-values for headers, but RabbitMQ client has an old quirk where it does
+            // not differentiate between string headers and byte-array headers when decoding them. See:
+            // https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/415. Hence, it is decided to also set byte[] as
+            // value for 'traceparent' header for consistency between the below two cases.
+            if (ea.BasicProperties.Headers?.ContainsKey("traceparent") == true)
             {
                 byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
                 string traceparentId = Encoding.UTF8.GetString(traceParentIdInBytes);
-                activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
+                return ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
             }
             else
             {
-                activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
-                ea.BasicProperties.Headers ??= new Dictionary<string, object>();
-                byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
-                ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
-            }
+                Activity activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
 
-            return activity;
+                // Method 'StartActivity' will return null if it has no event listeners.
+                if (activity != null)
+                {
+                    ea.BasicProperties.Headers ??= new Dictionary<string, object>();
+                    byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
+                    ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
+                }
+
+                return activity;
+            }
         }
 
         internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
