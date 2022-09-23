@@ -97,7 +97,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
                 else
                 {
-                    // This to lines are hera to solve some strange behaviour when requeuing messages. See:
+                    // This two lines are here to solve some strange behaviour when requeuing messages. See:
                     // https://github.com/Azure/azure-functions-rabbitmq-extension/issues/207
                     // https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211
                     var newBody = new ReadOnlyMemory<byte>(Encoding.ASCII.GetBytes(body));
