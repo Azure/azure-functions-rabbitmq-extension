@@ -86,7 +86,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 using Activity activity = StartActivity(ea);
 
-                var body = Encoding.UTF8.GetString(ea.Body.ToArray());
+                string body = Encoding.UTF8.GetString(ea.Body.ToArray());
 
                 var input = new TriggeredFunctionData() { TriggerValue = ea };
                 FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
