@@ -86,6 +86,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
             {
                 using Activity activity = StartActivity(ea);
 
+                var body = Encoding.UTF8.GetString(ea.Body.ToArray());
+
                 var input = new TriggeredFunctionData() { TriggerValue = ea };
                 FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
 
@@ -95,13 +97,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
                 else
                 {
+                    // This to lines are hera to solve some strange behaviour when requeuing messages. See:
+                    // https://github.com/Azure/azure-functions-rabbitmq-extension/issues/207
+                    // https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211
+                    var newBody = new ReadOnlyMemory<byte>(Encoding.ASCII.GetBytes(body));
+                    var eaAux = new BasicDeliverEventArgs(ea.ConsumerTag, ea.DeliveryTag, ea.Redelivered, ea.Exchange, ea.RoutingKey, ea.BasicProperties, newBody);
+
                     if (ea.BasicProperties.Headers == null || !ea.BasicProperties.Headers.ContainsKey(Constants.RequeueCount))
                     {
-                        this.CreateHeadersAndRepublish(ea);
+                        this.CreateHeadersAndRepublish(eaAux);
                     }
                     else
                     {
-                        this.RepublishMessages(ea);
+                        this.RepublishMessages(eaAux);
                     }
                 }
             };
