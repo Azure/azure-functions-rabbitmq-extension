@@ -7,6 +7,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
     {
         public const string LocalHost = "localhost";
         public const string RabbitMQ = "RabbitMQ";
-        public const string RequeueCount = "requeueCount";
     }
 }

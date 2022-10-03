@@ -21,7 +21,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
 {
     internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
     {
+        private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
+
         private static readonly ActivitySource ActivitySource = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
+
         private readonly ITriggeredFunctionExecutor executor;
         private readonly string queueName;
         private readonly ushort prefetchCount;
@@ -89,27 +92,35 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 var input = new TriggeredFunctionData() { TriggerValue = ea };
                 FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
 
-                if (result.Succeeded)
+                if (!result.Succeeded)
                 {
-                    this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
-                }
-                else
-                {
-                    if (ea.BasicProperties.Headers == null || !ea.BasicProperties.Headers.ContainsKey(Constants.RequeueCount))
+                    ea.BasicProperties.Headers ??= new Dictionary<string, object>();
+                    ea.BasicProperties.Headers.TryGetValue(RequeueCountHeaderName, out object headerValue);
+                    int requeueCount = Convert.ToInt32(headerValue, CultureInfo.InvariantCulture) + 1;
+
+                    if (requeueCount >= 5)
                     {
-                        this.CreateHeadersAndRepublish(ea);
+                        // Add message to dead letter exchange.
+                        this.logger.LogDebug("Requeue count exceeded: rejecting message");
+                        this.rabbitMQModel.BasicReject(ea.DeliveryTag, false);
+                        return;
                     }
-                    else
-                    {
-                        this.RepublishMessages(ea);
-                    }
+
+                    this.logger.LogDebug("Republishing message");
+                    ea.BasicProperties.Headers[RequeueCountHeaderName] = requeueCount;
+
+                    // RabbitMQ client library seems to be reusing the memory pointed by 'ea.Body' for subsequent
+                    // message-received events. This led to https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211.
+                    // Hence, pass a copy of 'ea.Body' to method 'BasicPublish' instead of the object itself to prevent
+                    // sharing of the memory and possibility of memory corruption.
+                    this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, ea.BasicProperties, ea.Body.ToArray());
                 }
+
+                this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
             };
 
             this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
-
             this.started = true;
-
             return Task.CompletedTask;
         }
 
@@ -181,41 +192,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
                 }
 
                 return activity;
-            }
-        }
-
-        internal void CreateHeadersAndRepublish(BasicDeliverEventArgs ea)
-        {
-            if (ea.BasicProperties.Headers == null)
-            {
-                ea.BasicProperties.Headers = new Dictionary<string, object>();
-            }
-
-            ea.BasicProperties.Headers[Constants.RequeueCount] = 0;
-            this.logger.LogDebug("Republishing message");
-            this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, basicProperties: ea.BasicProperties, body: ea.Body);
-            this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
-        }
-
-        internal void RepublishMessages(BasicDeliverEventArgs ea)
-        {
-            int requeueCount = Convert.ToInt32(ea.BasicProperties.Headers[Constants.RequeueCount], CultureInfo.InvariantCulture);
-
-            // Redelivered again
-            requeueCount++;
-            ea.BasicProperties.Headers[Constants.RequeueCount] = requeueCount;
-
-            if (requeueCount < 5)
-            {
-                this.logger.LogDebug("Republishing message");
-                this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, basicProperties: ea.BasicProperties, body: ea.Body);
-                this.rabbitMQModel.BasicAck(ea.DeliveryTag, false); // Manually ACK'ing, but ack after resend
-            }
-            else
-            {
-                // Add message to dead letter exchange
-                this.logger.LogDebug("Requeue count exceeded: rejecting message");
-                this.rabbitMQModel.BasicReject(ea.DeliveryTag, false);
             }
         }
 
