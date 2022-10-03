@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
-using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -19,7 +18,7 @@ public class RabbitMQListenerTests
     private readonly Mock<ITriggeredFunctionExecutor> mockExecutor;
     private readonly Mock<IRabbitMQService> mockService;
     private readonly Mock<ILogger> mockLogger;
-    private readonly Mock<IRabbitMQModel> mockModel;
+    private readonly Mock<IModel> mockModel;
     private readonly RabbitMQListener testListener;
 
     public RabbitMQListenerTests()
@@ -27,13 +26,13 @@ public class RabbitMQListenerTests
         this.mockExecutor = new Mock<ITriggeredFunctionExecutor>();
         this.mockService = new Mock<IRabbitMQService>();
         this.mockLogger = new Mock<ILogger>();
-        this.mockModel = new Mock<IRabbitMQModel>();
+        this.mockModel = new Mock<IModel>();
 
-        this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
+        this.mockService.Setup(m => m.Model).Returns(this.mockModel.Object);
         var queueInfo = new QueueDeclareOk("blah", 5, 1);
         this.mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
 
-        this.testListener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "blah", this.mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
+        this.testListener = new RabbitMQListener(this.mockExecutor.Object, "TestFunction", this.mockModel.Object, "blah", 30, this.mockLogger.Object);
     }
 
     // Created https://github.com/Azure/azure-functions-rabbitmq-extension/issues/214 for re-enabling the unit tests.
@@ -92,7 +91,7 @@ public class RabbitMQListenerTests
     [Fact]
     public async Task GetMetrics_ReturnsExpectedResult()
     {
-        var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "listener_test_queue", this.mockLogger.Object, new FunctionDescriptor { Id = "TestFunction" }, 30);
+        var listener = new RabbitMQListener(this.mockExecutor.Object, "TestFunction", this.mockModel.Object, "listener_test_queue", 30, this.mockLogger.Object);
         RabbitMQTriggerMetrics metrics = await listener.GetMetricsAsync();
 
         Assert.Equal(5U, metrics.QueueLength);

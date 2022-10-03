@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
-using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -20,69 +19,71 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
 {
+    private const int ListenerNotStarted = 0;
+    private const int ListenerStarting = 1;
+    private const int ListenerStarted = 2;
+    private const int ListenerStopping = 3;
+    private const int ListenerStopped = 4;
+
     private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
 
     private readonly ITriggeredFunctionExecutor executor;
+    private readonly IModel channel;
     private readonly string queueName;
     private readonly ushort prefetchCount;
-    private readonly IRabbitMQService service;
     private readonly ILogger logger;
-    private readonly string functionId;
-    private readonly IRabbitMQModel rabbitMQModel;
 
-    private EventingBasicConsumer consumer;
+    private readonly string logdetails;
+
+    private int listenerState = ListenerNotStarted;
+
     private string consumerTag;
-    private bool disposed;
-    private bool started;
 
     public RabbitMQListener(
         ITriggeredFunctionExecutor executor,
-        IRabbitMQService service,
+        string functionId,
+        IModel channel,
         string queueName,
-        ILogger logger,
-        FunctionDescriptor functionDescriptor,
-        ushort prefetchCount)
+        ushort prefetchCount,
+        ILogger logger)
     {
         this.executor = executor;
-        this.service = service;
+        this.channel = channel;
         this.queueName = queueName;
-        this.logger = logger;
-        this.rabbitMQModel = this.service.RabbitMQModel;
-        _ = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
-        this.functionId = functionDescriptor.Id;
-        this.Descriptor = new ScaleMonitorDescriptor($"{this.functionId}-RabbitMQTrigger-{this.queueName}".ToLowerInvariant());
         this.prefetchCount = prefetchCount;
+        this.logger = logger;
+
+        this.logdetails = $"function: '{functionId}, queue: '{queueName}'";
+
+        this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}".ToLowerInvariant());
     }
 
     public ScaleMonitorDescriptor Descriptor { get; }
 
     public void Cancel()
     {
-        if (!this.started)
-        {
-            return;
-        }
-
         this.StopAsync(CancellationToken.None).Wait();
     }
 
     public void Dispose()
     {
+        // Nothing to dispose.
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.ThrowIfDisposed();
+        int previousState = Interlocked.CompareExchange(ref this.listenerState, ListenerStarting, ListenerNotStarted);
 
-        if (this.started)
+        if (previousState != ListenerNotStarted)
         {
-            throw new InvalidOperationException("The listener has already been started.");
+            throw new InvalidOperationException("The listener is either starting or has already started.");
         }
 
-        this.rabbitMQModel.BasicQos(0, this.prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
-        this.consumer = new EventingBasicConsumer(this.rabbitMQModel.Model);
+        // Non-zero prefetch size doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception.
+        this.channel.BasicQos(prefetchSize: 0, this.prefetchCount, global: false);
+        var consumer = new EventingBasicConsumer(this.channel);
 
-        this.consumer.Received += async (model, args) =>
+        consumer.Received += async (model, args) =>
         {
             // The RabbitMQ client rents an array from the ArrayPool to hold a copy of the message body, and passes it
             // to the listener. Once all event handlers are executed, the array is returned back to the pool so that the
@@ -109,37 +110,42 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
                 if (requeueCount >= 5)
                 {
                     // Add message to dead letter exchange.
-                    this.logger.LogDebug("Requeue count exceeded: rejecting message");
-                    this.rabbitMQModel.BasicReject(args.DeliveryTag, false);
+                    this.logger.LogDebug($"Rejecting message since requeue count exceeded for {this.logdetails}.");
+                    this.channel.BasicReject(args.DeliveryTag, requeue: false);
                     return;
                 }
 
-                this.logger.LogDebug("Republishing message");
+                this.logger.LogDebug($"Republishing message for {this.logdetails}.");
                 args.BasicProperties.Headers[RequeueCountHeaderName] = requeueCount;
-                this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
+
+                // TODO: Check if 'BasicReject' with requeue = true would work here.
+                this.channel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
             }
 
-            this.rabbitMQModel.BasicAck(args.DeliveryTag, false);
+            this.channel.BasicAck(args.DeliveryTag, multiple: false);
         };
 
-        this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
-        this.started = true;
+        this.consumerTag = this.channel.BasicConsume(queue: this.queueName, autoAck: false, consumer);
+
+        this.listenerState = ListenerStarted;
+        this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logdetails}.");
+
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        this.ThrowIfDisposed();
+        int previousState = Interlocked.CompareExchange(ref this.listenerState, ListenerStopping, ListenerStarted);
 
-        if (!this.started)
+        if (previousState == ListenerStarted)
         {
-            throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
+            this.channel.BasicCancel(this.consumerTag);
+            this.channel.Close();
+
+            this.listenerState = ListenerStopped;
+            this.logger.LogDebug($"Stopped RabbitMQ trigger listener for {this.logdetails}.");
         }
 
-        this.rabbitMQModel.BasicCancel(this.consumerTag);
-        this.rabbitMQModel.Close();
-        this.started = false;
-        this.disposed = true;
         return Task.CompletedTask;
     }
 
@@ -150,7 +156,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
     public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
     {
-        QueueDeclareOk queueInfo = this.rabbitMQModel.QueueDeclarePassive(this.queueName);
+        QueueDeclareOk queueInfo = this.channel.QueueDeclarePassive(this.queueName);
         var metrics = new RabbitMQTriggerMetrics
         {
             QueueLength = queueInfo.MessageCount,
@@ -185,14 +191,6 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         }
 
         return true;
-    }
-
-    private void ThrowIfDisposed()
-    {
-        if (this.disposed)
-        {
-            throw new ObjectDisposedException(null);
-        }
     }
 
     private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)
