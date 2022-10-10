@@ -44,12 +44,12 @@ internal class RabbitMQTriggerBinding : ITriggerBinding
         return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, this.parameterType), bindingData));
     }
 
-        public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
-        {
-            _ = context ?? throw new ArgumentNullException(nameof(context));
+    public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
+    {
+        _ = context ?? throw new ArgumentNullException(nameof(context));
 
-            return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, this.service, this.queueName, this.logger, context.Descriptor, this.prefetchCount));
-        }
+        return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, this.service, this.queueName, this.logger, context.Descriptor, this.prefetchCount));
+    }
 
     public ParameterDescriptor ToParameterDescriptor()
     {

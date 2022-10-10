@@ -25,19 +25,19 @@ internal sealed class RabbitMQService : IRabbitMQService
         this.PublishBatchLock = new object();
     }
 
-        public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
-            : this(connectionString, disableCertificateValidation)
-        {
-            this.RabbitMQModel = new RabbitMQModel(this.Model);
-            _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
+    public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
+        : this(connectionString, disableCertificateValidation)
+    {
+        this.RabbitMQModel = new RabbitMQModel(this.Model);
+        _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
         this.Model.QueueDeclarePassive(queueName); // Throws exception if queue doesn't exist
         this.BasicPublishBatch = this.Model.CreateBasicPublishBatch();
     }
 
-        public IRabbitMQModel RabbitMQModel { get; }
+    public IRabbitMQModel RabbitMQModel { get; }
 
-        public IModel Model { get; }
+    public IModel Model { get; }
 
     public IBasicPublishBatch BasicPublishBatch { get; private set; }
 
