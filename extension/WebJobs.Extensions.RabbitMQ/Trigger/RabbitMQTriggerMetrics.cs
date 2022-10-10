@@ -3,10 +3,9 @@
 
 using Microsoft.Azure.WebJobs.Host.Scale;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+
+internal class RabbitMQTriggerMetrics : ScaleMetrics
 {
-    internal class RabbitMQTriggerMetrics : ScaleMetrics
-    {
-        public uint QueueLength { get; set; }
-    }
+    public uint QueueLength { get; set; }
 }

@@ -10,54 +10,53 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+
+internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
 {
-    internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
+    private readonly INameResolver nameResolver;
+    private readonly RabbitMQExtensionConfigProvider provider;
+    private readonly ILogger logger;
+    private readonly IOptions<RabbitMQOptions> options;
+    private readonly IConfiguration configuration;
+
+    public RabbitMQTriggerAttributeBindingProvider(
+        INameResolver nameResolver,
+        RabbitMQExtensionConfigProvider provider,
+        ILogger logger,
+        IOptions<RabbitMQOptions> options,
+        IConfiguration configuration)
     {
-        private readonly INameResolver nameResolver;
-        private readonly RabbitMQExtensionConfigProvider provider;
-        private readonly ILogger logger;
-        private readonly IOptions<RabbitMQOptions> options;
-        private readonly IConfiguration configuration;
+        this.nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
+        this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.options = options;
+        this.configuration = configuration;
+    }
 
-        public RabbitMQTriggerAttributeBindingProvider(
-            INameResolver nameResolver,
-            RabbitMQExtensionConfigProvider provider,
-            ILogger logger,
-            IOptions<RabbitMQOptions> options,
-            IConfiguration configuration)
+    public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
+    {
+        _ = context ?? throw new ArgumentNullException(nameof(context));
+
+        ParameterInfo parameter = context.Parameter;
+        RabbitMQTriggerAttribute attribute = parameter.GetCustomAttribute<RabbitMQTriggerAttribute>(inherit: false);
+
+        if (attribute == null)
         {
-            this.nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
-            this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.options = options;
-            this.configuration = configuration;
+            return Task.FromResult<ITriggerBinding>(null);
         }
 
-        public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
-        {
-            _ = context ?? throw new ArgumentNullException(nameof(context));
+        string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, this.options.Value.ConnectionString, this.configuration);
+        string queueName = this.Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
+        bool disableCertificateValidation = attribute.DisableCertificateValidation || this.options.Value.DisableCertificateValidation;
 
-            ParameterInfo parameter = context.Parameter;
-            RabbitMQTriggerAttribute attribute = parameter.GetCustomAttribute<RabbitMQTriggerAttribute>(inherit: false);
+        IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation);
 
-            if (attribute == null)
-            {
-                return Task.FromResult<ITriggerBinding>(null);
-            }
+        return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount));
+    }
 
-            string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, this.options.Value.ConnectionString, this.configuration);
-            string queueName = this.Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
-            bool disableCertificateValidation = attribute.DisableCertificateValidation || this.options.Value.DisableCertificateValidation;
-
-            IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation);
-
-            return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount));
-        }
-
-        private string Resolve(string name)
-        {
-            return this.nameResolver.ResolveWholeString(name) ?? name;
-        }
+    private string Resolve(string name)
+    {
+        return this.nameResolver.ResolveWholeString(name) ?? name;
     }
 }

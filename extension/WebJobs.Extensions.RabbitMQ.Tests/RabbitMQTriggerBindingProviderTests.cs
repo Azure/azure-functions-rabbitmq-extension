@@ -5,15 +5,14 @@ using System;
 using Moq;
 using Xunit;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
+
+public class RabbitMQTriggerBindingProviderTests
 {
-    public class RabbitMQTriggerBindingProviderTests
+    [Fact]
+    public void Null_Context_Throws_Error()
     {
-        [Fact]
-        public void Null_Context_Throws_Error()
-        {
-            var mockProvider = new Mock<RabbitMQTriggerAttributeBindingProvider>();
-            Assert.ThrowsAsync<ArgumentNullException>(() => mockProvider.Object.TryCreateAsync(null));
-        }
+        var mockProvider = new Mock<RabbitMQTriggerAttributeBindingProvider>();
+        Assert.ThrowsAsync<ArgumentNullException>(() => mockProvider.Object.TryCreateAsync(null));
     }
 }

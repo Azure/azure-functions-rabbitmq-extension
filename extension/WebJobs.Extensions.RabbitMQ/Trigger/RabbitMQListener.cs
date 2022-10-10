@@ -17,271 +17,270 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+
+internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
 {
-    internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
+    private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
+
+    private static readonly ActivitySource ActivitySource = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
+
+    private readonly ITriggeredFunctionExecutor executor;
+    private readonly string queueName;
+    private readonly ushort prefetchCount;
+    private readonly IRabbitMQService service;
+    private readonly ILogger logger;
+    private readonly string functionId;
+    private readonly IRabbitMQModel rabbitMQModel;
+
+    private EventingBasicConsumer consumer;
+    private string consumerTag;
+    private bool disposed;
+    private bool started;
+
+    public RabbitMQListener(
+        ITriggeredFunctionExecutor executor,
+        IRabbitMQService service,
+        string queueName,
+        ILogger logger,
+        FunctionDescriptor functionDescriptor,
+        ushort prefetchCount)
     {
-        private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
+        this.executor = executor;
+        this.service = service;
+        this.queueName = queueName;
+        this.logger = logger;
+        this.rabbitMQModel = this.service.RabbitMQModel;
+        _ = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
+        this.functionId = functionDescriptor.Id;
+        this.Descriptor = new ScaleMonitorDescriptor($"{this.functionId}-RabbitMQTrigger-{this.queueName}".ToLowerInvariant());
+        this.prefetchCount = prefetchCount;
+    }
 
-        private static readonly ActivitySource ActivitySource = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
+    public ScaleMonitorDescriptor Descriptor { get; }
 
-        private readonly ITriggeredFunctionExecutor executor;
-        private readonly string queueName;
-        private readonly ushort prefetchCount;
-        private readonly IRabbitMQService service;
-        private readonly ILogger logger;
-        private readonly string functionId;
-        private readonly IRabbitMQModel rabbitMQModel;
-
-        private EventingBasicConsumer consumer;
-        private string consumerTag;
-        private bool disposed;
-        private bool started;
-
-        public RabbitMQListener(
-            ITriggeredFunctionExecutor executor,
-            IRabbitMQService service,
-            string queueName,
-            ILogger logger,
-            FunctionDescriptor functionDescriptor,
-            ushort prefetchCount)
+    public void Cancel()
+    {
+        if (!this.started)
         {
-            this.executor = executor;
-            this.service = service;
-            this.queueName = queueName;
-            this.logger = logger;
-            this.rabbitMQModel = this.service.RabbitMQModel;
-            _ = functionDescriptor ?? throw new ArgumentNullException(nameof(functionDescriptor));
-            this.functionId = functionDescriptor.Id;
-            this.Descriptor = new ScaleMonitorDescriptor($"{this.functionId}-RabbitMQTrigger-{this.queueName}".ToLowerInvariant());
-            this.prefetchCount = prefetchCount;
+            return;
         }
 
-        public ScaleMonitorDescriptor Descriptor { get; }
+        this.StopAsync(CancellationToken.None).Wait();
+    }
 
-        public void Cancel()
+    public void Dispose()
+    {
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+
+        if (this.started)
         {
-            if (!this.started)
-            {
-                return;
-            }
-
-            this.StopAsync(CancellationToken.None).Wait();
+            throw new InvalidOperationException("The listener has already been started.");
         }
 
-        public void Dispose()
+        this.rabbitMQModel.BasicQos(0, this.prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
+        this.consumer = new EventingBasicConsumer(this.rabbitMQModel.Model);
+
+        this.consumer.Received += async (model, ea) =>
         {
-        }
+            using Activity activity = StartActivity(ea);
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            this.ThrowIfDisposed();
+            var input = new TriggeredFunctionData() { TriggerValue = ea };
+            FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
 
-            if (this.started)
+            if (!result.Succeeded)
             {
-                throw new InvalidOperationException("The listener has already been started.");
-            }
+                ea.BasicProperties.Headers ??= new Dictionary<string, object>();
+                ea.BasicProperties.Headers.TryGetValue(RequeueCountHeaderName, out object headerValue);
+                int requeueCount = Convert.ToInt32(headerValue, CultureInfo.InvariantCulture) + 1;
 
-            this.rabbitMQModel.BasicQos(0, this.prefetchCount, false);  // Non zero prefetchSize doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception
-            this.consumer = new EventingBasicConsumer(this.rabbitMQModel.Model);
-
-            this.consumer.Received += async (model, ea) =>
-            {
-                using Activity activity = StartActivity(ea);
-
-                var input = new TriggeredFunctionData() { TriggerValue = ea };
-                FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
-
-                if (!result.Succeeded)
+                if (requeueCount >= 5)
                 {
-                    ea.BasicProperties.Headers ??= new Dictionary<string, object>();
-                    ea.BasicProperties.Headers.TryGetValue(RequeueCountHeaderName, out object headerValue);
-                    int requeueCount = Convert.ToInt32(headerValue, CultureInfo.InvariantCulture) + 1;
-
-                    if (requeueCount >= 5)
-                    {
-                        // Add message to dead letter exchange.
-                        this.logger.LogDebug("Requeue count exceeded: rejecting message");
-                        this.rabbitMQModel.BasicReject(ea.DeliveryTag, false);
-                        return;
-                    }
-
-                    this.logger.LogDebug("Republishing message");
-                    ea.BasicProperties.Headers[RequeueCountHeaderName] = requeueCount;
-
-                    // RabbitMQ client library seems to be reusing the memory pointed by 'ea.Body' for subsequent
-                    // message-received events. This led to https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211.
-                    // Hence, pass a copy of 'ea.Body' to method 'BasicPublish' instead of the object itself to prevent
-                    // sharing of the memory and possibility of memory corruption.
-                    this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, ea.BasicProperties, ea.Body.ToArray());
+                    // Add message to dead letter exchange.
+                    this.logger.LogDebug("Requeue count exceeded: rejecting message");
+                    this.rabbitMQModel.BasicReject(ea.DeliveryTag, false);
+                    return;
                 }
 
-                this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
-            };
+                this.logger.LogDebug("Republishing message");
+                ea.BasicProperties.Headers[RequeueCountHeaderName] = requeueCount;
 
-            this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
-            this.started = true;
-            return Task.CompletedTask;
+                // RabbitMQ client library seems to be reusing the memory pointed by 'ea.Body' for subsequent
+                // message-received events. This led to https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211.
+                // Hence, pass a copy of 'ea.Body' to method 'BasicPublish' instead of the object itself to prevent
+                // sharing of the memory and possibility of memory corruption.
+                this.rabbitMQModel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, ea.BasicProperties, ea.Body.ToArray());
+            }
+
+            this.rabbitMQModel.BasicAck(ea.DeliveryTag, false);
+        };
+
+        this.consumerTag = this.rabbitMQModel.BasicConsume(queue: this.queueName, autoAck: false, consumer: this.consumer);
+        this.started = true;
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+
+        if (!this.started)
+        {
+            throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            this.ThrowIfDisposed();
+        this.rabbitMQModel.BasicCancel(this.consumerTag);
+        this.rabbitMQModel.Close();
+        this.started = false;
+        this.disposed = true;
+        return Task.CompletedTask;
+    }
 
-            if (!this.started)
+    async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
+    {
+        return await this.GetMetricsAsync().ConfigureAwait(false);
+    }
+
+    public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
+    {
+        QueueDeclareOk queueInfo = this.rabbitMQModel.QueueDeclarePassive(this.queueName);
+        var metrics = new RabbitMQTriggerMetrics
+        {
+            QueueLength = queueInfo.MessageCount,
+            Timestamp = DateTime.UtcNow,
+        };
+
+        return Task.FromResult(metrics);
+    }
+
+    ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
+    {
+        return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
+    }
+
+    public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
+    {
+        return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
+    }
+
+    internal static Activity StartActivity(BasicDeliverEventArgs ea)
+    {
+        // Ideally, we would have used string-values for headers, but RabbitMQ client has an old quirk where it does
+        // not differentiate between string headers and byte-array headers when decoding them. See:
+        // https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/415. Hence, it is decided to also set byte[] as
+        // value for 'traceparent' header for consistency between the below two cases.
+        if (ea.BasicProperties.Headers?.ContainsKey("traceparent") == true)
+        {
+            byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
+            string traceparentId = Encoding.UTF8.GetString(traceParentIdInBytes);
+            return ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
+        }
+        else
+        {
+            Activity activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
+
+            // Method 'StartActivity' will return null if it has no event listeners.
+            if (activity != null)
             {
-                throw new InvalidOperationException("The listener has not yet been started or has already been stopped");
+                ea.BasicProperties.Headers ??= new Dictionary<string, object>();
+                byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
+                ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
             }
 
-            this.rabbitMQModel.BasicCancel(this.consumerTag);
-            this.rabbitMQModel.Close();
-            this.started = false;
-            this.disposed = true;
-            return Task.CompletedTask;
+            return activity;
         }
+    }
 
-        async Task<ScaleMetrics> IScaleMonitor.GetMetricsAsync()
-        {
-            return await this.GetMetricsAsync().ConfigureAwait(false);
-        }
+    private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
+    {
+        Debug.Assert(count > 1, "count must be greater than 1.");
+        Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
 
-        public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
+        // Walks through the list from left to right starting at len(samples) - count.
+        for (int i = samples.Count - count; i < samples.Count - 1; i++)
         {
-            QueueDeclareOk queueInfo = this.rabbitMQModel.QueueDeclarePassive(this.queueName);
-            var metrics = new RabbitMQTriggerMetrics
+            if (!predicate(samples[i], samples[i + 1]))
             {
-                QueueLength = queueInfo.MessageCount,
-                Timestamp = DateTime.UtcNow,
-            };
-
-            return Task.FromResult(metrics);
-        }
-
-        ScaleStatus IScaleMonitor.GetScaleStatus(ScaleStatusContext context)
-        {
-            return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.Cast<RabbitMQTriggerMetrics>().ToArray());
-        }
-
-        public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
-        {
-            return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
-        }
-
-        internal static Activity StartActivity(BasicDeliverEventArgs ea)
-        {
-            // Ideally, we would have used string-values for headers, but RabbitMQ client has an old quirk where it does
-            // not differentiate between string headers and byte-array headers when decoding them. See:
-            // https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/415. Hence, it is decided to also set byte[] as
-            // value for 'traceparent' header for consistency between the below two cases.
-            if (ea.BasicProperties.Headers?.ContainsKey("traceparent") == true)
-            {
-                byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
-                string traceparentId = Encoding.UTF8.GetString(traceParentIdInBytes);
-                return ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
-            }
-            else
-            {
-                Activity activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
-
-                // Method 'StartActivity' will return null if it has no event listeners.
-                if (activity != null)
-                {
-                    ea.BasicProperties.Headers ??= new Dictionary<string, object>();
-                    byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
-                    ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
-                }
-
-                return activity;
-            }
-        }
-
-        private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
-        {
-            Debug.Assert(count > 1, "count must be greater than 1.");
-            Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
-
-            // Walks through the list from left to right starting at len(samples) - count.
-            for (int i = samples.Count - count; i < samples.Count - 1; i++)
-            {
-                if (!predicate(samples[i], samples[i + 1]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (this.disposed)
-            {
-                throw new ObjectDisposedException(null);
+                return false;
             }
         }
 
-        private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)
+        return true;
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (this.disposed)
         {
-            var status = new ScaleStatus
-            {
-                Vote = ScaleVote.None,
-            };
+            throw new ObjectDisposedException(null);
+        }
+    }
 
-            // TODO: Make the below two ints configurable.
-            int numberOfSamplesToConsider = 5;
-            int targetQueueLength = 1000;
+    private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)
+    {
+        var status = new ScaleStatus
+        {
+            Vote = ScaleVote.None,
+        };
 
-            if (metrics == null || metrics.Length < numberOfSamplesToConsider)
-            {
-                return status;
-            }
+        // TODO: Make the below two ints configurable.
+        int numberOfSamplesToConsider = 5;
+        int targetQueueLength = 1000;
 
-            long latestQueueLength = metrics.Last().QueueLength;
-
-            if (latestQueueLength > workerCount * targetQueueLength)
-            {
-                status.Vote = ScaleVote.ScaleOut;
-                this.logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
-                this.logger.LogInformation($"Length of queue ({this.queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
-                return status;
-            }
-
-            bool queueIsIdle = metrics.All(p => p.QueueLength == 0);
-
-            if (queueIsIdle)
-            {
-                status.Vote = ScaleVote.ScaleIn;
-                this.logger.LogInformation($"Queue '{this.queueName}' is idle");
-                return status;
-            }
-
-            bool queueLengthIncreasing =
-                IsTrueForLast(
-                    metrics,
-                    numberOfSamplesToConsider,
-                    (prev, next) => prev.QueueLength < next.QueueLength) && metrics[0].QueueLength > 0;
-
-            if (queueLengthIncreasing)
-            {
-                status.Vote = ScaleVote.ScaleOut;
-                this.logger.LogInformation($"Queue length is increasing for '{this.queueName}'");
-                return status;
-            }
-
-            bool queueLengthDecreasing =
-                IsTrueForLast(
-                    metrics,
-                    numberOfSamplesToConsider,
-                    (prev, next) => prev.QueueLength > next.QueueLength);
-
-            if (queueLengthDecreasing)
-            {
-                status.Vote = ScaleVote.ScaleIn;
-                this.logger.LogInformation($"Queue length is decreasing for '{this.queueName}'");
-            }
-
-            this.logger.LogInformation($"Queue '{this.queueName}' is steady");
+        if (metrics == null || metrics.Length < numberOfSamplesToConsider)
+        {
             return status;
         }
+
+        long latestQueueLength = metrics.Last().QueueLength;
+
+        if (latestQueueLength > workerCount * targetQueueLength)
+        {
+            status.Vote = ScaleVote.ScaleOut;
+            this.logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
+            this.logger.LogInformation($"Length of queue ({this.queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
+            return status;
+        }
+
+        bool queueIsIdle = metrics.All(p => p.QueueLength == 0);
+
+        if (queueIsIdle)
+        {
+            status.Vote = ScaleVote.ScaleIn;
+            this.logger.LogInformation($"Queue '{this.queueName}' is idle");
+            return status;
+        }
+
+        bool queueLengthIncreasing =
+            IsTrueForLast(
+                metrics,
+                numberOfSamplesToConsider,
+                (prev, next) => prev.QueueLength < next.QueueLength) && metrics[0].QueueLength > 0;
+
+        if (queueLengthIncreasing)
+        {
+            status.Vote = ScaleVote.ScaleOut;
+            this.logger.LogInformation($"Queue length is increasing for '{this.queueName}'");
+            return status;
+        }
+
+        bool queueLengthDecreasing =
+            IsTrueForLast(
+                metrics,
+                numberOfSamplesToConsider,
+                (prev, next) => prev.QueueLength > next.QueueLength);
+
+        if (queueLengthDecreasing)
+        {
+            status.Vote = ScaleVote.ScaleIn;
+            this.logger.LogInformation($"Queue length is decreasing for '{this.queueName}'");
+        }
+
+        this.logger.LogInformation($"Queue '{this.queueName}' is steady");
+        return status;
     }
 }

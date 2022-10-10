@@ -8,81 +8,80 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
+
+public class RabbitMQOptionsTests
 {
-    public class RabbitMQOptionsTests
+    [Fact]
+    public void TestDefaultOptions()
     {
-        [Fact]
-        public void TestDefaultOptions()
+        var options = new RabbitMQOptions();
+
+        Assert.Null(options.ConnectionString);
+        Assert.Null(options.QueueName);
+        Assert.Equal<ushort>(30, options.PrefetchCount);
+        Assert.False(options.DisableCertificateValidation);
+
+        // Test formatted
+        Assert.Equal(GetFormattedOption(options), options.Format());
+    }
+
+    [Fact]
+    public void TestConfiguredRabbitMQOptions()
+    {
+        string expectedConnectionString = "someConnectionString";
+        string expectedQueueName = "someQueueName";
+        ushort expectedPrefetchCount = 100;
+        bool expectedDisableCertificateValidation = true;
+
+        var options = new RabbitMQOptions()
         {
-            var options = new RabbitMQOptions();
+            ConnectionString = expectedConnectionString,
+            QueueName = expectedQueueName,
+            PrefetchCount = expectedPrefetchCount,
+            DisableCertificateValidation = expectedDisableCertificateValidation,
+        };
 
-            Assert.Null(options.ConnectionString);
-            Assert.Null(options.QueueName);
-            Assert.Equal<ushort>(30, options.PrefetchCount);
-            Assert.False(options.DisableCertificateValidation);
+        Assert.Equal(expectedConnectionString, options.ConnectionString);
+        Assert.Equal(expectedQueueName, options.QueueName);
+        Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
+        Assert.Equal(expectedDisableCertificateValidation, options.DisableCertificateValidation);
 
-            // Test formatted
-            Assert.Equal(GetFormattedOption(options), options.Format());
-        }
+        // Test formatted
+        Assert.Equal(GetFormattedOption(options), options.Format());
+    }
 
-        [Fact]
-        public void TestConfiguredRabbitMQOptions()
+    [Fact]
+    public void TestJobHostHasTheRightConfiguration()
+    {
+        ushort expectedPrefetchCount = 10;
+
+        IHostBuilder builder = new HostBuilder()
+          .UseEnvironment("Development")
+          .ConfigureWebJobs(webJobsBuilder =>
+          {
+              webJobsBuilder.AddRabbitMQ(a => a.PrefetchCount = expectedPrefetchCount); // set to non-default prefetch count
+          })
+          .UseConsoleLifetime();
+
+        IHost host = builder.Build();
+        using (host)
         {
-            string expectedConnectionString = "someConnectionString";
-            string expectedQueueName = "someQueueName";
-            ushort expectedPrefetchCount = 100;
-            bool expectedDisableCertificateValidation = true;
-
-            var options = new RabbitMQOptions()
-            {
-                ConnectionString = expectedConnectionString,
-                QueueName = expectedQueueName,
-                PrefetchCount = expectedPrefetchCount,
-                DisableCertificateValidation = expectedDisableCertificateValidation,
-            };
-
-            Assert.Equal(expectedConnectionString, options.ConnectionString);
-            Assert.Equal(expectedQueueName, options.QueueName);
-            Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
-            Assert.Equal(expectedDisableCertificateValidation, options.DisableCertificateValidation);
-
-            // Test formatted
-            Assert.Equal(GetFormattedOption(options), options.Format());
+            IOptions<RabbitMQOptions> config = host.Services.GetService<IOptions<RabbitMQOptions>>();
+            Assert.Equal(config.Value.PrefetchCount, expectedPrefetchCount);
         }
+    }
 
-        [Fact]
-        public void TestJobHostHasTheRightConfiguration()
+    // TODO: Do not immitate source code.
+    private static string GetFormattedOption(RabbitMQOptions option)
+    {
+        var options = new JObject
         {
-            ushort expectedPrefetchCount = 10;
+            { nameof(option.QueueName), option.QueueName },
+            { nameof(option.PrefetchCount), option.PrefetchCount },
+            { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
+        };
 
-            IHostBuilder builder = new HostBuilder()
-              .UseEnvironment("Development")
-              .ConfigureWebJobs(webJobsBuilder =>
-              {
-                  webJobsBuilder.AddRabbitMQ(a => a.PrefetchCount = expectedPrefetchCount); // set to non-default prefetch count
-              })
-              .UseConsoleLifetime();
-
-            IHost host = builder.Build();
-            using (host)
-            {
-                IOptions<RabbitMQOptions> config = host.Services.GetService<IOptions<RabbitMQOptions>>();
-                Assert.Equal(config.Value.PrefetchCount, expectedPrefetchCount);
-            }
-        }
-
-        // TODO: Do not immitate source code.
-        private static string GetFormattedOption(RabbitMQOptions option)
-        {
-            var options = new JObject
-            {
-                { nameof(option.QueueName), option.QueueName },
-                { nameof(option.PrefetchCount), option.PrefetchCount },
-                { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
-            };
-
-            return options.ToString(Formatting.Indented);
-        }
+        return options.ToString(Formatting.Indented);
     }
 }
