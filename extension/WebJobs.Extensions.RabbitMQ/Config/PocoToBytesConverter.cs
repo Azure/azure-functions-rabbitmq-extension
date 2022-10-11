@@ -5,16 +5,15 @@ using System;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
-{
-    internal class PocoToBytesConverter<T> : IConverter<T, ReadOnlyMemory<byte>>
-    {
-        public ReadOnlyMemory<byte> Convert(T input)
-        {
-            _ = input ?? throw new ArgumentNullException(nameof(input));
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-            string res = JsonConvert.SerializeObject(input);
-            return Encoding.UTF8.GetBytes(res);
-        }
+internal class PocoToBytesConverter<T> : IConverter<T, ReadOnlyMemory<byte>>
+{
+    public ReadOnlyMemory<byte> Convert(T input)
+    {
+        _ = input ?? throw new ArgumentNullException(nameof(input));
+
+        string res = JsonConvert.SerializeObject(input);
+        return Encoding.UTF8.GetBytes(res);
     }
 }

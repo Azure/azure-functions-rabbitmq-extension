@@ -3,18 +3,17 @@
 
 using RabbitMQ.Client;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+
+public interface IRabbitMQService
 {
-    public interface IRabbitMQService
-    {
-        IRabbitMQModel RabbitMQModel { get; }
+    IRabbitMQModel RabbitMQModel { get; }
 
-        IModel Model { get; }
+    IModel Model { get; }
 
-        IBasicPublishBatch BasicPublishBatch { get; }
+    IBasicPublishBatch BasicPublishBatch { get; }
 
-        object PublishBatchLock { get; }
+    object PublishBatchLock { get; }
 
-        void ResetPublishBatch();
-    }
+    void ResetPublishBatch();
 }

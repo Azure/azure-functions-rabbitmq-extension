@@ -5,15 +5,14 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
-{
-    internal class RabbitMQTriggerParameterDescriptor : TriggerParameterDescriptor
-    {
-        public string QueueName { get; set; }
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-        public override string GetTriggerReason(IDictionary<string, string> arguments)
-        {
-            return $"RabbitMQ message detected from queue: {this.QueueName} at {DateTime.Now}";
-        }
+internal class RabbitMQTriggerParameterDescriptor : TriggerParameterDescriptor
+{
+    public string QueueName { get; set; }
+
+    public override string GetTriggerReason(IDictionary<string, string> arguments)
+    {
+        return $"RabbitMQ message detected from queue: {this.QueueName} at {DateTime.Now}";
     }
 }

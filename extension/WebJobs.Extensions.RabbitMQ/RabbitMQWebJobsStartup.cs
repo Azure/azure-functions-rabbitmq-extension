@@ -7,13 +7,12 @@ using Microsoft.Extensions.Hosting;
 
 [assembly: WebJobsStartup(typeof(RabbitMQWebJobsStartup))]
 
-namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
+
+public class RabbitMQWebJobsStartup : IWebJobsStartup
 {
-    public class RabbitMQWebJobsStartup : IWebJobsStartup
+    public void Configure(IWebJobsBuilder builder)
     {
-        public void Configure(IWebJobsBuilder builder)
-        {
-            builder.AddRabbitMQ();
-        }
+        builder.AddRabbitMQ();
     }
 }
