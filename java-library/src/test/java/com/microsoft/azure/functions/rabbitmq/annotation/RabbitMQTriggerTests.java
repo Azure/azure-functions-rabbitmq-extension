@@ -18,10 +18,12 @@ public class RabbitMQTriggerTests {
         EasyMock.expect(triggerMock.queueName()).andReturn("dummyQueueName");
         EasyMock.expect(triggerMock.connectionStringSetting()).andReturn("dummyConnectionStringSetting");
         EasyMock.expect(triggerMock.disableCertificateValidation()).andReturn(true);
+        EasyMock.expect(triggerMock.dataType()).andReturn("string");
         EasyMock.replay(triggerMock);
 
         Assert.assertEquals("dummyQueueName", triggerMock.queueName());
         Assert.assertEquals("dummyConnectionStringSetting", triggerMock.connectionStringSetting());
         Assert.assertEquals(true, triggerMock.disableCertificateValidation());
+        Assert.assertEquals("string", triggerMock.dataType());
     }
 }

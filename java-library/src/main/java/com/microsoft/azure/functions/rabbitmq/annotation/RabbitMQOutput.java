@@ -55,4 +55,14 @@ public @interface RabbitMQOutput {
      * production. Does not apply when SSL is disabled.
      */
     boolean disableCertificateValidation() default false;
+
+    /**
+     * <p>Defines how Functions runtime should treat the parameter value. Possible values are:</p>
+     * <ul>
+     *     <li>"" or string: treat it as a string whose value is serialized from the parameter</li>
+     *     <li>binary: treat it as a binary data whose value comes from for example OutputBinding&lt;byte[]&lt;</li>
+     * </ul>
+     * @return The dataType which will be used by the Functions runtime.
+     */
+    String dataType() default "";
 }
