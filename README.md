@@ -38,6 +38,7 @@ The following attributes are common to both RabbitMQ trigger and output bindings
 | `ConnectionStringSetting` | string | The setting name for RabbitMQ connection URI. An example setting value would be `amqp://user:pass@host:10000/vhost`. |
 | `QueueName` | string | The RabbitMQ queue name. |
 | `DisableCertificateValidation` | boolean | Indicates whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is disabled. |
+| `dataType` | string | DataType of the message. "" by default as String, "binary" for byte[]|
 
 ## Further Reading
 

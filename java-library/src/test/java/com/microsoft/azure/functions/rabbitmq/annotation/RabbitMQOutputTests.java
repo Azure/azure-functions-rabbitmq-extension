@@ -18,10 +18,12 @@ public class RabbitMQOutputTests {
         EasyMock.expect(outputMock.queueName()).andReturn("dummyQueueName");
         EasyMock.expect(outputMock.connectionStringSetting()).andReturn("dummyConnectionStringSetting");
         EasyMock.expect(outputMock.disableCertificateValidation()).andReturn(true);
+        EasyMock.expect(outputMock.dataType()).andReturn("string");
         EasyMock.replay(outputMock);
 
         Assert.assertEquals("dummyQueueName", outputMock.queueName());
         Assert.assertEquals("dummyConnectionStringSetting", outputMock.connectionStringSetting());
         Assert.assertEquals(true, outputMock.disableCertificateValidation());
+        Assert.assertEquals("string", outputMock.dataType());
     }
 }
