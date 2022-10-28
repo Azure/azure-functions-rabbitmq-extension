@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -22,8 +21,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTriggerMetrics>
 {
     private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
-
-    private static readonly ActivitySource ActivitySource = new("Microsoft.Azure.WebJobs.Extensions.RabbitMQ");
 
     private readonly ITriggeredFunctionExecutor executor;
     private readonly string queueName;
@@ -98,7 +95,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
             // handler registered for the consumer so there should be no side-effects.
             args.Body = args.Body.ToArray();
 
-            using Activity activity = StartActivity(args);
+            using Activity activity = RabbitMQActivitySource.StartActivity(args.BasicProperties);
 
             var input = new TriggeredFunctionData() { TriggerValue = args };
             FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
@@ -171,34 +168,6 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     public ScaleStatus GetScaleStatus(ScaleStatusContext<RabbitMQTriggerMetrics> context)
     {
         return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
-    }
-
-    internal static Activity StartActivity(BasicDeliverEventArgs ea)
-    {
-        // Ideally, we would have used string-values for headers, but RabbitMQ client has an old quirk where it does
-        // not differentiate between string headers and byte-array headers when decoding them. See:
-        // https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/415. Hence, it is decided to also set byte[] as
-        // value for 'traceparent' header for consistency between the below two cases.
-        if (ea.BasicProperties.Headers?.ContainsKey("traceparent") == true)
-        {
-            byte[] traceParentIdInBytes = ea.BasicProperties.Headers["traceparent"] as byte[];
-            string traceparentId = Encoding.UTF8.GetString(traceParentIdInBytes);
-            return ActivitySource.StartActivity("Trigger", ActivityKind.Consumer, traceparentId);
-        }
-        else
-        {
-            Activity activity = ActivitySource.StartActivity("Trigger", ActivityKind.Consumer);
-
-            // Method 'StartActivity' will return null if it has no event listeners.
-            if (activity != null)
-            {
-                ea.BasicProperties.Headers ??= new Dictionary<string, object>();
-                byte[] traceParentIdInBytes = Encoding.UTF8.GetBytes(activity.Id);
-                ea.BasicProperties.Headers["traceparent"] = traceParentIdInBytes;
-            }
-
-            return activity;
-        }
     }
 
     private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
