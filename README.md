@@ -3,11 +3,11 @@
 [![Build Status](https://dev.azure.com/azfunc/Azure%20Functions/_apis/build/status/Azure.azure-functions-rabbitmq-extension?branchName=dev)](https://dev.azure.com/azfunc/Azure%20Functions/_build/latest?definitionId=48&branchName=dev)
 
 This repository hosts RabbitMQ trigger and output bindings to interact with RabbitMQ in your [Azure Functions](https://azure.microsoft.com/services/functions/)
-and [WebJobs](https://docs.microsoft.com/azure/app-service/webjobs-sdk-how-to). More specifically, the trigger binding enables invoking a function when a message arrives at the RabbitMQ queue. The triggered function can consume this message and take required action. Similarly, the output binding facilitates publishing of messages on the RabbitMQ queue.
+and [WebJobs](https://learn.microsoft.com/azure/app-service/webjobs-sdk-how-to). More specifically, the trigger binding enables invoking a function when a message arrives at the RabbitMQ queue. The triggered function can consume this message and take required action. Similarly, the output binding facilitates publishing of messages on the RabbitMQ queue.
 
 ## Usage
 
-The following example shows a [C# function](https://docs.microsoft.com/azure/azure-functions/functions-dotnet-class-library) that gets invoked (by virtue of the trigger binding) when a message is added to a RabbitMQ queue named `inputQueue`. The function then logs the message string, composes an output message and returns it. This value is then published to the queue named `outputQueue` through the output binding. The example function dictates that the connection URI for the RabbitMQ service is the one with key `RabbitMqConnectionString` in the [Application Settings](https://docs.microsoft.com/azure/azure-functions/functions-develop-local#local-settings-file).
+The following example shows a [C# function](https://learn.microsoft.com/azure/azure-functions/functions-dotnet-class-library) that gets invoked (by virtue of the trigger binding) when a message is added to a RabbitMQ queue named `inputQueue`. The function then logs the message string, composes an output message and returns it. This value is then published to the queue named `outputQueue` through the output binding. The example function dictates that the connection URI for the RabbitMQ service is the one with key `RabbitMqConnectionString` in the [Application Settings](https://learn.microsoft.com/azure/azure-functions/functions-develop-local#local-settings-file).
 
 ```cs
 [FunctionName("RabbitMqExample")]
@@ -29,20 +29,30 @@ Before working with the RabbitMQ extension, you must [set up your RabbitMQ endpo
 
 To learn about creating an application that works with RabbitMQ, see the [getting started](https://www.rabbitmq.com/getstarted.html) page. For general documentation on .NET RabbitMQ client usage, see the [.NET/C# client API guide](https://www.rabbitmq.com/dotnet-api-guide.html).
 
-## Attributes
+## C# Attributes
 
-The following attributes are common to both RabbitMQ trigger and output bindings.
+The following C# attributes are common to both RabbitMQ trigger and output bindings.
 
 | Attribute Name | Type | Description |
 |---|---|---|
-| `ConnectionStringSetting` | string | The setting name for RabbitMQ connection URI. An example setting value would be `amqp://user:pass@host:10000/vhost`. |
-| `QueueName` | string | The RabbitMQ queue name. |
-| `DisableCertificateValidation` | boolean | Indicates whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is disabled. |
-| `dataType` | string | DataType of the message. "" by default as String, "binary" for byte[]|
+| `ConnectionStringSetting` | `string` | The setting name for RabbitMQ connection URI. An example setting value would be `amqp://user:pass@host:10000/vhost`. |
+| `DisableCertificateValidation` | `bool` | Indicates whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is disabled. |
+| `QueueName` | `string` | The RabbitMQ queue name. |
+
+## Java Annotations
+
+The following Java annotations are common to both RabbitMQ trigger and output bindings.
+
+| Annotation Name | Type | Description |
+|---|---|---|
+| `connectionStringSetting` | `String` | The setting name for RabbitMQ connection URI. An example setting value would be `amqp://user:pass@host:10000/vhost`. |
+| `dataType` | `String` | Defines how the Functions runtime should treat the parameter value. Possible values are `""`, `"string"` and `"binary"`. |
+| `disableCertificateValidation` | `boolean` | Indicates whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is disabled. |
+| `queueName` | `String` | The RabbitMQ queue name. |
 
 ## Further Reading
 
-Please refer to the Microsoft Docs page on [RabbitMQ bindings for Azure Functions overview](https://docs.microsoft.com/azure/azure-functions/functions-bindings-rabbitmq). It contains install instructions for all the supported programming languages, information on setting up and configuring the function app, and the  list of Azure App Service plans that support hosting of the function apps with RabbitMQ bindings.
+Please refer to the Microsoft Docs page on [RabbitMQ bindings for Azure Functions overview](https://learn.microsoft.com/azure/azure-functions/functions-bindings-rabbitmq). It contains install instructions for all the supported programming languages, information on setting up and configuring the function app, and the  list of Azure App Service plans that support hosting of the function apps with RabbitMQ bindings.
 
 ## Contributing
 

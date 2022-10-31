@@ -41,19 +41,9 @@ public @interface RabbitMQTrigger {
 
     /**
      * Setting name for RabbitMQ connection URI.
+     * @return Setting name for RabbitMQ connection URI.
      */
     String connectionStringSetting() default "";
-
-    /**
-     * RabbitMQ queue name.
-     */
-    String queueName() default "";
-
-    /**
-     * Whether certificate validation should be disabled. Not recommended for
-     * production. Does not apply when SSL is disabled.
-     */
-    boolean disableCertificateValidation() default false;
 
     /**
      * <p>Defines how Functions runtime should treat the parameter value. Possible values are:</p>
@@ -62,7 +52,22 @@ public @interface RabbitMQTrigger {
      *     <li>string: always get the value as a string</li>
      *     <li>binary: get the value as a binary data, and try to deserialize to actual parameter type byte[]</li>
      * </ul>
+     * 
      * @return The dataType which will be used by the Functions runtime.
      */
     String dataType() default "";
+
+    /**
+     * Whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is
+     * disabled.
+     *
+     * @return Whether certificate validation should be disabled.
+     */
+    boolean disableCertificateValidation() default false;
+
+    /**
+     * RabbitMQ queue name.
+     * @return RabbitMQ queue name.
+     */
+    String queueName() default "";
 }

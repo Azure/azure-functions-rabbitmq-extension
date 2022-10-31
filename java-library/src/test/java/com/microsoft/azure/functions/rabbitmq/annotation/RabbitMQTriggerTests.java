@@ -15,15 +15,15 @@ public class RabbitMQTriggerTests {
     public void TestRabbitMQTrigger() {
         RabbitMQTrigger triggerMock = EasyMock.mock(RabbitMQTrigger.class);
 
-        EasyMock.expect(triggerMock.queueName()).andReturn("dummyQueueName");
-        EasyMock.expect(triggerMock.connectionStringSetting()).andReturn("dummyConnectionStringSetting");
+        EasyMock.expect(triggerMock.connectionStringSetting()).andReturn("testConnectionStringSetting");
+        EasyMock.expect(triggerMock.dataType()).andReturn("testDataType");
         EasyMock.expect(triggerMock.disableCertificateValidation()).andReturn(true);
-        EasyMock.expect(triggerMock.dataType()).andReturn("string");
+        EasyMock.expect(triggerMock.queueName()).andReturn("testQueueName");
         EasyMock.replay(triggerMock);
 
-        Assert.assertEquals("dummyQueueName", triggerMock.queueName());
-        Assert.assertEquals("dummyConnectionStringSetting", triggerMock.connectionStringSetting());
+        Assert.assertEquals("testConnectionStringSetting", triggerMock.connectionStringSetting());
+        Assert.assertEquals("testDataType", triggerMock.dataType());
         Assert.assertEquals(true, triggerMock.disableCertificateValidation());
-        Assert.assertEquals("string", triggerMock.dataType());
+        Assert.assertEquals("testQueueName", triggerMock.queueName());
     }
 }

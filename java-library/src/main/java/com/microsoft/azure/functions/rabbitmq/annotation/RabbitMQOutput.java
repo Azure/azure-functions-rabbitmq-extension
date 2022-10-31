@@ -42,27 +42,32 @@ import java.lang.annotation.Target;
 public @interface RabbitMQOutput {
     /**
      * Setting name for RabbitMQ connection URI.
+     * @return Setting name for RabbitMQ connection URI.
      */
     String connectionStringSetting() default "";
-
-    /**
-     * RabbitMQ queue name.
-     */
-    String queueName() default "";
-
-    /**
-     * Whether certificate validation should be disabled. Not recommended for
-     * production. Does not apply when SSL is disabled.
-     */
-    boolean disableCertificateValidation() default false;
 
     /**
      * <p>Defines how Functions runtime should treat the parameter value. Possible values are:</p>
      * <ul>
      *     <li>"" or string: treat it as a string whose value is serialized from the parameter</li>
-     *     <li>binary: treat it as a binary data whose value comes from for example OutputBinding&lt;byte[]&lt;</li>
+     *     <li>binary: treat it as a binary data whose value comes from for example OutputBinding&lt;byte[]&gt;</li>
      * </ul>
+     *
      * @return The dataType which will be used by the Functions runtime.
      */
     String dataType() default "";
+
+    /**
+     * Whether certificate validation should be disabled. Not recommended for production. Does not apply when SSL is
+     * disabled.
+     *
+     * @return Whether certificate validation should be disabled.
+     */
+    boolean disableCertificateValidation() default false;
+
+    /**
+     * RabbitMQ queue name.
+     * @return RabbitMQ queue name.
+     */
+    String queueName() default "";
 }
