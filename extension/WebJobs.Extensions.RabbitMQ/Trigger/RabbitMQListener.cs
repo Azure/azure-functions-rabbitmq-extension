@@ -52,8 +52,10 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         this.prefetchCount = prefetchCount;
 
         _ = !string.IsNullOrWhiteSpace(functionId) ? true : throw new ArgumentNullException(nameof(functionId));
-        this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}".ToLowerInvariant());
-        this.logDetails = $"function: '{functionId}, queue: '{queueName}'";
+
+        // Do not convert the scale-monitor ID to lower-case string since RabbitMQ queue names are case-sensitive.
+        this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}");
+        this.logDetails = $"function: '{functionId}', queue: '{queueName}'";
     }
 
     public ScaleMonitorDescriptor Descriptor { get; }
@@ -72,6 +74,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     {
         int previousState = Interlocked.CompareExchange(ref this.listenerState, ListenerStarting, ListenerNotStarted);
 
+        // It is possible that the WebJobs SDKS invokes StartAsync() method more than once, if there are other trigger
+        // listeners registered and some of them have failed to start.
         if (previousState != ListenerNotStarted)
         {
             throw new InvalidOperationException("The listener is either starting or has already started.");
@@ -103,6 +107,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
             if (!result.Succeeded)
             {
+                // Retry by republishing a copy of message to the queue if the triggered function failed to run.
                 args.BasicProperties.Headers ??= new Dictionary<string, object>();
                 args.BasicProperties.Headers.TryGetValue(RequeueCountHeaderName, out object headerValue);
                 int requeueCount = Convert.ToInt32(headerValue, CultureInfo.InvariantCulture) + 1;
