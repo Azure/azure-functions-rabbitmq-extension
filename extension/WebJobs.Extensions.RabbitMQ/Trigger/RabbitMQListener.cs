@@ -29,33 +29,31 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
     private readonly ITriggeredFunctionExecutor executor;
     private readonly IModel channel;
+    private readonly ILogger logger;
     private readonly string queueName;
     private readonly ushort prefetchCount;
-    private readonly ILogger logger;
-
-    private readonly string logdetails;
+    private readonly string logDetails;
 
     private int listenerState = ListenerNotStarted;
-
     private string consumerTag;
 
     public RabbitMQListener(
         ITriggeredFunctionExecutor executor,
-        string functionId,
         IModel channel,
+        ILogger logger,
+        string functionId,
         string queueName,
-        ushort prefetchCount,
-        ILogger logger)
+        ushort prefetchCount)
     {
-        this.executor = executor;
-        this.channel = channel;
-        this.queueName = queueName;
+        this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
+        this.channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
         this.prefetchCount = prefetchCount;
-        this.logger = logger;
 
-        this.logdetails = $"function: '{functionId}, queue: '{queueName}'";
-
+        _ = !string.IsNullOrWhiteSpace(functionId) ? true : throw new ArgumentNullException(nameof(functionId));
         this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}".ToLowerInvariant());
+        this.logDetails = $"function: '{functionId}, queue: '{queueName}'";
     }
 
     public ScaleMonitorDescriptor Descriptor { get; }
@@ -79,7 +77,9 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
             throw new InvalidOperationException("The listener is either starting or has already started.");
         }
 
-        // Non-zero prefetch size doesn't work (tested upto 5.2.0) and will throw NOT_IMPLEMENTED exception.
+        // The RabbitMQ server (v3.11.2 as of latest) only has support for prefetch size of zero (no specific limit).
+        // See: https://github.com/rabbitmq/rabbitmq-server/blob/v3.11.2/deps/rabbit/src/rabbit_channel.erl#L1543.
+        // See: https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.prefetch-size for protocol specification.
         this.channel.BasicQos(prefetchSize: 0, this.prefetchCount, global: false);
         var consumer = new EventingBasicConsumer(this.channel);
 
@@ -109,26 +109,28 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
                 if (requeueCount >= 5)
                 {
-                    // Add message to dead letter exchange.
-                    this.logger.LogDebug($"Rejecting message since requeue count exceeded for {this.logdetails}.");
+                    // Discard or 'dead-letter' the message. See: https://www.rabbitmq.com/dlx.html.
+                    this.logger.LogDebug($"Rejecting message since the requeue count exceeded for {this.logDetails}.");
                     this.channel.BasicReject(args.DeliveryTag, requeue: false);
                     return;
                 }
 
-                this.logger.LogDebug($"Republishing message for {this.logdetails}.");
+                this.logger.LogDebug($"Republishing message for {this.logDetails}.");
                 args.BasicProperties.Headers[RequeueCountHeaderName] = requeueCount;
 
-                // TODO: Check if 'BasicReject' with requeue = true would work here.
+                // We cannot call BasicReject() on the message with requeue = true since that would not enable a fixed
+                // number of retry attempts. See: https://stackoverflow.com/q/23158310.
                 this.channel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
             }
 
+            // Acknowledge the existing message only after the message (in case of failure) is re-published.
             this.channel.BasicAck(args.DeliveryTag, multiple: false);
         };
 
         this.consumerTag = this.channel.BasicConsume(queue: this.queueName, autoAck: false, consumer);
 
         this.listenerState = ListenerStarted;
-        this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logdetails}.");
+        this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logDetails}.");
 
         return Task.CompletedTask;
     }
@@ -139,11 +141,12 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
         if (previousState == ListenerStarted)
         {
+            // TODO: Close RabbitMQ connection along with the channel.
             this.channel.BasicCancel(this.consumerTag);
             this.channel.Close();
 
             this.listenerState = ListenerStopped;
-            this.logger.LogDebug($"Stopped RabbitMQ trigger listener for {this.logdetails}.");
+            this.logger.LogDebug($"Stopped RabbitMQ trigger listener for {this.logDetails}.");
         }
 
         return Task.CompletedTask;
@@ -157,9 +160,10 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
     {
         QueueDeclareOk queueInfo = this.channel.QueueDeclarePassive(this.queueName);
+
         var metrics = new RabbitMQTriggerMetrics
         {
-            QueueLength = queueInfo.MessageCount,
+            MessageCount = queueInfo.MessageCount,
             Timestamp = DateTime.UtcNow,
         };
 
@@ -176,84 +180,98 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         return this.GetScaleStatusCore(context.WorkerCount, context.Metrics?.ToArray());
     }
 
-    private static bool IsTrueForLast(IList<RabbitMQTriggerMetrics> samples, int count, Func<RabbitMQTriggerMetrics, RabbitMQTriggerMetrics, bool> predicate)
-    {
-        Debug.Assert(count > 1, "count must be greater than 1.");
-        Debug.Assert(count <= samples.Count, "count must be less than or equal to the list size.");
-
-        // Walks through the list from left to right starting at len(samples) - count.
-        for (int i = samples.Count - count; i < samples.Count - 1; i++)
-        {
-            if (!predicate(samples[i], samples[i + 1]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
+    /// <summary>
+    /// Returns scale recommendation i.e. whether to scale in or out the host application. The recommendation is
+    /// made based on both the latest metrics and the trend of increase or decrease in the the number of messages in
+    /// Ready state in the queue. In all of the calculations, it is attempted to keep the number of workers minimum
+    /// while also ensuring that the message count per worker stays under the maximum limit.
+    /// </summary>
+    /// <param name="workerCount">The current worker count for the host application.</param>
+    /// <param name="metrics">The collection of metrics samples to make the scale decision.</param>
     private ScaleStatus GetScaleStatusCore(int workerCount, RabbitMQTriggerMetrics[] metrics)
     {
+        // We require minimum 5 samples to estimate the trend of variations in message count with certain reliability.
+        // These samples roughly cover the timespan of past 40 seconds.
+        int minSamplesForScaling = 5;
+
+        // TODO: Make this value configurable.
+        // Upper limit on the count of messages that needs to be maintained per worker.
+        int maxMessagesPerWorker = 1000;
+
         var status = new ScaleStatus
         {
             Vote = ScaleVote.None,
         };
 
-        // TODO: Make the below two ints configurable.
-        int numberOfSamplesToConsider = 5;
-        int targetQueueLength = 1000;
-
-        if (metrics == null || metrics.Length < numberOfSamplesToConsider)
+        // Do not make a scale decision unless we have enough samples.
+        if (metrics == null || metrics.Length < minSamplesForScaling)
         {
+            this.logger.LogInformation($"Requesting no-scaling: Insufficient metrics for making scale decision for {this.logDetails}.");
             return status;
         }
 
-        long latestQueueLength = metrics.Last().QueueLength;
+        // Consider only the most recent batch of samples in the rest of the method.
+        metrics = metrics.Skip(metrics.Length - minSamplesForScaling).ToArray();
 
-        if (latestQueueLength > workerCount * targetQueueLength)
+        string counts = string.Join(", ", metrics.Select(metric => metric.MessageCount));
+        this.logger.LogInformation($"Message counts: [{counts}], worker count: {workerCount}, maximum messages per worker: {maxMessagesPerWorker}.");
+
+        // Add worker if the count of messages per worker exceeds the maximum limit.
+        long lastMessageCount = metrics.Last().MessageCount;
+        if (lastMessageCount > workerCount * maxMessagesPerWorker)
         {
             status.Vote = ScaleVote.ScaleOut;
-            this.logger.LogInformation($"QueueLength ({latestQueueLength}) > workerCount ({workerCount}) * 1000");
-            this.logger.LogInformation($"Length of queue ({this.queueName}, {latestQueueLength}) is too high relative to the number of instances ({workerCount}).");
+            this.logger.LogInformation($"Requesting scale-out: Found too many messages for {this.logDetails} relative to the number of workers.");
             return status;
         }
 
-        bool queueIsIdle = metrics.All(p => p.QueueLength == 0);
-
-        if (queueIsIdle)
+        // Check if there is a continuous increase or decrease in the count of messages.
+        bool isIncreasing = true;
+        bool isDecreasing = true;
+        for (int index = 0; index < metrics.Length - 1; index++)
         {
-            status.Vote = ScaleVote.ScaleIn;
-            this.logger.LogInformation($"Queue '{this.queueName}' is idle");
-            return status;
+            isIncreasing = isIncreasing && metrics[index].MessageCount < metrics[index + 1].MessageCount;
+            isDecreasing = isDecreasing && (metrics[index + 1].MessageCount == 0 || metrics[index].MessageCount > metrics[index + 1].MessageCount);
         }
 
-        bool queueLengthIncreasing =
-            IsTrueForLast(
-                metrics,
-                numberOfSamplesToConsider,
-                (prev, next) => prev.QueueLength < next.QueueLength) && metrics[0].QueueLength > 0;
-
-        if (queueLengthIncreasing)
+        if (isIncreasing)
         {
-            status.Vote = ScaleVote.ScaleOut;
-            this.logger.LogInformation($"Queue length is increasing for '{this.queueName}'");
-            return status;
+            // Scale out only if the expected count of messages would exceed the combined limit after 30 seconds.
+            DateTime referenceTime = metrics[metrics.Length - 1].Timestamp - TimeSpan.FromSeconds(30);
+            RabbitMQTriggerMetrics referenceMetric = metrics.First(metric => metric.Timestamp > referenceTime);
+            long expectedMessageCount = (2 * metrics[metrics.Length - 1].MessageCount) - referenceMetric.MessageCount;
+
+            if (expectedMessageCount > workerCount * maxMessagesPerWorker)
+            {
+                status.Vote = ScaleVote.ScaleOut;
+                this.logger.LogInformation($"Requesting scale-out: Found the messages for {this.logDetails} to be continuously increasing" +
+                    " and may exceed the maximum limit set for the workers.");
+                return status;
+            }
+            else
+            {
+                this.logger.LogDebug($"Avoiding scale-out: Found the messages for {this.logDetails} to be increasing" +
+                    " but they may not exceed the maximum limit set for the workers.");
+            }
         }
 
-        bool queueLengthDecreasing =
-            IsTrueForLast(
-                metrics,
-                numberOfSamplesToConsider,
-                (prev, next) => prev.QueueLength > next.QueueLength);
-
-        if (queueLengthDecreasing)
+        if (isDecreasing)
         {
-            status.Vote = ScaleVote.ScaleIn;
-            this.logger.LogInformation($"Queue length is decreasing for '{this.queueName}'");
+            // Scale in only if the count of messages will not exceed the combined limit post the scale-in operation.
+            if (lastMessageCount <= (workerCount - 1) * maxMessagesPerWorker)
+            {
+                status.Vote = ScaleVote.ScaleIn;
+                this.logger.LogInformation($"Requesting scale-in: Found {this.logDetails} to be either idle or the messages to be continuously decreasing.");
+                return status;
+            }
+            else
+            {
+                this.logger.LogDebug($"Avoiding scale-in: Found the messages for {this.logDetails} to be decreasing" +
+                    " but they are high enough to require all existing workers for processing.");
+            }
         }
 
-        this.logger.LogInformation($"Queue '{this.queueName}' is steady");
+        this.logger.LogInformation($"Requesting no-scaling: Found {this.logDetails} to not require scaling.");
         return status;
     }
 }

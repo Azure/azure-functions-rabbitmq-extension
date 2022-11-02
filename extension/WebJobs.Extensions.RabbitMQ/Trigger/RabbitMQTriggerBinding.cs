@@ -50,11 +50,11 @@ internal class RabbitMQTriggerBinding : ITriggerBinding
 
         return Task.FromResult<IListener>(new RabbitMQListener(
             context.Executor,
-            context.Descriptor.Id,
             this.service.Model,
+            this.logger,
+            context.Descriptor.Id,
             this.queueName,
-            this.prefetchCount,
-            this.logger));
+            this.prefetchCount));
     }
 
     public ParameterDescriptor ToParameterDescriptor()

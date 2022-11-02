@@ -7,5 +7,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 internal class RabbitMQTriggerMetrics : ScaleMetrics
 {
-    public uint QueueLength { get; set; }
+    public uint MessageCount { get; set; }
 }

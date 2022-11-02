@@ -32,7 +32,7 @@ public class RabbitMQListenerTests
         var queueInfo = new QueueDeclareOk("blah", 5, 1);
         this.mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
 
-        this.testListener = new RabbitMQListener(this.mockExecutor.Object, "TestFunction", this.mockModel.Object, "blah", 30, this.mockLogger.Object);
+        this.testListener = new RabbitMQListener(this.mockExecutor.Object, this.mockModel.Object, this.mockLogger.Object, "TestFunction", "blah", 30);
     }
 
     // Created https://github.com/Azure/azure-functions-rabbitmq-extension/issues/214 for re-enabling the unit tests.
@@ -91,10 +91,10 @@ public class RabbitMQListenerTests
     [Fact]
     public async Task GetMetrics_ReturnsExpectedResult()
     {
-        var listener = new RabbitMQListener(this.mockExecutor.Object, "TestFunction", this.mockModel.Object, "listener_test_queue", 30, this.mockLogger.Object);
+        var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockModel.Object, this.mockLogger.Object, "TestFunction", "listener_test_queue", 30);
         RabbitMQTriggerMetrics metrics = await listener.GetMetricsAsync();
 
-        Assert.Equal(5U, metrics.QueueLength);
+        Assert.Equal(5U, metrics.MessageCount);
         Assert.NotEqual(default, metrics.Timestamp);
     }
 
@@ -120,12 +120,12 @@ public class RabbitMQListenerTests
 
         var metrics = new List<RabbitMQTriggerMetrics>
         {
-            new RabbitMQTriggerMetrics { QueueLength = 2500, Timestamp = timestamp.AddSeconds(15) },
-            new RabbitMQTriggerMetrics { QueueLength = 2505, Timestamp = timestamp.AddSeconds(15) },
-            new RabbitMQTriggerMetrics { QueueLength = 2612, Timestamp = timestamp.AddSeconds(15) },
-            new RabbitMQTriggerMetrics { QueueLength = 2700, Timestamp = timestamp.AddSeconds(15) },
-            new RabbitMQTriggerMetrics { QueueLength = 2810, Timestamp = timestamp.AddSeconds(15) },
-            new RabbitMQTriggerMetrics { QueueLength = 2900, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2500, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2505, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2612, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2700, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2810, Timestamp = timestamp.AddSeconds(15) },
+            new RabbitMQTriggerMetrics { MessageCount = 2900, Timestamp = timestamp.AddSeconds(15) },
         };
 
         var context = new ScaleStatusContext<RabbitMQTriggerMetrics>
@@ -158,12 +158,12 @@ public class RabbitMQListenerTests
             WorkerCount = 1,
             Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 10, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 20, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 40, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 80, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 100, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 150, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 10, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 20, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 40, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 80, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 100, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 150, Timestamp = timestamp.AddSeconds(15) },
             },
         };
 
@@ -182,12 +182,12 @@ public class RabbitMQListenerTests
             WorkerCount = 5,
             Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 150, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 100, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 80, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 40, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 20, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 10, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 150, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 100, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 80, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 40, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 20, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 10, Timestamp = timestamp.AddSeconds(15) },
             },
         };
 
@@ -206,12 +206,12 @@ public class RabbitMQListenerTests
             WorkerCount = 2,
             Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 1500, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1600, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1400, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1300, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1700, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 1600, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1500, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1600, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1400, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1300, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1700, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 1600, Timestamp = timestamp.AddSeconds(15) },
             },
         };
 
@@ -230,12 +230,12 @@ public class RabbitMQListenerTests
             WorkerCount = 3,
             Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
-                new RabbitMQTriggerMetrics { QueueLength = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
+                new RabbitMQTriggerMetrics { MessageCount = 0, Timestamp = timestamp.AddSeconds(15) },
             },
         };
 
@@ -252,7 +252,7 @@ public class RabbitMQListenerTests
             WorkerCount = 1,
             Metrics = new List<RabbitMQTriggerMetrics>
             {
-                new RabbitMQTriggerMetrics { QueueLength = 5, Timestamp = DateTime.UtcNow },
+                new RabbitMQTriggerMetrics { MessageCount = 5, Timestamp = DateTime.UtcNow },
             },
         };
 
