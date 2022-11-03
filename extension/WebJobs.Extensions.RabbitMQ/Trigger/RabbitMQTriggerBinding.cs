@@ -49,8 +49,8 @@ internal class RabbitMQTriggerBinding : ITriggerBinding
         _ = context ?? throw new ArgumentNullException(nameof(context), "Missing listener context");
 
         return Task.FromResult<IListener>(new RabbitMQListener(
-            context.Executor,
             this.service.Model,
+            context.Executor,
             this.logger,
             context.Descriptor.Id,
             this.queueName,

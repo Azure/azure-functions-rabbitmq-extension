@@ -27,8 +27,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
     private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
 
-    private readonly ITriggeredFunctionExecutor executor;
     private readonly IModel channel;
+    private readonly ITriggeredFunctionExecutor executor;
     private readonly ILogger logger;
     private readonly string queueName;
     private readonly ushort prefetchCount;
@@ -38,15 +38,15 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     private string consumerTag;
 
     public RabbitMQListener(
-        ITriggeredFunctionExecutor executor,
         IModel channel,
+        ITriggeredFunctionExecutor executor,
         ILogger logger,
         string functionId,
         string queueName,
         ushort prefetchCount)
     {
-        this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
         this.prefetchCount = prefetchCount;
@@ -85,21 +85,21 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         // See: https://github.com/rabbitmq/rabbitmq-server/blob/v3.11.2/deps/rabbit/src/rabbit_channel.erl#L1543.
         // See: https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.prefetch-size for protocol specification.
         this.channel.BasicQos(prefetchSize: 0, this.prefetchCount, global: false);
-        var consumer = new EventingBasicConsumer(this.channel);
 
-        consumer.Received += async (model, args) =>
+        // We should use AsyncEventingBasicConsumer to create the consumer since our handler method is async. Using
+        // EventingBasicConsumer led to issue: https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211).
+        var consumer = new AsyncEventingBasicConsumer(this.channel);
+        consumer.Received += ReceivedHandler;
+
+        this.consumerTag = this.channel.BasicConsume(queue: this.queueName, autoAck: false, consumer);
+
+        this.listenerState = ListenerStarted;
+        this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logDetails}.");
+
+        return Task.CompletedTask;
+
+        async Task ReceivedHandler(object model, BasicDeliverEventArgs args)
         {
-            // The RabbitMQ client rents an array from the ArrayPool to hold a copy of the message body, and passes it
-            // to the listener. Once all event handlers are executed, the array is returned back to the pool so that the
-            // memory can be reused for future messages for that connection. However, since our event handler is async,
-            // the very first await statement i.e. the call to TryExecuteAsync below causes the event handler invocation
-            // to complete and lets the RabbitMQ client release the memory. This led to message body corruption when the
-            // message is republished (see: https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211).
-            //
-            // We chose to copy the message body instead of having a new 'args' object as there is only one event
-            // handler registered for the consumer so there should be no side-effects.
-            args.Body = args.Body.ToArray();
-
             using Activity activity = RabbitMQActivitySource.StartActivity(args.BasicProperties);
 
             var input = new TriggeredFunctionData() { TriggerValue = args };
@@ -130,14 +130,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
             // Acknowledge the existing message only after the message (in case of failure) is re-published.
             this.channel.BasicAck(args.DeliveryTag, multiple: false);
-        };
-
-        this.consumerTag = this.channel.BasicConsume(queue: this.queueName, autoAck: false, consumer);
-
-        this.listenerState = ListenerStarted;
-        this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logDetails}.");
-
-        return Task.CompletedTask;
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

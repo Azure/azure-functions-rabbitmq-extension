@@ -16,66 +16,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
 
 public class RabbitMQListenerTests
 {
-    private readonly Mock<IRabbitMQService> mockService;
-    private readonly Mock<IModel> mockModel;
-
-    public RabbitMQListenerTests()
-    {
-        this.mockService = new Mock<IRabbitMQService>();
-        this.mockModel = new Mock<IModel>();
-
-        this.mockService.Setup(m => m.Model).Returns(this.mockModel.Object);
-        var queueInfo = new QueueDeclareOk("blah", 5, 1);
-        this.mockModel.Setup(m => m.QueueDeclarePassive(It.IsAny<string>())).Returns(queueInfo);
-    }
-
-    // Created https://github.com/Azure/azure-functions-rabbitmq-extension/issues/214 for re-enabling the unit tests.
-    // Currently, the tests are testing private-made-internal class methods, which hinders refactoring of the logic
-    // within the class. Instead, the aim should be to test the functionality through public methods only.
-
-    //// [Fact]
-    //// public void CreatesHeadersAndRepublishes()
-    //// {
-    ////     string queueName = "blah";
-    ////     this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
-    ////     var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, queueName, this.mockLogger.Object, this.mockDescriptor.Object, 30);
-
-    ////     IBasicProperties properties = Mock.Of<IBasicProperties>();
-    ////     var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
-    ////     listener.CreateHeadersAndRepublish(args);
-
-    ////     this.mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-    ////     this.mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
-    //// }
-
-    //// [Fact]
-    //// public void RepublishesMessages()
-    //// {
-    ////     string queueName = "blah";
-    ////     this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
-    ////     var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, queueName, this.mockLogger.Object, this.mockDescriptor.Object, 30);
-
-    ////     IBasicProperties properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 1 } });
-    ////     var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "routingKey", properties, Encoding.UTF8.GetBytes("hello world"));
-    ////     listener.RepublishMessages(args);
-
-    ////     this.mockModel.Verify(m => m.BasicAck(It.IsAny<ulong>(), false), Times.Exactly(1));
-    ////     this.mockModel.Verify(m => m.BasicPublish(It.IsAny<string>(), queueName, It.IsAny<IBasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>()), Times.Exactly(1));
-    //// }
-
-    //// [Fact]
-    //// public void RejectsStaleMessages()
-    //// {
-    ////     this.mockService.Setup(m => m.RabbitMQModel).Returns(this.mockModel.Object);
-    ////     var listener = new RabbitMQListener(this.mockExecutor.Object, this.mockService.Object, "blah", this.mockLogger.Object, this.mockDescriptor.Object, 30);
-
-    ////     IBasicProperties properties = Mock.Of<IBasicProperties>(property => property.Headers == new Dictionary<string, object>() { { "requeueCount", 6 } });
-    ////     var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", properties, Encoding.UTF8.GetBytes("hello world"));
-    ////     listener.RepublishMessages(args);
-
-    ////     this.mockModel.Verify(m => m.BasicReject(It.IsAny<ulong>(), false), Times.Exactly(1));
-    //// }
-
     /// <summary>
     /// Verifies that the scale monitor descriptor ID is set to expected value.
     /// </summary>
@@ -262,8 +202,8 @@ public class RabbitMQListenerTests
     private static IScaleMonitor<RabbitMQTriggerMetrics> GetScaleMonitor(string functionId, string queueName)
     {
         return new RabbitMQListener(
-            Mock.Of<ITriggeredFunctionExecutor>(),
             Mock.Of<IModel>(),
+            Mock.Of<ITriggeredFunctionExecutor>(),
             Mock.Of<ILogger>(),
             functionId,
             queueName,
@@ -275,8 +215,8 @@ public class RabbitMQListenerTests
         (Mock<ILogger> mockLogger, List<string> logMessages) = CreateMockLogger();
 
         IScaleMonitor<RabbitMQTriggerMetrics> monitor = new RabbitMQListener(
-            Mock.Of<ITriggeredFunctionExecutor>(),
             Mock.Of<IModel>(),
+            Mock.Of<ITriggeredFunctionExecutor>(),
             mockLogger.Object,
             "testFunctionId",
             "testQueueName",
