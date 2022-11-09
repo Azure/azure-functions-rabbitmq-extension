@@ -91,7 +91,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         var consumer = new AsyncEventingBasicConsumer(this.channel);
         consumer.Received += ReceivedHandler;
 
-        this.consumerTag = this.channel.BasicConsume(queue: this.queueName, autoAck: false, consumer);
+        this.consumerTag = this.channel.BasicConsume(this.queueName, autoAck: false, consumer);
 
         this.listenerState = ListenerStarted;
         this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logDetails}.");

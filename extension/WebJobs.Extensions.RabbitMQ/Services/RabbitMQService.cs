@@ -14,6 +14,9 @@ internal sealed class RabbitMQService : IRabbitMQService
         var connectionFactory = new ConnectionFactory
         {
             Uri = new Uri(connectionString),
+
+            // Required to use async consumer. See: https://www.rabbitmq.com/dotnet-api-guide.html#consuming-async.
+            DispatchConsumersAsync = true,
         };
 
         if (disableCertificateValidation && connectionFactory.Ssl.Enabled)
