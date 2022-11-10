@@ -46,9 +46,15 @@ internal class RabbitMQTriggerBinding : ITriggerBinding
 
     public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
     {
-        _ = context ?? throw new ArgumentNullException(nameof(context));
+        _ = context ?? throw new ArgumentNullException(nameof(context), "Missing listener context");
 
-        return Task.FromResult<IListener>(new RabbitMQListener(context.Executor, this.service, this.queueName, this.logger, context.Descriptor, this.prefetchCount));
+        return Task.FromResult<IListener>(new RabbitMQListener(
+            this.service.Model,
+            context.Executor,
+            this.logger,
+            context.Descriptor.Id,
+            this.queueName,
+            this.prefetchCount));
     }
 
     public ParameterDescriptor ToParameterDescriptor()
