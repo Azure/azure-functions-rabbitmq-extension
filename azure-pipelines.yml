@@ -165,18 +165,20 @@ jobs:
         displayName: Extract version # e.g. 1.2.3
         condition: and(succeeded(), eq(variables.isTagTriggered, 'True'))
 
+        # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+        # options prevents spurious logging about downloading of Maven packages.
       - task: Maven@3
         displayName: Set library version
         inputs:
           mavenPomFile: java-library\pom.xml
           goals: versions:set
-          options: --define=newVersion=$(version)
+          options: --batch-mode --define=newVersion=$(version) --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
 
       - task: Maven@3
         displayName: Build library
         inputs:
           mavenPomFile: java-library\pom.xml
-          options: --batch-mode --define=gpg.skip --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
+          options: --batch-mode --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
 
       - powershell: |
           $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
