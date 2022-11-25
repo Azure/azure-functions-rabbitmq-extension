@@ -14,11 +14,15 @@ trigger:
       - v*.*.*
 
 variables:
-  vmImages: 'Windows:MMS2019TLS,Linux:MMSUbuntu20.04TLS'
   isTagTriggered: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}
   prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
   version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
   fileVersion: $[variables.version]
+
+  ${{ if eq(variables.isTagTriggered, 'True') }}:
+    vmImages: 'Windows:MMS2019TLS,Linux:MMSUbuntu20.04TLS'
+  ${{ else }}:
+    vmImages: 'Windows:windows-latest,Linux:ubuntu-latest'
 
 jobs:
   - ${{ each vmImage in split(variables.vmImages, ',') }}:
