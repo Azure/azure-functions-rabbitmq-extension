@@ -118,7 +118,7 @@ internal static class RabbitMQSamples
         logger.LogInformation($"RabbitMQ output binding function sent message: {outputMessage}");
     }
 
-    public class TestClass
+    public sealed class TestClass
     {
         public int X { get; set; }
 

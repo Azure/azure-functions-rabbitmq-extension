@@ -112,10 +112,10 @@ public class BasicDeliverEventArgsValueProviderTests
         var args = new BasicDeliverEventArgs("tag", 1, false, string.Empty, "queue", null, objJsonBytes);
         var testValueProvider = new BasicDeliverEventArgsValueProvider(args, typeof(TestClass));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => testValueProvider.GetValueAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(testValueProvider.GetValueAsync);
     }
 
-    private class TestClass
+    private sealed class TestClass
     {
         public int X { get; set; }
 

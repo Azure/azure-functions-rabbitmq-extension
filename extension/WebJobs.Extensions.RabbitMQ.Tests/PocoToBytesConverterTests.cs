@@ -30,7 +30,7 @@ public class PocoToBytesConverterTests
         Assert.Throws<ArgumentNullException>(() => converter.Convert(null));
     }
 
-    private class TestClass
+    private sealed class TestClass
     {
         public int X { get; set; }
 

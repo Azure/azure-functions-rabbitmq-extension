@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests</RootNamespace>
     <LangVersion>latest</LangVersion>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="Moq" Version="4.18.2" />
     <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
