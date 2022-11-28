@@ -14,27 +14,35 @@ trigger:
       - v*.*.*
 
 variables:
-  isTagTriggered: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}
+  # It is a release build if it is triggered by pushing a tag.
+  isReleaseBuild: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}
+
+  ${{ if eq(variables.isReleaseBuild, 'True') }}:
+    agentOSes: Windows
+  ${{ else }}:
+    agentOSes: Windows,Linux
+
   prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
   version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
   fileVersion: $[variables.version]
 
-  ${{ if eq(variables.isTagTriggered, 'True') }}:
-    vmImages: 'Windows:MMS2019TLS,Linux:MMSUbuntu20.04TLS'
-  ${{ else }}:
-    vmImages: 'Windows:windows-latest,Linux:ubuntu-latest'
-
 jobs:
-  - ${{ each vmImage in split(variables.vmImages, ',') }}:
-      - job: buildExtension${{ split(vmImage, ':')[0] }}
-        displayName: WebJobs Extension (${{ split(vmImage, ':')[0] }})
+  - ${{ each agentOS in split(variables.agentOSes, ',') }}:
+      - job: buildExtension${{ agentOS }}
+        displayName: WebJobs Extension (${{ agentOS }})
 
         pool:
-          name: 1ES-Hosted-AzFunc
-          vmImage: ${{ split(vmImage, ':')[1] }}
+          ${{ if eq(variables.isReleaseBuild, 'True') }}:
+            name: 1ES-Hosted-AzFunc
+            demands:
+              - ImageOverride -equals MMS2022TLS
+          ${{ elseif eq(agentOS, 'Windows') }}:
+            vmImage: windows-latest
+          ${{ elseif eq(agentOS, 'Linux') }}:
+            vmImage: ubuntu-latest
 
         steps:
-          - ${{ if and(eq(split(vmImage, ':')[0], 'Windows'), eq(variables.isTagTriggered, 'True')) }}:
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
                 $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v(((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?:-\w+)?)$'
                 if (-not $found) {
@@ -46,6 +54,7 @@ jobs:
 
               displayName: Extract version # e.g. 1.2.3
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             # .NET Core 2.1 SDK is required by ESRP Code Signing tasks.
             - task: UseDotNet@2
               displayName: Acquire .NET Core 2.1 SDK
@@ -75,7 +84,7 @@ jobs:
               workingDirectory: extension
               arguments: --configuration Debug
 
-          - ${{ if and(eq(split(vmImage, ':')[0], 'Windows'), eq(variables.isTagTriggered, 'True')) }}:
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: EsrpCodeSigning@1
               displayName: Sign extension assembly
               inputs:
@@ -107,6 +116,7 @@ jobs:
                     }
                   ]
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: DotNetCoreCLI@2
               displayName: Pack extension
               inputs:
@@ -119,6 +129,7 @@ jobs:
                 includesymbols: true
                 verbosityPack: minimal
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: EsrpCodeSigning@1
               displayName: Sign extension package
               inputs:
@@ -144,6 +155,7 @@ jobs:
                       }
                   ]
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: DeleteFiles@1
               displayName: Cleanup staging directory
               inputs:
@@ -151,6 +163,7 @@ jobs:
                 # contents: '!(Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg)'
                 contents: CodeSignSummary-*.md
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: ManifestGeneratorTask@0
               displayName: Generate SBOM manifest
               inputs:
@@ -158,19 +171,26 @@ jobs:
                 packageName: Azure Functions RabbitMQ Extension
                 packageVersion: $(version)
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - publish: $(Build.ArtifactStagingDirectory)
               displayName: Publish extension package
               artifact: drop-extension
 
-      - job: buildJavaLibrary${{ split(vmImage, ':')[0] }}
-        displayName: Java library (${{ split(vmImage, ':')[0] }})
+      - job: buildJavaLibrary${{ agentOS }}
+        displayName: Java Library (${{ agentOS }})
 
         pool:
-          name: 1ES-Hosted-AzFunc
-          vmImage: ${{ split(vmImage, ':')[1] }}
+          ${{ if eq(variables.isReleaseBuild, 'True') }}:
+            name: 1ES-Hosted-AzFunc
+            demands:
+              - ImageOverride -equals MMS2022TLS
+          ${{ elseif eq(agentOS, 'Windows') }}:
+            vmImage: windows-latest
+          ${{ elseif eq(agentOS, 'Linux') }}:
+            vmImage: ubuntu-latest
 
         steps:
-          - ${{ if and(eq(split(vmImage, ':')[0], 'Windows'), eq(variables.isTagTriggered, 'True')) }}:
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
                 $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
                 if (-not $found) {
@@ -196,7 +216,7 @@ jobs:
               mavenPomFile: java-library/pom.xml
               options: --batch-mode --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
 
-          - ${{ if and(eq(split(vmImage, ':')[0], 'Windows'), eq(variables.isTagTriggered, 'True')) }}:
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - powershell: |
                 $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
                 $source = 'java-library'
@@ -210,6 +230,7 @@ jobs:
 
               displayName: Copy output files
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - task: ManifestGeneratorTask@0
               displayName: Generate SBOM manifest
               inputs:
@@ -217,6 +238,7 @@ jobs:
                 packageName: Azure Functions RabbitMQ Java Bindings
                 packageVersion: $(version)
 
+          - ${{ if eq(variables.isReleaseBuild, 'True') }}:
             - publish: $(Build.ArtifactStagingDirectory)
               displayName: Publish library package
               artifact: drop-java-library
