@@ -3,30 +3,45 @@
 
 using System;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 internal sealed class RabbitMQService : IRabbitMQService
 {
-    public RabbitMQService(string connectionString, bool disableCertificateValidation)
+    public RabbitMQService(string connectionString, bool disableCertificateValidation, string sslCertPath = null, string sslCertPassphrase = null, string sslCertThumbprint = null)
     {
         var connectionFactory = new ConnectionFactory
         {
             Uri = new Uri(connectionString),
         };
 
-        if (disableCertificateValidation && connectionFactory.Ssl.Enabled)
+        if (connectionFactory.Ssl.Enabled)
         {
-            connectionFactory.Ssl.AcceptablePolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+            if (disableCertificateValidation)
+            {
+                connectionFactory.Ssl.AcceptablePolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+            }
+
+            if (!string.IsNullOrEmpty(sslCertThumbprint))
+            {
+                connectionFactory.Ssl.Certs = GetCertsFromThumbprint(sslCertThumbprint);
+            }
+
+            if (!string.IsNullOrEmpty(sslCertPath))
+            {
+                connectionFactory.Ssl.CertPath = sslCertPath;
+                connectionFactory.Ssl.CertPassphrase = sslCertPassphrase;
+            }
         }
 
         this.Model = connectionFactory.CreateConnection().CreateModel();
         this.PublishBatchLock = new object();
     }
 
-    public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
-        : this(connectionString, disableCertificateValidation)
+    public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation, string sslCertPath, string sslCertPassphrase, string sslCertThumbprint)
+        : this(connectionString, disableCertificateValidation, sslCertPath, sslCertPassphrase, sslCertThumbprint)
     {
         this.RabbitMQModel = new RabbitMQModel(this.Model);
         _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
@@ -47,5 +62,21 @@ internal sealed class RabbitMQService : IRabbitMQService
     public void ResetPublishBatch()
     {
         this.BasicPublishBatch = this.Model.CreateBasicPublishBatch();
+    }
+
+    private static X509Certificate2Collection GetCertsFromThumbprint(string thumbprint)
+    {
+        using var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+
+        certStore.Open(OpenFlags.ReadOnly);
+
+        X509Certificate2Collection certCollection = certStore.Certificates.Find(
+                                    X509FindType.FindByThumbprint,
+                                    thumbprint,
+                                    false);
+
+        return certCollection.Count == 0
+            ? throw new ArgumentException($"Certificate with thumbprint {thumbprint} was not found")
+            : certCollection;
     }
 }
