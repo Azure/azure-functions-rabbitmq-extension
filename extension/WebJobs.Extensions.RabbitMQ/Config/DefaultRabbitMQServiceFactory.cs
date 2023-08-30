@@ -5,9 +5,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 internal class DefaultRabbitMQServiceFactory : IRabbitMQServiceFactory
 {
-    public IRabbitMQService CreateService(string connectionString, string queueName, bool disableCertificateValidation)
+    public IRabbitMQService CreateService(string connectionString, string queueName, bool disableCertificateValidation, string sslCertPath, string sslCertPassphrase, string sslCertThumbprint)
     {
-        return new RabbitMQService(connectionString, queueName, disableCertificateValidation);
+        return new RabbitMQService(connectionString, queueName, disableCertificateValidation, sslCertPath, sslCertPassphrase, sslCertThumbprint);
     }
 
     public IRabbitMQService CreateService(string connectionString, bool disableCertificateValidation)
