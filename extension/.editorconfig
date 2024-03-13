@@ -76,6 +76,7 @@ dotnet_diagnostic.CA1716.severity = none # Identifiers should not match keywords
 dotnet_diagnostic.IDE0058.severity = none # Remove unnecessary expression value
 dotnet_diagnostic.IDE0130.severity = none # Namespace does not match folder structure
 dotnet_diagnostic.SA0001.severity = none # XML comment analysis is disabled (to be removed)
+dotnet_diagnostic.IDE0005.severity = none # test codeql
 
 ###############################
 # C# Coding Conventions       #

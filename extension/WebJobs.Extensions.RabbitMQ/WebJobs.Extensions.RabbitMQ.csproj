@@ -32,6 +32,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
   </PropertyGroup>
 
   <!-- Produce deterministic assembly (see https://devblogs.microsoft.com/dotnet/producing-packages-with-source-link/) -->
