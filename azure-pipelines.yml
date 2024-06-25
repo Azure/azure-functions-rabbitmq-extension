@@ -42,9 +42,8 @@ extends:
         - job: buildExtension${{ agentOS }}
           displayName: Build (${{ agentOS }}) Webjobs Extension
           pool:
-          ${{ if eq(variables.isReleaseBuild, 'True') }}:
             name: 1es-pool-azfunc-public
-          ${{ elseif eq(agentOS, 'Windows') }}:
+          ${{ if eq(agentOS, 'Windows') }}:
             image: 1es-windows-2022
             os: windows
           ${{ elseif eq(agentOS, 'Linux') }}:
@@ -75,9 +74,8 @@ extends:
         - job: buildJavaLibrary${{ agentOS }}
           displayName: Build (${{ agentOS }}) Java Library 
           pool:
-          ${{ if eq(variables.isReleaseBuild, 'True') }}:
             name: 1es-pool-azfunc-public
-          ${{ elseif eq(agentOS, 'Windows') }}:
+          ${{ if eq(agentOS, 'Windows') }}:
             image: 1es-windows-2022
             os: windows
           ${{ elseif eq(agentOS, 'Linux') }}:
