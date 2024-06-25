@@ -75,12 +75,12 @@ extends:
           displayName: Build (${{ agentOS }}) Java Library 
           pool:
             name: 1es-pool-azfunc-public
+            ${{ if eq(agentOS, 'Windows') }}:
             demands:
-              - ImageOverride -equals MMS2022TLS
-          ${{ if eq(agentOS, 'Windows') }}:
-            vmImage: 1es-windows-2022
+              - ImageOverride -equals 1es-windows-2022
           ${{ elseif eq(agentOS, 'Linux') }}:
-            vmImage: 1es-ubuntu-22.04
+            demands:
+              - ImageOverride -equals 1es-ubuntu-22.04
           steps:
               # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
               # options prevents spurious logging about downloading of Maven packages.
