@@ -30,6 +30,10 @@ extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
   parameters:
     sdl:
+      sourceAnalysisPool:
+        name: 1es-pool-azfunc-public
+        image: 1es-windows-2022
+        os: windows
       codeql:
         compiled:
           enabled: true # still only runs for default branch
