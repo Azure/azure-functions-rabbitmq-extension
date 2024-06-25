@@ -40,7 +40,7 @@ extends:
         runSourceLanguagesInSourceAnalysis: true
 
     stages:
-    - stage: Build Extension and Java Library
+    - stage: Build
       jobs:
       - ${{ each agentOS in split(variables.agentOSes, ',') }}:
         - job: buildExtension${{ agentOS }}
