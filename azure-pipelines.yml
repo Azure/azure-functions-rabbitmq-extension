@@ -50,11 +50,11 @@ extends:
             ${{ if eq(agentOS, 'Windows') }}:
               demands:
               - ImageOverride -equals 1es-windows-2022
-              - OsOverride -equals windows
+              - OSOverride -equals windows
             ${{ elseif eq(agentOS, 'Linux') }}:
               demands:
               - ImageOverride -equals 1es-ubuntu-22.04
-              - OsOverride -equals linux
+              - OSOverride -equals linux
           steps:
             - task: UseDotNet@2
               displayName: Acquire .NET 7.0 SDK
@@ -84,11 +84,11 @@ extends:
             ${{ if eq(agentOS, 'Windows') }}:
               demands:
               - ImageOverride -equals 1es-windows-2022
-              - OsOverride -equals windows
+              - OSOverride -equals windows
             ${{ elseif eq(agentOS, 'Linux') }}:
               demands:
               - ImageOverride -equals 1es-ubuntu-22.04
-              - OsOverride -equals linux
+              - OSOverride -equals linux
           steps:
               # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
               # options prevents spurious logging about downloading of Maven packages.
