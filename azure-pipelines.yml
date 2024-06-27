@@ -39,10 +39,6 @@ extends:
       image: 1es-windows-2022
       os: windows
     sdl:
-      sourceAnalysisPool:
-        name: 1es-pool-azfunc-public
-        image: 1es-windows-2022
-        os: windows
       codeql:
         compiled:
           enabled: true # still only runs for default branch
