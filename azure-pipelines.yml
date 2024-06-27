@@ -33,11 +33,11 @@ variables:
 
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
-  pool:
+  parameters:
+    pool:
       name: 1es-pool-azfunc-public
       image: 1es-ubuntu-22.04
       os: linux
-  parameters:
     sdl:
       sourceAnalysisPool:
         name: 1es-pool-azfunc-public
