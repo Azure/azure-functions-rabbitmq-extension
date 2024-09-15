@@ -10,3 +10,12 @@ pipelines:
           lastModifiedDate: 2024-09-15
         armory:
           lastModifiedDate: 2024-09-15
+  761:
+    retail:
+      source:
+        credscan:
+          lastModifiedDate: 2024-09-15
+        eslint:
+          lastModifiedDate: 2024-09-15
+        armory:
+          lastModifiedDate: 2024-09-15
