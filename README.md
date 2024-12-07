@@ -1,6 +1,6 @@
 # RabbitMQ Extension for Azure Functions
 
-[![Build Status](https://dev.azure.com/azfunc/Azure%20Functions/_apis/build/status/Azure.azure-functions-rabbitmq-extension?branchName=dev)](https://dev.azure.com/azfunc/Azure%20Functions/_build/latest?definitionId=48&branchName=dev)
+[![Build Status](https://azfunc.visualstudio.com/public/_apis/build/status%2Fazure%2Fazure-functions-rabbitmq-extension%2Frabbitmq-extension-linux.public?repoName=Azure%2Fazure-functions-rabbitmq-extension&branchName=dev)](https://azfunc.visualstudio.com/public/_build/latest?definitionId=807&repoName=Azure%2Fazure-functions-rabbitmq-extension&branchName=dev)
 
 This repository hosts RabbitMQ trigger and output bindings to interact with RabbitMQ in your [Azure Functions](https://azure.microsoft.com/services/functions/)
 and [WebJobs](https://learn.microsoft.com/azure/app-service/webjobs-sdk-how-to). More specifically, the trigger binding enables invoking a function when a message arrives at the RabbitMQ queue. The triggered function can consume this message and take required action. Similarly, the output binding facilitates publishing of messages on the RabbitMQ queue.
