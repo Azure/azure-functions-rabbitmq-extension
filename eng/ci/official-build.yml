@@ -29,6 +29,10 @@ resources:
     type: git
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
+  - repository: eng
+    type: git
+    name: engineering
+    ref: refs/tags/release
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
@@ -95,36 +99,12 @@ extends:
               workingDirectory: extension
               arguments: --configuration Debug
 
-          - task: EsrpCodeSigning@1
-            displayName: Sign extension assembly
-            inputs:
-              connectedServiceName: ESRP Service-internal
-              folderPath: extension/WebJobs.Extensions.RabbitMQ/bin/Release/netstandard2.0
-              pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.dll
-              signConfigType: inlineSignParams
-              inlineOperation: |
-                [
-                  {
-                    "KeyCode": "CP-230012",
-                    "OperationCode": "SigntoolSign",
-                    "Parameters": {
-                      "OpusName": "Microsoft",
-                      "OpusInfo": "http://www.microsoft.com",
-                      "FileDigest": "/fd \"SHA256\"",
-                      "PageHash": "/NPH",
-                      "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
-                    },
-                    "ToolName": "sign",
-                    "ToolVersion": "1.0"
-                  },
-                  {
-                    "KeyCode": "CP-230012",
-                    "OperationCode": "SigntoolVerify",
-                    "Parameters": {},
-                    "ToolName": "sign",
-                    "ToolVersion": "1.0"
-                  }
-                ]
+          - template: ci/sign-files.yml@eng
+            parameters:
+                displayName: Sign extension assembly
+                folderPath: extension/WebJobs.Extensions.RabbitMQ/bin/Release/netstandard2.0
+                pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.dll
+                signType: dll
 
           - task: DotNetCoreCLI@2
             displayName: Pack extension
@@ -138,30 +118,12 @@ extends:
               includesymbols: true
               verbosityPack: minimal
 
-          - task: EsrpCodeSigning@1
-            displayName: Sign extension package
-            inputs:
-              connectedServiceName: ESRP Service-internal
-              folderPath: $(Build.ArtifactStagingDirectory)/$(version)
-              pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg
-              signConfigType: inlineSignParams
-              inlineOperation: |
-                [
-                    {
-                      "KeyCode": "CP-401405",
-                      "OperationCode": "NuGetSign",
-                      "Parameters": {},
-                      "ToolName": "sign",
-                      "ToolVersion": "1.0"
-                    },
-                    {
-                      "KeyCode": "CP-401405",
-                      "OperationCode": "NuGetVerify",
-                      "Parameters": {},
-                      "ToolName": "sign",
-                      "ToolVersion": "1.0"
-                    }
-                ]
+          - template: ci/sign-files.yml@eng
+            parameters:
+                displayName: Sign extension package
+                folderPath: $(Build.ArtifactStagingDirectory)/$(version)
+                pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg
+                signType: nuget
 
           - task: DeleteFiles@1
             displayName: Cleanup staging directory
@@ -184,17 +146,6 @@ extends:
             targetPath: $(Build.ArtifactStagingDirectory)
             artifactName: drop-java-library
         steps:
-          - ${{ if eq(variables.isTaggedBuild, 'True') }}:
-            - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-                $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
-                if (-not $found) {
-                  Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
-                  exit 1
-                }
-                Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
-
-              displayName: Extract version # e.g. 1.2.3
-            
             # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
             # options prevents spurious logging about downloading of Maven packages.
           - task: Maven@3
