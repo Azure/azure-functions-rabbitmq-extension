@@ -10,17 +10,11 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-public class BasicDeliverEventArgsValueProvider : IValueProvider
+public class BasicDeliverEventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType) : IValueProvider
 {
-    private readonly BasicDeliverEventArgs input;
+    private readonly BasicDeliverEventArgs input = input;
 
-    public BasicDeliverEventArgsValueProvider(BasicDeliverEventArgs input, Type destinationType)
-    {
-        this.input = input;
-        this.Type = destinationType;
-    }
-
-    public Type Type { get; }
+    public Type Type { get; } = destinationType;
 
     public Task<object> GetValueAsync()
     {

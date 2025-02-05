@@ -9,19 +9,14 @@ namespace Microsoft.Azure.WebJobs;
 /// <summary>
 /// Attribute used to bind a parameter to RabbitMQ trigger message.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="RabbitMQTriggerAttribute"/> class.
+/// </remarks>
+/// <param name="queueName">RabbitMQ queue name.</param>
 [AttributeUsage(AttributeTargets.Parameter)]
 [Binding]
-public sealed class RabbitMQTriggerAttribute : Attribute
+public sealed class RabbitMQTriggerAttribute(string queueName) : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RabbitMQTriggerAttribute"/> class.
-    /// </summary>
-    /// <param name="queueName">RabbitMQ queue name.</param>
-    public RabbitMQTriggerAttribute(string queueName)
-    {
-        this.QueueName = queueName;
-    }
-
     /// <summary>
     /// Gets or sets the setting name for RabbitMQ connection URI.
     /// </summary>
@@ -31,7 +26,7 @@ public sealed class RabbitMQTriggerAttribute : Attribute
     /// <summary>
     /// Gets the RabbitMQ queue name.
     /// </summary>
-    public string QueueName { get; private set; }
+    public string QueueName { get; private set; } = queueName;
 
     /// <summary>
     /// Gets or sets a value indicating whether certificate validation should be disabled. Not recommended for

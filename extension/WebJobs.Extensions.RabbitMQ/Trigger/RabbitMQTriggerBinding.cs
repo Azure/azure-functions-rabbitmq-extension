@@ -14,27 +14,17 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-internal class RabbitMQTriggerBinding : ITriggerBinding
+internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount) : ITriggerBinding
 {
-    private readonly IRabbitMQService service;
-    private readonly ILogger logger;
-    private readonly Type parameterType;
-    private readonly string queueName;
-    private readonly ushort prefetchCount;
-
-    public RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount)
-    {
-        this.service = service;
-        this.queueName = queueName;
-        this.logger = logger;
-        this.parameterType = parameterType;
-        this.prefetchCount = prefetchCount;
-        this.BindingDataContract = CreateBindingDataContract();
-    }
+    private readonly IRabbitMQService service = service;
+    private readonly ILogger logger = logger;
+    private readonly Type parameterType = parameterType;
+    private readonly string queueName = queueName;
+    private readonly ushort prefetchCount = prefetchCount;
 
     public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
-    public IReadOnlyDictionary<string, Type> BindingDataContract { get; } = new Dictionary<string, Type>();
+    public IReadOnlyDictionary<string, Type> BindingDataContract { get; } = CreateBindingDataContract();
 
     public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
     {
