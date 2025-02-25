@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Scale;
@@ -33,7 +34,9 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     private readonly string queueName;
     private readonly ushort prefetchCount;
     private readonly string logDetails;
+    private readonly IDrainModeManager drainModeManager;
 
+    private readonly CancellationTokenSource listenerCancellationTokenSource;
     private int listenerState = ListenerNotStarted;
     private string consumerTag;
 
@@ -43,13 +46,16 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         ILogger logger,
         string functionId,
         string queueName,
-        ushort prefetchCount)
+        ushort prefetchCount,
+        IDrainModeManager drainModeManager)
     {
         this.channel = channel ?? throw new ArgumentNullException(nameof(channel));
         this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
         this.prefetchCount = prefetchCount;
+        this.drainModeManager = drainModeManager;
+        this.listenerCancellationTokenSource = new CancellationTokenSource();
 
         _ = !string.IsNullOrWhiteSpace(functionId) ? true : throw new ArgumentNullException(nameof(functionId));
 
@@ -103,7 +109,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
             using Activity activity = RabbitMQActivitySource.StartActivity(args.BasicProperties);
 
             var input = new TriggeredFunctionData() { TriggerValue = args };
-            FunctionResult result = await this.executor.TryExecuteAsync(input, cancellationToken).ConfigureAwait(false);
+
+            FunctionResult result = await this.executor.TryExecuteAsync(input, this.listenerCancellationTokenSource.Token).ConfigureAwait(false);
 
             if (!result.Succeeded)
             {
@@ -142,6 +149,11 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
             // TODO: Close RabbitMQ connection along with the channel.
             this.channel.BasicCancel(this.consumerTag);
             this.channel.Close();
+
+            if (!this.drainModeManager.IsDrainModeEnabled)
+            {
+                this.listenerCancellationTokenSource.Cancel();
+            }
 
             this.listenerState = ListenerStopped;
             this.logger.LogDebug($"Stopped RabbitMQ trigger listener for {this.logDetails}.");

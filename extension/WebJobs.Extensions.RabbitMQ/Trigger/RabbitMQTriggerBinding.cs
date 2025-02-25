@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -14,13 +15,14 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount) : ITriggerBinding
+internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName, ILogger logger, Type parameterType, ushort prefetchCount, IDrainModeManager drainModeManager) : ITriggerBinding
 {
     private readonly IRabbitMQService service = service;
     private readonly ILogger logger = logger;
     private readonly Type parameterType = parameterType;
     private readonly string queueName = queueName;
     private readonly ushort prefetchCount = prefetchCount;
+    private readonly IDrainModeManager drainModeManager = drainModeManager;
 
     public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
@@ -44,7 +46,8 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
             this.logger,
             context.Descriptor.Id,
             this.queueName,
-            this.prefetchCount));
+            this.prefetchCount,
+            this.drainModeManager));
     }
 
     public ParameterDescriptor ToParameterDescriptor()
