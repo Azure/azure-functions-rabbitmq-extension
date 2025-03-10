@@ -5,7 +5,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 public interface IRabbitMQServiceFactory
 {
-    IRabbitMQService CreateService(string connectionString, string queueName, bool disableCertificateValidation);
+    IRabbitMQService CreateService(string connectionString, string queueName, bool disableCertificateValidation, string sslCertPath, string sslCertPassphrase, string sslCertThumbprint);
 
     IRabbitMQService CreateService(string connectionString, bool disableCertificateValidation);
 }

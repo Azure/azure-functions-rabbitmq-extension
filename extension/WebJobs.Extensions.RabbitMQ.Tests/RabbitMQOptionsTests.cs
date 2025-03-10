@@ -33,6 +33,9 @@ public class RabbitMQOptionsTests
         string expectedQueueName = "someQueueName";
         ushort expectedPrefetchCount = 100;
         bool expectedDisableCertificateValidation = true;
+        string expectedSslCertPath = "someCertPath";
+        string expectedSslCertPassphrase = "someCertPassphrase";
+        string expectedSslCertThumbprint = "someCertThumbprint";
 
         var options = new RabbitMQOptions()
         {
@@ -40,12 +43,18 @@ public class RabbitMQOptionsTests
             QueueName = expectedQueueName,
             PrefetchCount = expectedPrefetchCount,
             DisableCertificateValidation = expectedDisableCertificateValidation,
+            SslCertPath = expectedSslCertPath,
+            SslCertPassphrase = expectedSslCertPassphrase,
+            SslCertThumbprint = expectedSslCertThumbprint,
         };
 
         Assert.Equal(expectedConnectionString, options.ConnectionString);
         Assert.Equal(expectedQueueName, options.QueueName);
         Assert.Equal(expectedPrefetchCount, options.PrefetchCount);
         Assert.Equal(expectedDisableCertificateValidation, options.DisableCertificateValidation);
+        Assert.Equal(expectedSslCertPath, options.SslCertPath);
+        Assert.Equal(expectedSslCertPassphrase, options.SslCertPassphrase);
+        Assert.Equal(expectedSslCertThumbprint, options.SslCertThumbprint);
 
         // Test formatted
         Assert.Equal(GetFormattedOption(options), options.Format());
@@ -80,6 +89,9 @@ public class RabbitMQOptionsTests
             { nameof(option.QueueName), option.QueueName },
             { nameof(option.PrefetchCount), option.PrefetchCount },
             { nameof(option.DisableCertificateValidation), option.DisableCertificateValidation },
+            { nameof(option.SslCertPath), option.SslCertPath },
+            { nameof(option.SslCertPassphrase), option.SslCertPassphrase },
+            { nameof(option.SslCertThumbprint), option.SslCertThumbprint },
         };
 
         return options.ToString(Formatting.Indented);

@@ -77,7 +77,7 @@ internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
             DisableCertificateValidation = disableCertificateValidation,
         };
 
-        IRabbitMQService service = this.GetService(connectionString, queueName, disableCertificateValidation);
+        IRabbitMQService service = this.GetService(connectionString, queueName, disableCertificateValidation, null, null, null);
 
         return new RabbitMQContext
         {
@@ -86,11 +86,11 @@ internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
         };
     }
 
-    internal IRabbitMQService GetService(string connectionString, string queueName, bool disableCertificateValidation)
+    internal IRabbitMQService GetService(string connectionString, string queueName, bool disableCertificateValidation, string sslCertPath, string sslCertPassphrase, string sslCertThumbprint)
     {
-        string[] keyArray = { connectionString, queueName, disableCertificateValidation.ToString() };
+        string[] keyArray = { connectionString, queueName, disableCertificateValidation.ToString(), sslCertPath, sslCertPassphrase, sslCertThumbprint };
         string key = string.Join(",", keyArray);
-        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
+        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation, sslCertPath, sslCertPassphrase, sslCertThumbprint));
     }
 
     // Overloaded method used only for getting the RabbitMQ client

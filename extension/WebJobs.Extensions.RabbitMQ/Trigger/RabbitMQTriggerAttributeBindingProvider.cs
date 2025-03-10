@@ -49,8 +49,11 @@ internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
         string connectionString = Utility.ResolveConnectionString(attribute.ConnectionStringSetting, this.options.Value.ConnectionString, this.configuration);
         string queueName = this.Resolve(attribute.QueueName) ?? throw new InvalidOperationException("RabbitMQ queue name is missing");
         bool disableCertificateValidation = attribute.DisableCertificateValidation || this.options.Value.DisableCertificateValidation;
+        string sslCertPath = this.Resolve(attribute.SslCertPath) ?? this.options.Value.SslCertPath;
+        string sslCertPassphrase = this.Resolve(attribute.SslCertPassphrase) ?? this.options.Value.SslCertPassphrase;
+        string sslCertThumbprint = this.Resolve(attribute.SslCertThumbprint) ?? this.options.Value.SslCertThumbprint;
 
-        IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation);
+        IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation, sslCertPath, sslCertPassphrase, sslCertThumbprint);
 
         return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount));
     }
