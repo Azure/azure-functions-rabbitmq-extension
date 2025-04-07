@@ -20,6 +20,7 @@
 
     <!-- NuGet package metadata (see https://docs.microsoft.com/nuget/reference/msbuild-targets#pack-target) -->
     <PackageId>Microsoft.Azure.WebJobs.Extensions.RabbitMQ</PackageId>
+    <Version>$(Version)</Version> 
     <Authors>Microsoft</Authors>
     <Description>This package contains binding extensions for RabbitMQ.</Description>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
