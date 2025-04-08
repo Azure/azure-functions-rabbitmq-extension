@@ -24,7 +24,6 @@ public static string Run(
 Along with `string` type, the extension also allows binding to the input arguments and returned values of `byte[]` type, POCO objects, and `BasicDeliverEventArgs` type. The last type is particularly useful for fetching of RabbitMQ message headers and other message properties. See the [repository wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for detailed samples of bindings to different types.
 
 ## Getting Started
-
 Before working with the RabbitMQ extension, you must [set up your RabbitMQ endpoint](https://www.rabbitmq.com/download.html). Then you can get started by following the sample functions in [C#](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-C%23), [C# Script](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-CSX), [JavaScript](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-JavaScript), [Python](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Python) or [Java](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki/Samples-in-Java).
 
 To learn about creating an application that works with RabbitMQ, see the [getting started](https://www.rabbitmq.com/getstarted.html) page. For general documentation on .NET RabbitMQ client usage, see the [.NET/C# client API guide](https://www.rabbitmq.com/dotnet-api-guide.html).
