@@ -209,7 +209,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         }
 
         // Consider only the most recent batch of samples in the rest of the method.
-        metrics = metrics.Skip(metrics.Length - minSamplesForScaling).ToArray();
+        metrics = new RabbitMQTriggerMetrics[minSamplesForScaling];
+        Array.Copy(metrics, metrics.Length - minSamplesForScaling, metrics, 0, minSamplesForScaling);
 
         string counts = string.Join(", ", metrics.Select(metric => metric.MessageCount));
         this.logger.LogInformation($"Message counts: [{counts}], worker count: {workerCount}, maximum messages per worker: {maxMessagesPerWorker}.");
