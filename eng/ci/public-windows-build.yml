@@ -26,10 +26,10 @@ resources:
       ref: refs/tags/release
 
 variables:
+  Codeql.Enabled: true
   prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
   version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
   fileVersion: $[variables.version]
-  Codeql.Enabled: true
 
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
@@ -45,10 +45,12 @@ extends:
         runSourceLanguagesInSourceAnalysis: true
 
     stages:
-      - stage: Build and Test Extension in Windows
+      - stage: buildAndTestExtensionWindows
+        displayName: Build and Test Extension in Windows
         jobs:
-          - template: /eng/ci/templates/build-test-extension.yml@self
+          - template: /eng/ci/templates/public/build-test-extension.yml@self
 
-      - stage: Build Java Library in Windows
+      - stage: buildJavaLibraryWindows
+        displayName: Build Java Library in Windows
         jobs:
-          - template: /eng/ci/templates/build-java-library.yml@self
+          - template: /eng/ci/templates/public/build-java-library.yml@self

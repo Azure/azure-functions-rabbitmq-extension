@@ -49,10 +49,12 @@ extends:
         runSourceLanguagesInSourceAnalysis: true
 
     stages:
-      - stage: Build and Test Extension in Linux
+      - stage: buildAndTestExtensionLinux
+        displayName: Build and Test Extension in Linux
         jobs:
           - template: /eng/ci/templates/public/build-test-extension.yml@self
 
-      - stage: Build Java Library in Linux
+      - stage: buildJavaLibraryLinux
+        displayName: Build Java Library in Linux
         jobs:
           - template: /eng/ci/templates/public/build-java-library.yml@self
