@@ -20,7 +20,6 @@ public static string Run(
     return $"Hello, {name}.";
 }
 ```
-
 Along with `string` type, the extension also allows binding to the input arguments and returned values of `byte[]` type, POCO objects, and `BasicDeliverEventArgs` type. The last type is particularly useful for fetching of RabbitMQ message headers and other message properties. See the [repository wiki](https://github.com/Azure/azure-functions-rabbitmq-extension/wiki) for detailed samples of bindings to different types.
 
 ## Getting Started
