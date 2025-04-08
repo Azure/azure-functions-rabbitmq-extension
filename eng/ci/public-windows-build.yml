@@ -5,7 +5,7 @@ pr:
       - v*.x
 
 schedules:
-  - cron: '0 12 * * 0'
+  - cron: "0 12 * * 0"
     displayName: Weekly Sunday build
     branches:
       include:
@@ -20,10 +20,10 @@ trigger:
 
 resources:
   repositories:
-  - repository: 1es
-    type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
+    - repository: 1es
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
 variables:
   prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
@@ -45,46 +45,10 @@ extends:
         runSourceLanguagesInSourceAnalysis: true
 
     stages:
-    - stage: Build
-      jobs:
-      - job: buildExtensionWindows
-        displayName: Build Windows Webjobs Extension
-        steps:
-          - task: UseDotNet@2
-            displayName: Acquire .NET 7.0 SDK
-            inputs:
-              packageType: sdk
-              version: 7.0.x
-              performMultiLevelLookup: true
+      - stage: Build and Test Extension in Windows
+        jobs:
+          - template: /eng/ci/templates/build-test-extension.yml@self
 
-          - task: DotNetCoreCLI@2
-            displayName: Build solution
-            inputs:
-              command: build
-              workingDirectory: extension
-              arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
-
-          - task: DotNetCoreCLI@2
-            displayName: Test extension
-            inputs:
-              command: test
-              workingDirectory: extension
-              arguments: --configuration Debug
-
-      - job: buildJavaLibraryWindows
-        displayName: Build Windows Java Library 
-        steps:
-            # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-            # options prevents spurious logging about downloading of Maven packages.
-          - task: Maven@3
-            displayName: Set library version
-            inputs:
-              mavenPomFile: java-library/pom.xml
-              goals: versions:set
-              options: --batch-mode --define=newVersion=$(version) --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
-
-          - task: Maven@3
-            displayName: Build library
-            inputs:
-              mavenPomFile: java-library/pom.xml
-              options: --batch-mode --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
+      - stage: Build Java Library in Windows
+        jobs:
+          - template: /eng/ci/templates/build-java-library.yml@self
