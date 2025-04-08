@@ -33,7 +33,7 @@ public class RabbitMQListenerTests
     /// </summary>
     [Theory]
     [InlineData(null)] // metrics == null
-    [InlineData(new uint[] { })] // metrics.Length == 0
+    [InlineData(new uint[0])] // metrics.Length == 0
     [InlineData(new uint[] { 1000, 1000, 1000, 1000 })] // metrics.Length == 4.
     public void ScaleMonitorGetScaleStatus_InsufficentMetrics_ReturnsNone(uint[] messageCounts)
     {
@@ -199,7 +199,7 @@ public class RabbitMQListenerTests
         Assert.Contains("Requesting no-scaling: Found function: 'testFunctionId', queue: 'testQueueName' to not require scaling.", logMessages);
     }
 
-    private static IScaleMonitor<RabbitMQTriggerMetrics> GetScaleMonitor(string functionId, string queueName)
+    private static RabbitMQListener GetScaleMonitor(string functionId, string queueName)
     {
         return new RabbitMQListener(
             Mock.Of<IModel>(),

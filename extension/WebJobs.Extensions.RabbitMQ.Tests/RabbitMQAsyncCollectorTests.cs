@@ -33,7 +33,7 @@ public class RabbitMQAsyncCollectorTests
             Service = mockRabbitMQService.Object,
         };
 
-        ILoggerFactory loggerFactory = new LoggerFactory();
+        var loggerFactory = new LoggerFactory();
         ILogger logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(Constants.RabbitMQ));
         var collector = new RabbitMQAsyncCollector(context, logger);
 

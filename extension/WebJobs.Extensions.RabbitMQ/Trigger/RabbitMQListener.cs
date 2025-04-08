@@ -54,7 +54,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         _ = !string.IsNullOrWhiteSpace(functionId) ? true : throw new ArgumentNullException(nameof(functionId));
 
         // Do not convert the scale-monitor ID to lower-case string since RabbitMQ queue names are case-sensitive.
-        this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}");
+        this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}", functionId);
         this.logDetails = $"function: '{functionId}', queue: '{queueName}'";
     }
 
