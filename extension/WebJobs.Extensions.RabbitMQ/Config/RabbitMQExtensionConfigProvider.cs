@@ -15,24 +15,14 @@ using Microsoft.Extensions.Options;
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 [Extension("RabbitMQ")]
-internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
+internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration) : IExtensionConfigProvider
 {
-    private readonly IOptions<RabbitMQOptions> options;
-    private readonly INameResolver nameResolver;
-    private readonly IRabbitMQServiceFactory rabbitMQServiceFactory;
-    private readonly ILogger logger;
-    private readonly IConfiguration configuration;
-    private readonly ConcurrentDictionary<string, IRabbitMQService> connectionParametersToService;
-
-    public RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration)
-    {
-        this.options = options;
-        this.nameResolver = nameResolver;
-        this.rabbitMQServiceFactory = rabbitMQServiceFactory;
-        this.logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
-        this.configuration = configuration;
-        this.connectionParametersToService = new ConcurrentDictionary<string, IRabbitMQService>();
-    }
+    private readonly IOptions<RabbitMQOptions> options = options;
+    private readonly INameResolver nameResolver = nameResolver;
+    private readonly IRabbitMQServiceFactory rabbitMQServiceFactory = rabbitMQServiceFactory;
+    private readonly ILogger logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
+    private readonly IConfiguration configuration = configuration;
+    private readonly ConcurrentDictionary<string, IRabbitMQService> connectionParametersToService = new();
 
     public void Initialize(ExtensionConfigContext context)
     {
@@ -88,7 +78,8 @@ internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
 
     internal IRabbitMQService GetService(string connectionString, string queueName, bool disableCertificateValidation)
     {
-        string[] keyArray = { connectionString, queueName, disableCertificateValidation.ToString() };
+        string[] keyArray =
+            [connectionString, queueName, disableCertificateValidation.ToString()];
         string key = string.Join(",", keyArray);
         return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
     }
@@ -96,7 +87,8 @@ internal class RabbitMQExtensionConfigProvider : IExtensionConfigProvider
     // Overloaded method used only for getting the RabbitMQ client
     internal IRabbitMQService GetService(string connectionString, bool disableCertificateValidation)
     {
-        string[] keyArray = { connectionString, disableCertificateValidation.ToString() };
+        string[] keyArray =
+            [connectionString, disableCertificateValidation.ToString()];
         string key = string.Join(",", keyArray);
         return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation));
     }

@@ -6,14 +6,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Samples;
 
-public class SamplesTypeLocator : ITypeLocator
+public class SamplesTypeLocator(params Type[] types) : ITypeLocator
 {
-    private readonly Type[] types;
-
-    public SamplesTypeLocator(params Type[] types)
-    {
-        this.types = types;
-    }
+    private readonly Type[] types = types;
 
     public IReadOnlyList<Type> GetTypes()
     {
