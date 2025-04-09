@@ -1,10 +1,11 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Concurrent;
 using System.Text;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
@@ -15,7 +16,7 @@ using Microsoft.Extensions.Options;
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 [Extension("RabbitMQ")]
-internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration) : IExtensionConfigProvider
+internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options, INameResolver nameResolver, IRabbitMQServiceFactory rabbitMQServiceFactory, ILoggerFactory loggerFactory, IConfiguration configuration, IDrainModeManager drainModeManager) : IExtensionConfigProvider
 {
     private readonly IOptions<RabbitMQOptions> options = options;
     private readonly INameResolver nameResolver = nameResolver;
@@ -23,6 +24,7 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
     private readonly ILogger logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
     private readonly IConfiguration configuration = configuration;
     private readonly ConcurrentDictionary<string, IRabbitMQService> connectionParametersToService = new();
+    private readonly IDrainModeManager drainModeManager = drainModeManager;
 
     public void Initialize(ExtensionConfigContext context)
     {
@@ -51,7 +53,8 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
                 this,
                 this.logger,
                 this.options,
-                this.configuration));
+                this.configuration,
+                this.drainModeManager));
     }
 
     internal RabbitMQContext CreateContext(RabbitMQAttribute attribute)
@@ -84,7 +87,7 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
         return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
     }
 
-    // Overloaded method used only for getting the RabbitMQ client
+    // Overloaded method used only for getting the RabbitMQ client.
     internal IRabbitMQService GetService(string connectionString, bool disableCertificateValidation)
     {
         string[] keyArray =

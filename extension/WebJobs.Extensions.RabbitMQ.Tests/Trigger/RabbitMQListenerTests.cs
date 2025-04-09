@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
 
 public class RabbitMQListenerTests
 {
+    private static readonly IDrainModeManager DrainModeManager = new Mock<IDrainModeManager>().Object;
+
     /// <summary>
     /// Verifies that the scale monitor descriptor ID is set to expected value.
     /// </summary>
@@ -207,7 +210,8 @@ public class RabbitMQListenerTests
             Mock.Of<ILogger>(),
             functionId,
             queueName,
-            7357);
+            7357,
+            DrainModeManager);
     }
 
     private static (IScaleMonitor<RabbitMQTriggerMetrics> Monitor, List<string> LogMessages) GetScaleMonitor()
@@ -220,7 +224,8 @@ public class RabbitMQListenerTests
             mockLogger.Object,
             "testFunctionId",
             "testQueueName",
-            7357);
+            7357,
+            DrainModeManager);
 
         return (monitor, logMessages);
     }

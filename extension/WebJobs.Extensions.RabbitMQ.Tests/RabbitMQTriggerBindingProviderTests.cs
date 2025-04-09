@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -22,13 +23,15 @@ public class RabbitMQTriggerBindingProviderTests
             new DefaultNameResolver(emptyConfig),
             new Mock<IRabbitMQServiceFactory>().Object,
             NullLoggerFactory.Instance,
-            emptyConfig);
+            emptyConfig,
+            new Mock<IDrainModeManager>().Object);
         var bindingProvider = new RabbitMQTriggerAttributeBindingProvider(
             new Mock<INameResolver>().Object,
             configProvider,
             NullLogger.Instance,
             Options.Create(new RabbitMQOptions()),
-            emptyConfig);
+            emptyConfig,
+            new Mock<IDrainModeManager>().Object);
         await Assert.ThrowsAsync<ArgumentNullException>(() => bindingProvider.TryCreateAsync(null));
     }
 }

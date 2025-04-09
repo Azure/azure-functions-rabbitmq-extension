@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -29,7 +30,8 @@ public class RabbitMQExtensionConfigProviderTests
             new Mock<INameResolver>().Object,
             rabbitmqServiceFactory.Object,
             NullLoggerFactory.Instance,
-            new Mock<IConfiguration>().Object);
+            new Mock<IConfiguration>().Object,
+            new Mock<IDrainModeManager>().Object);
 
         IRabbitMQService rabbitmqService1 = extensionConfigProvider.GetService("something", false);
         IRabbitMQService rabbitmqService2 = extensionConfigProvider.GetService("something", false);

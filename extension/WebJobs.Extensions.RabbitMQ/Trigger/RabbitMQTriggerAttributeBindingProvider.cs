@@ -17,13 +17,15 @@ internal class RabbitMQTriggerAttributeBindingProvider(
     RabbitMQExtensionConfigProvider provider,
     ILogger logger,
     IOptions<RabbitMQOptions> options,
-    IConfiguration configuration) : ITriggerBindingProvider
+    IConfiguration configuration,
+    IDrainModeManager drainModeManager) : ITriggerBindingProvider
 {
     private readonly INameResolver nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
     private readonly RabbitMQExtensionConfigProvider provider = provider ?? throw new ArgumentNullException(nameof(provider));
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOptions<RabbitMQOptions> options = options;
     private readonly IConfiguration configuration = configuration;
+    private readonly IDrainModeManager drainModeManager = drainModeManager;
 
     public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
     {
@@ -43,7 +45,7 @@ internal class RabbitMQTriggerAttributeBindingProvider(
 
         IRabbitMQService service = this.provider.GetService(connectionString, queueName, disableCertificateValidation);
 
-        return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount));
+        return Task.FromResult<ITriggerBinding>(new RabbitMQTriggerBinding(service, queueName, this.logger, parameter.ParameterType, this.options.Value.PrefetchCount, this.drainModeManager));
     }
 
     private string Resolve(string name)
