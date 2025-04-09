@@ -23,6 +23,15 @@ trigger:
     include:
       - v*.*.*
 
+pr:
+  branches:
+    include:
+      - dev
+  paths:
+    include:
+      - /eng/ci/official-build.yml
+      - /eng/ci/templates/official/**
+
 resources:
   repositories:
     - repository: 1ESPipelineTemplates
