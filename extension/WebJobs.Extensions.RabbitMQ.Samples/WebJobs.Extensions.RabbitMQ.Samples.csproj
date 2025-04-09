@@ -32,7 +32,7 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.3.4" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Host.Storage" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
