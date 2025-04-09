@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
 public class RabbitMQConfigProviderTests
 {
     private static readonly IConfiguration EmptyConfig = new ConfigurationBuilder().Build();
+    private static readonly IDrainModeManager DrainModeManager = new Mock<IDrainModeManager>().Object;
 
     [Fact]
     public void Creates_Context_Correctly()
@@ -20,7 +22,7 @@ public class RabbitMQConfigProviderTests
         var loggerFactory = new LoggerFactory();
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
         var mockNameResolver = new Mock<INameResolver>();
-        var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig);
+        var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(options), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig, DrainModeManager);
         var attribute = new RabbitMQAttribute { ConnectionStringSetting = "connectionStringSettingFromAttribute", QueueName = "queueNameFromAttributes" };
 
         RabbitMQContext actualContext = config.CreateContext(attribute);
@@ -50,7 +52,7 @@ public class RabbitMQConfigProviderTests
         var loggerFactory = new LoggerFactory();
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
         var mockNameResolver = new Mock<INameResolver>();
-        var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig);
+        var config = new RabbitMQExtensionConfigProvider(new OptionsWrapper<RabbitMQOptions>(opt), mockNameResolver.Object, mockServiceFactory.Object, loggerFactory, EmptyConfig, DrainModeManager);
         RabbitMQContext actualContext = config.CreateContext(attr);
 
         if (optConnectionString == null && optQueueName == null)

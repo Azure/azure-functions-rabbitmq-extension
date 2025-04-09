@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,13 +14,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.Tests;
 public class RabbitMQClientBuilderTests
 {
     private static readonly IConfiguration EmptyConfig = new ConfigurationBuilder().Build();
+    private static readonly IDrainModeManager DrainModeManager = new Mock<IDrainModeManager>().Object;
 
     [Fact]
     public void Opens_Connection()
     {
         var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-        var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig);
+        var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig, DrainModeManager);
         mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false)).Returns(new Mock<IRabbitMQService>().Object);
         RabbitMQAttribute attr = GetTestAttribute();
 
@@ -36,7 +38,7 @@ public class RabbitMQClientBuilderTests
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
         mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), false))
             .Returns(GetRabbitMQService());
-        var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig);
+        var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig, DrainModeManager);
         RabbitMQAttribute attr = GetTestAttribute();
 
         var clientBuilder = new RabbitMQClientBuilder(config, options);
