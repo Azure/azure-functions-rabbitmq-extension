@@ -1,0 +1,54 @@
+jobs:
+  - job: buildJavaLibrary
+    displayName: Build Java Library
+    templateContext:
+      outputs:
+        - output: pipelineArtifact
+          targetPath: $(Build.ArtifactStagingDirectory)
+          artifactName: drop-java-library
+    steps:
+      - ${{ if eq(variables.isTaggedBuild, 'True') }}:
+          - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
+              $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
+              if (-not $found) {
+                Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
+                exit 1
+              }
+              Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
+
+            displayName: Extract version # e.g. 1.2.3
+
+        # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+        # options prevents spurious logging about downloading of Maven packages.
+      - task: Maven@3
+        displayName: Set library version
+        inputs:
+          mavenPomFile: java-library/pom.xml
+          goals: versions:set
+          options: --batch-mode --define=newVersion=$(version) --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
+
+      - task: Maven@3
+        displayName: Build library
+        inputs:
+          mavenPomFile: java-library/pom.xml
+          options: --batch-mode --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
+
+      - powershell: |
+          $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
+          $source = 'java-library'
+          $destination = '$(Build.ArtifactStagingDirectory)/$(version)'
+
+          New-Item $destination -ItemType Directory
+          Copy-Item "$source/pom.xml" "$destination/$prefix.pom"
+          Copy-Item "$source/target/$prefix.jar" "$destination/$prefix.jar"
+          Copy-Item "$source/target/$prefix-javadoc.jar" "$destination/$prefix-javadoc.jar"
+          Copy-Item "$source/target/$prefix-sources.jar" "$destination/$prefix-sources.jar"
+
+        displayName: Copy output files
+
+      - task: ManifestGeneratorTask@0
+        displayName: Generate SBOM manifest
+        inputs:
+          buildDropPath: $(Build.ArtifactStagingDirectory)/$(version)
+          packageName: Azure Functions RabbitMQ Java Bindings
+          packageVersion: $(version)
