@@ -12,27 +12,18 @@ using Microsoft.Extensions.Options;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-internal class RabbitMQTriggerAttributeBindingProvider : ITriggerBindingProvider
+internal class RabbitMQTriggerAttributeBindingProvider(
+    INameResolver nameResolver,
+    RabbitMQExtensionConfigProvider provider,
+    ILogger logger,
+    IOptions<RabbitMQOptions> options,
+    IConfiguration configuration) : ITriggerBindingProvider
 {
-    private readonly INameResolver nameResolver;
-    private readonly RabbitMQExtensionConfigProvider provider;
-    private readonly ILogger logger;
-    private readonly IOptions<RabbitMQOptions> options;
-    private readonly IConfiguration configuration;
-
-    public RabbitMQTriggerAttributeBindingProvider(
-        INameResolver nameResolver,
-        RabbitMQExtensionConfigProvider provider,
-        ILogger logger,
-        IOptions<RabbitMQOptions> options,
-        IConfiguration configuration)
-    {
-        this.nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
-        this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.options = options;
-        this.configuration = configuration;
-    }
+    private readonly INameResolver nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
+    private readonly RabbitMQExtensionConfigProvider provider = provider ?? throw new ArgumentNullException(nameof(provider));
+    private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IOptions<RabbitMQOptions> options = options;
+    private readonly IConfiguration configuration = configuration;
 
     public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
     {

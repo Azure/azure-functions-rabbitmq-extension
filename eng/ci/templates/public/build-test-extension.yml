@@ -1,0 +1,23 @@
+jobs:
+  - job: BuildExtension
+    steps:
+      - task: UseDotNet@2
+        displayName: Acquire .NET 8.0 SDK
+        inputs:
+          packageType: sdk
+          version: 8.0.x
+          performMultiLevelLookup: true
+
+      - task: DotNetCoreCLI@2
+        displayName: Build solution
+        inputs:
+          command: build
+          workingDirectory: extension
+          arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
+
+      - task: DotNetCoreCLI@2
+        displayName: Test extension
+        inputs:
+          command: test
+          workingDirectory: extension
+          arguments: --configuration Debug

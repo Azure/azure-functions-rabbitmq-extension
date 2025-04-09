@@ -7,16 +7,10 @@ using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-internal class RabbitMQClientBuilder : IConverter<RabbitMQAttribute, IModel>
+internal class RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider, IOptions<RabbitMQOptions> options) : IConverter<RabbitMQAttribute, IModel>
 {
-    private readonly RabbitMQExtensionConfigProvider configProvider;
-    private readonly IOptions<RabbitMQOptions> options;
-
-    public RabbitMQClientBuilder(RabbitMQExtensionConfigProvider configProvider, IOptions<RabbitMQOptions> options)
-    {
-        this.configProvider = configProvider;
-        this.options = options;
-    }
+    private readonly RabbitMQExtensionConfigProvider configProvider = configProvider;
+    private readonly IOptions<RabbitMQOptions> options = options;
 
     public IModel Convert(RabbitMQAttribute attribute)
     {

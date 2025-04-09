@@ -7,13 +7,13 @@ variables:
   Codeql.Enabled: true
 
 schedules:
-  - cron: '0 12 * * 0'
+  - cron: "0 12 * * 0"
     displayName: Weekly Sunday build
     branches:
       include:
         - dev
     always: true
-    
+
 trigger:
   branches:
     include:
@@ -23,16 +23,25 @@ trigger:
     include:
       - v*.*.*
 
+pr:
+  branches:
+    include:
+      - dev
+  paths:
+    include:
+      - /eng/ci/official-build.yml
+      - /eng/ci/templates/official/**
+
 resources:
   repositories:
-  - repository: 1ESPipelineTemplates
-    type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
-  - repository: eng
-    type: git
-    name: engineering
-    ref: refs/tags/release
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+    - repository: eng
+      type: git
+      name: engineering
+      ref: refs/tags/release
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
@@ -47,147 +56,8 @@ extends:
         image: 1es-windows-2022
         os: windows
     stages:
-    - stage: stage1
-      displayName: Build
-      jobs:
-      - job: job1
-        displayName: Build RabbitMQ Extension
-        templateContext:
-          outputs:
-          - output: pipelineArtifact
-            targetPath: $(Build.ArtifactStagingDirectory)
-            artifactName: drop-extension
-        steps:
-          - ${{ if eq(variables.isTaggedBuild, 'True') }}:
-            - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-                $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v(((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(?:-\w+)?)$'
-                if (-not $found) {
-                  Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
-                  exit 1
-                }
-                Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
-                Write-Host "##vso[task.setvariable variable=fileVersion]$($found.Matches.Groups[2].Value)"
-
-              displayName: Extract version # e.g. 1.2.3
-
-          # .NET Core 2.1 SDK is required by ESRP Code Signing tasks.
-          - task: UseDotNet@2
-            displayName: Acquire .NET Core 2.1 SDK
-            inputs:
-              packageType: sdk
-              version: 2.1.x
-              performMultiLevelLookup: true
-
-          - task: UseDotNet@2
-            displayName: Acquire .NET 7.0 SDK
-            inputs:
-              packageType: sdk
-              version: 7.0.x
-              performMultiLevelLookup: true
-
-          - task: DotNetCoreCLI@2
-            displayName: Build solution
-            inputs:
-              command: build
-              workingDirectory: extension
-              arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
-
-          - task: DotNetCoreCLI@2
-            displayName: Test extension
-            inputs:
-              command: test
-              workingDirectory: extension
-              arguments: --configuration Debug
-
-          - template: ci/sign-files.yml@eng
-            parameters:
-                displayName: Sign extension assembly
-                folderPath: extension/WebJobs.Extensions.RabbitMQ/bin/Release/netstandard2.0
-                pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.dll
-                signType: dll
-
-          - task: DotNetCoreCLI@2
-            displayName: Pack extension
-            inputs:
-              command: pack
-              searchPatternPack: extension/WebJobs.Extensions.RabbitMQ/WebJobs.Extensions.RabbitMQ.csproj
-              configurationToPack: Release
-              buildProperties: Version=$(version);CommitHash=$(Build.SourceVersion)
-              outputDir: $(Build.ArtifactStagingDirectory)/$(version)
-              nobuild: true
-              includesymbols: true
-              verbosityPack: minimal
-
-          - template: ci/sign-files.yml@eng
-            parameters:
-                displayName: Sign extension package
-                folderPath: $(Build.ArtifactStagingDirectory)/$(version)
-                pattern: Microsoft.Azure.WebJobs.Extensions.RabbitMQ.*.nupkg
-                signType: nuget
-
-          - task: DeleteFiles@1
-            displayName: Cleanup staging directory
-            inputs:
-              sourceFolder: $(Build.ArtifactStagingDirectory)/$(version)
-              contents: CodeSignSummary-*.md
-
-          - task: ManifestGeneratorTask@0
-            displayName: Generate SBOM manifest
-            inputs:
-              buildDropPath: $(Build.ArtifactStagingDirectory)/$(version)
-              packageName: Azure Functions RabbitMQ Extension
-              packageVersion: $(version)
-
-      - job: buildJavaLibraryWindows
-        displayName: Java Library Windows
-        templateContext:
-          outputs:
-          - output: pipelineArtifact
-            targetPath: $(Build.ArtifactStagingDirectory)
-            artifactName: drop-java-library
-        steps:
-          - ${{ if eq(variables.isTaggedBuild, 'True') }}:
-            - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
-                $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'
-                if (-not $found) {
-                  Write-Error "Found unexpected tag name: $(Build.SourceBranchName)."
-                  exit 1
-                }
-                Write-Host "##vso[task.setvariable variable=version]$($found.Matches.Groups[1].Value)"
-
-              displayName: Extract version # e.g. 1.2.3
-            
-            # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-            # options prevents spurious logging about downloading of Maven packages.
-          - task: Maven@3
-            displayName: Set library version
-            inputs:
-              mavenPomFile: java-library/pom.xml
-              goals: versions:set
-              options: --batch-mode --define=newVersion=$(version) --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
-
-          - task: Maven@3
-            displayName: Build library
-            inputs:
-              mavenPomFile: java-library/pom.xml
-              options: --batch-mode --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn --update-snapshots
-
-          - powershell: |
-              $prefix = 'azure-functions-java-library-rabbitmq-$(version)'
-              $source = 'java-library'
-              $destination = '$(Build.ArtifactStagingDirectory)/$(version)'
-
-              New-Item $destination -ItemType Directory
-              Copy-Item "$source/pom.xml" "$destination/$prefix.pom"
-              Copy-Item "$source/target/$prefix.jar" "$destination/$prefix.jar"
-              Copy-Item "$source/target/$prefix-javadoc.jar" "$destination/$prefix-javadoc.jar"
-              Copy-Item "$source/target/$prefix-sources.jar" "$destination/$prefix-sources.jar"
-
-            displayName: Copy output files
-
-          - task: ManifestGeneratorTask@0
-            displayName: Generate SBOM manifest
-            inputs:
-              buildDropPath: $(Build.ArtifactStagingDirectory)/$(version)
-              packageName: Azure Functions RabbitMQ Java Bindings
-              packageVersion: $(version)
+      - stage: stage1
+        displayName: Build Extension
+        jobs:
+          - template: /eng/ci/templates/official/build-extension.yml@self
+          - template: /eng/ci/templates/official/build-java-library.yml@self
