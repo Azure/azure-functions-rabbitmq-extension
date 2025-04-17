@@ -1,0 +1,10 @@
+parameters:
+  - name: nugetPackageName
+    type: string
+    default: "Microsoft.Azure.WebJobs.Extensions.RabbitMQ"
+  - name: javaPackageName
+    type: string
+    default: "azure-functions-java-library-rabbitmq"
+  - name: packageVersion
+    type: string
+    default: ""
