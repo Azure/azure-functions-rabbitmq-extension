@@ -16,8 +16,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: 1ESPT-Pool-Name-Placeholder
-      image: pool-image-placeholder
+      name: 1es-pool-azfunc
+      image: 1es-windows-2022
       os: windows
     stages:
       - stage: ValidateAndApprove
