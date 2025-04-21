@@ -1,7 +1,6 @@
 trigger: none
-name: $(Date:yyyyMMdd).$(Rev:r)
-parameters:
-  - template: templates/release-parameters.yml
+variables:
+  - template: templates/release-variables.yml@self
 resources:
   pipelines:
     - pipeline: "_rabbitmq-extensionofficial"
@@ -24,6 +23,10 @@ extends:
         displayName: Validate and Approve Release
         jobs:
           - template: templates/predeployment/validate-release.yml
+            parameters:
+              nugetPackageName: $(nugetPackageName)
+              javaPackageName: $(javaPackageName)
+              packageVersion: $(packageVersion)
           - template: templates/predeployment/approve-release.yml
       - stage: NugetPublish
         displayName: NuGet Publish
@@ -31,9 +34,15 @@ extends:
         condition: succeeded()
         jobs:
           - template: templates/nuget-publish.yml
+            parameters:
+              nugetPackageName: $(nugetPackageName)
+              packageVersion: $(packageVersion)
       - stage: MavenPublish
         displayName: Maven Publish
         dependsOn: ValidateAndApprove
         condition: succeeded()
         jobs:
           - template: templates/maven-publish.yml
+            parameters:
+              javaPackageName: $(javaPackageName)
+              packageVersion: $(packageVersion)
