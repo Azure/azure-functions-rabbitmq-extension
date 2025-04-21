@@ -42,7 +42,7 @@ jobs:
                 Write-Host "##vso[task.LogIssue type=error;]Version from artifact ($extractedVersion) does not match the provided parameter version ($packageVersion)."
             }
 
-            Write-Host "Validation successful: extracted nugetPackageBaseName and extracted packageVersion match with the release versions."
+            Write-Host "##vso[task.complete result=Succeeded;]Validation successful. Extracted nugetPackageBaseName and extracted packageVersion match with the release versions."
       - task: PowerShell@2
         displayName: Validate Java Package Version
         env:
@@ -66,4 +66,4 @@ jobs:
                 Write-Host "##vso[task.LogIssue type=error;]Version from artifact ($extractedVersion) does not match the expected version from parameters ($packageVersion)."
             }
 
-            Write-Host "##vso[task.complete result=Succeeded;]Validation successful."
+            Write-Host "##vso[task.complete result=Succeeded;]Validation successful. Extracted nugetPackageBaseName and extracted packageVersion match with the release versions."
