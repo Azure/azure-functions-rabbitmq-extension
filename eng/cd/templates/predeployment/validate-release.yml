@@ -1,10 +1,7 @@
 parameters:
-  - name: nugetPackageName
-    type: string
-  - name: javaPackageName
-    type: string
-  - name: packageVersion
-    type: string
+  nugetPackageName: ""
+  javaPackageName: ""
+  packageVersion: ""
 
 jobs:
   - job: ValidateRelease
