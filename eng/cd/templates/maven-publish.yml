@@ -31,16 +31,11 @@ parameters:
               targetPath: "$(Pipeline.Workspace)/drop-java-library"
         steps:
           - task: PowerShell@2
-            displayName: Initialize variables
+            displayName: Show initialized variables
             inputs:
               targetType: inline
               script: |-
-                $version = (Get-ChildItem "$(System.DefaultWorkingDirectory)\$(Release.PrimaryArtifactSourceAlias)\drop-java-library").Name
-                $artifactPath = "$(System.DefaultWorkingDirectory)\$(Release.PrimaryArtifactSourceAlias)\drop-java-library\$version"
-                $blobPath = "azure-functions-rabbitmq-extension/java/$version"
-                Write-Host "##vso[task.setvariable variable=version]$version"
-                Write-Host "##vso[task.setvariable variable=artifactPath]$artifactPath"
-                Write-Host "##vso[task.setvariable variable=blobPath]$blobPath"
+                Get-ChildItem env:
           - task: AzureFileCopy@4
             displayName: Upload Java artifacts
             inputs:
