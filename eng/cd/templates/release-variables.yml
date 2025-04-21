@@ -1,4 +1,4 @@
-parameters:
+variables:
   - name: nugetPackageName
     type: string
     default: "Microsoft.Azure.WebJobs.Extensions.RabbitMQ"

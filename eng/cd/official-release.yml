@@ -23,13 +23,13 @@ extends:
       - stage: ValidateAndApprove
         displayName: Validate and Approve Release
         jobs:
-          - template: templates/predeployment/validate-release.yml
+          - template: /eng/cd/templates/predeployment/validate-release.yml@self
             parameters:
               nugetPackageName: "$(nugetPackageName)"
               javaPackageName: "$(javaPackageName)"
               packageVersion: "$(packageVersion)"
-          - template: templates/predeployment/approve-release.yml
-      - template: templates/publish.yml
+          - template: /eng/cd/templates/predeployment/approve-release.yml@self
+      - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "NugetPublishStage"
           displayName: "Publish Nuget Package"
@@ -37,7 +37,7 @@ extends:
           packageVersion: "$(packageVersion)"
           relativeArtifactPath: "drop-extension/$(packageVersion)"
           blobPath: "azure-functions-rabbitmq-extension/net/$(packageVersion)"
-      - template: templates/publish.yml
+      - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "MavenPublishStage"
           displayName: "Publish Maven Package"
