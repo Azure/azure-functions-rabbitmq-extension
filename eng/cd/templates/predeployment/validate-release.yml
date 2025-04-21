@@ -28,25 +28,21 @@ jobs:
           targetType: inline
           script: |-
             if (-not $nugetPackageName) {
-              throw "Error: nugetPackageName parameter is null or empty."
-            }
-
-            if (-not $javaPackageName) {
-              throw "Error: javaPackageName parameter is null or empty."
+              Write-Host "##vso[task.LogIssue type=error;]NugetPackageName parameter is null or empty."
             }
 
             if (-not $packageVersion) {
-              throw "Error: packageVersion parameter is null or empty."
+              Write-Host "##vso[task.LogIssue type=error;]PackageVersion parameter is null or empty."
             }
 
             $extractedBaseName = (Get-Item "$(System.DefaultWorkingDirectory)\$(Release.PrimaryArtifactSourceAlias)\drop-extension\$(packageVersion)\$(nugetPackageName).*.nupkg").BaseName
             if ($nugetPackageBaseName -ne $extractedBaseName) {
-                throw "Error: extracted nugetPackageBaseName from artifact ($extractedBaseName) does not match expected base name ($nugetPackageBaseName)."
+                Write-Host "##vso[task.LogIssue type=error;]Package name from artifact ($extractedBaseName) does not match provided package name ($nugetPackageBaseName)."
             }
 
             $extractedVersion = $extractedBaseName.Replace("$nugetPackageName.", "").Split(' ')[0]
             if ($packageVersion -ne $extractedVersion) {
-                throw "Error: extracted packageVersion from artifact ($extractedVersion) does not match the actual version ($packageVersion)."
+                Write-Host "##vso[task.LogIssue type=error;]Version from artifact ($extractedVersion) does not match the provided parameter version ($packageVersion)."
             }
 
             Write-Host "Validation successful: extracted nugetPackageBaseName and extracted packageVersion match with the release versions."
@@ -59,14 +55,18 @@ jobs:
         inputs:
           targetType: inline
           script: |-
+            if (-not $javaPackageName) {
+              Write-Host "##vso[task.LogIssue type=error;]JavaPackageName parameter is null or empty."
+            }
+
             $extractedBaseName = (Get-Item "$(System.DefaultWorkingDirectory)\$(Release.PrimaryArtifactSourceAlias)\drop-java-library\$(packageVersion)\$(nugetPackageName).*.jar").BaseName
             if ($javaPackageBaseName -ne $extractedBaseName) {
-                throw "Error: extracted javaPackageBaseName from artifact ($extractedBaseName) does not match expected base name ($javaPackageBaseName)."
+                Write-Host "##vso[task.LogIssue type=error;]Package name from artifact ($extractedBaseName) does not match expected package name ($javaPackageBaseName)."
             }
 
             $extractedVersion = $extractedBaseName.Replace("$javaPackageName.", "").Split(' ')[0]
             if ($packageVersion -ne $extractedVersion) {
-                throw "Error: extracted packageVersion from artifact ($extractedVersion) does not match the actual version ($packageVersion)."
+                Write-Host "##vso[task.LogIssue type=error;]Version from artifact ($extractedVersion) does not match the expected version from parameters ($packageVersion)."
             }
 
-            Write-Host "Validation successful: extracted javaPackageBaseName and extracted packageVersion match with the release versions."
+            Write-Host "##vso[task.complete result=Succeeded;]Validation successful."
