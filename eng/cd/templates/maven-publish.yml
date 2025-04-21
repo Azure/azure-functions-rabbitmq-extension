@@ -1,0 +1,47 @@
+parameters:
+  - name: javaPackageName
+    type: string
+  - name: packageVersion
+    type: string
+
+- stage: MavenPublish
+    displayName: Maven Publish
+    dependsOn: ValidateAndApprove
+    condition: succeeded()
+    jobs:
+      - job: MavenPublishJob
+        displayName: Publish Maven Package to Partner Storage Account
+        timeoutInMinutes: 0
+        variables:
+          - name: artifactPath
+            value: '$(System.DefaultWorkingDirectory)\$(Release.PrimaryArtifactSourceAlias)\drop-java-library\${{ parameters.packageVersion }}'
+          - name: blobPath
+            value: 'azure-functions-rabbitmq-extension/java/${{ parameters.packageVersion }}'
+        templateContext:
+          type: releaseJob
+          isProduction: true
+          inputs:
+            - input: pipelineArtifact
+              pipeline: "_rabbitmq-extensionofficial"
+              artifactName: "drop-extension"
+              targetPath: "$(Pipeline.Workspace)/drop-extension"
+            - input: pipelineArtifact
+              pipeline: "_rabbitmq-extensionofficial"
+              artifactName: "drop-java-library"
+              targetPath: "$(Pipeline.Workspace)/drop-java-library"
+        steps:
+          - task: PowerShell@2
+            displayName: Show initialized variables
+            inputs:
+              targetType: inline
+              script: |-
+                Get-ChildItem env:
+          - task: AzureFileCopy@4
+            displayName: Upload Java artifacts
+            inputs:
+              SourcePath: $(artifactPath)\*
+              ConnectedServiceNameARM: azure-sdk-partner-drops
+              Destination: AzureBlob
+              StorageAccountRM: azuresdkpartnerdrops
+              ContainerName: drops
+              BlobPrefix: $(blobPath)
