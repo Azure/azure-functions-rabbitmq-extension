@@ -1,6 +1,6 @@
 trigger: none
 variables:
-  - template: templates/release-variables.yml@self
+  - template: /eng/cd/templates/release-variables.yml@self
 resources:
   pipelines:
     - pipeline: "_rabbitmq-extensionofficial"
@@ -11,6 +11,7 @@ resources:
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
+
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
@@ -24,25 +25,23 @@ extends:
         jobs:
           - template: templates/predeployment/validate-release.yml
             parameters:
-              nugetPackageName: $(nugetPackageName)
-              javaPackageName: $(javaPackageName)
-              packageVersion: $(packageVersion)
+              nugetPackageName: "$(nugetPackageName)"
+              javaPackageName: "$(javaPackageName)"
+              packageVersion: "$(packageVersion)"
           - template: templates/predeployment/approve-release.yml
-      - stage: NugetPublish
-        displayName: NuGet Publish
-        dependsOn: ValidateAndApprove
-        condition: succeeded()
-        jobs:
-          - template: templates/nuget-publish.yml
-            parameters:
-              nugetPackageName: $(nugetPackageName)
-              packageVersion: $(packageVersion)
-      - stage: MavenPublish
-        displayName: Maven Publish
-        dependsOn: ValidateAndApprove
-        condition: succeeded()
-        jobs:
-          - template: templates/maven-publish.yml
-            parameters:
-              javaPackageName: $(javaPackageName)
-              packageVersion: $(packageVersion)
+      - template: templates/publish.yml
+        parameters:
+          stageName: "NugetPublishStage"
+          displayName: "Publish Nuget Package"
+          packageBaseName: "$(nugetPackageName)"
+          packageVersion: "$(packageVersion)"
+          relativeArtifactPath: "drop-extension/$(packageVersion)"
+          blobPath: "azure-functions-rabbitmq-extension/net/$(packageVersion)"
+      - template: templates/publish.yml
+        parameters:
+          stageName: "MavenPublishStage"
+          displayName: "Publish Maven Package"
+          packageBaseName: "$(javaPackageName)"
+          packageVersion: "$(packageVersion)"
+          relativeArtifactPath: "drop-java-library/$(packageVersion)"
+          blobPath: "azure-functions-rabbitmq-extension/java/$(packageVersion)"
