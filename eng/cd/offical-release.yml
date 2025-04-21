@@ -26,14 +26,14 @@ extends:
           - template: templates/predeployment/validate-release.yml
           - template: templates/predeployment/approve-release.yml
       - stage: NugetPublish
-          displayName: NuGet Publish
-          dependsOn: ValidateAndApprove
-          condition: succeeded()
-          jobs:
-            - template: templates/nuget-publish.yml
+        displayName: NuGet Publish
+        dependsOn: ValidateAndApprove
+        condition: succeeded()
+        jobs:
+          - template: templates/nuget-publish.yml
       - stage: MavenPublish
-          displayName: Maven Publish
-          dependsOn: ValidateAndApprove
-          condition: succeeded()
-          jobs:
-            - template: templates/maven-publish.yml
+        displayName: Maven Publish
+        dependsOn: ValidateAndApprove
+        condition: succeeded()
+        jobs:
+          - template: templates/maven-publish.yml
