@@ -107,6 +107,9 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         async Task ReceivedHandler(object model, BasicDeliverEventArgs args)
         {
             using Activity activity = RabbitMQActivitySource.StartActivity(args.BasicProperties);
+            activity?.AddTag("amqp.queue", this.queue);
+            activity?.AddTag("amqp.channel", this.channel);
+            activity?.AddTag("amqp.bodySize", args.Body.Length);
 
             var input = new TriggeredFunctionData() { TriggerValue = args };
 
@@ -118,6 +121,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
                 args.BasicProperties.Headers ??= new Dictionary<string, object>();
                 args.BasicProperties.Headers.TryGetValue(RequeueCountHeaderName, out object headerValue);
                 int requeueCount = Convert.ToInt32(headerValue, CultureInfo.InvariantCulture) + 1;
+                activity?.AddTag("amqp.requeueCount", requeueCount);
 
                 if (requeueCount >= 5)
                 {
