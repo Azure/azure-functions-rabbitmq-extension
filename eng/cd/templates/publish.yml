@@ -1,7 +1,7 @@
 parameters:
   stageName: ""
   displayName: ""
-  artifactPath: ""
+  artifactPath: "" # path from which package files are copied to the storage account
   blobPath: ""
 
 stages:
@@ -19,11 +19,11 @@ stages:
             - input: pipelineArtifact
               pipeline: "_rabbitmq-extensionofficial"
               artifactName: "drop-extension"
-              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-extension"
+              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-extension" # default download path for nuget artifact folder
             - input: pipelineArtifact
               pipeline: "_rabbitmq-extensionofficial"
               artifactName: "drop-java-library"
-              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library"
+              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library" # default download path for maven artifact folder
         steps:
           - task: AzureFileCopy@6
             displayName: Upload .NET artifacts

@@ -1,7 +1,7 @@
 parameters:
-  - name: mavenPackageBaseName
+  - name: mavenPackageBaseName # (e.g. azure-functions-java-library-rabbitmq-2.0.0)
     type: string
-  - name: mavenArtifactPath
+  - name: mavenArtifactPath # path to which pipeline artifact is copied
     type: string
   - name: packageVersion
     type: string

@@ -10,7 +10,7 @@ parameters:
     displayName: "Base name of the Maven package"
     default: "azure-functions-java-library-rabbitmq"
   - name: packageVersion
-    displayName: "Release version"
+    displayName: "Release version (ex. 2.0.0, 1.0.1-preview)"
     type: string
     default: ""
 
@@ -36,23 +36,28 @@ extends:
       - stage: ValidateAndApprove
         displayName: Validate and Approve Release
         jobs:
+          # validates that version.nupkg and version.symbols files under version folder in drop-extension exist
           - template: /eng/cd/templates/predeployment/validate-nuget.yml@self
             parameters:
               nugetPackageBaseName: "${{ format('{0}.{1}', parameters.nugetPackageName, parameters.packageVersion) }}"
               nugetArtifactPath: "$(Build.ArtifactStagingDirectory)\\drop-extension"
               packageVersion: "${{ parameters.packageVersion }}"
+          # validates that version-jar, version-pom files under version folder in drop-java-library exist
           - template: /eng/cd/templates/predeployment/validate-maven.yml@self
             parameters:
               mavenPackageBaseName: "${{ format('{0}-{1}', parameters.mavenPackageName, parameters.packageVersion) }}"
               mavenArtifactPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library"
               packageVersion: "${{ parameters.packageVersion }}"
+          # approval step sent to Azure Functions IDC
           - template: /eng/cd/templates/predeployment/approve.yml@self
+      # stage to copy all nuget package files in drop-extension to partner storage account
       - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "NugetPublishStage"
           displayName: "Publish Nuget Package"
           artifactPath: "$(Build.ArtifactStagingDirectory)\\drop-extension\\${{ parameters.packageVersion }}"
           blobPath: "azure-functions-rabbitmq-extension/net/${{ parameters.packageVersion }}"
+      # stage to copy all maven package files in drop-java-library to partner storage account
       - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "MavenPublishStage"

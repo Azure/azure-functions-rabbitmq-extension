@@ -1,7 +1,7 @@
 parameters:
-  - name: nugetPackageBaseName
+  - name: nugetPackageBaseName # (e.g. Microsoft.Azure.WebJobs.Extensions.RabbitMQ.2.0.0)
     type: string
-  - name: nugetArtifactPath
+  - name: nugetArtifactPath # path to which pipeline artifact is copied
     type: string
   - name: packageVersion
     type: string
