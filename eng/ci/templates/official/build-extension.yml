@@ -1,14 +1,15 @@
-variables:
-  # It is a tagged build if it is triggered by pushing a tag.
-  isTaggedBuild: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}
-  prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
-  version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
-  fileVersion: $[variables.version]
-  Codeql.Enabled: true
+parameters:
+  - isTaggedBuild: false # Set to true if this is a tagged build
+  - version: ""
+  - fileVersion: ""
 
 jobs:
   - job: buildRabbitMQExtension
     displayName: Build RabbitMQ Extension
+    variables:
+      isTaggedBuild: ${{ parameters.isTaggedBuild }}
+      version: ${{ parameters.version }}
+      fileVersion: ${{ parameters.fileVersion }}
     templateContext:
       outputs:
         - output: pipelineArtifact
