@@ -1,3 +1,9 @@
+variables:
+  prefix: $[format('0.{0:yyyy}.{0:MMdd}', pipeline.startTime)]
+  version: $[format('{0}.{1}', variables.prefix, counter(variables.prefix, 1))] # e.g. 0.2001.0203.4
+  fileVersion: $[variables.version]
+  Codeql.Enabled: true
+
 jobs:
   - job: BuildExtension
     steps:
