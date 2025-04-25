@@ -1,0 +1,68 @@
+parameters:
+  - name: mavenPackageBaseName
+    type: string
+  - name: mavenArtifactPath
+    type: string
+  - name: packageVersion
+    type: string
+
+jobs:
+  - job: ValidateCopyMaven
+    displayName: Validate Maven package files
+    variables:
+      mavenJarPath: "${{ parameters.mavenArtifactPath }}\\${{ parameters.packageVersion}}\\${{ parameters.mavenPackageBaseName }}.jar"
+      mavenPomPath: "${{ parameters.mavenArtifactPath }}\\${{ parameters.packageVersion}}\\${{ parameters.mavenPackageBaseName }}.pom"
+      mavenSourcesPath: "${{ parameters.mavenArtifactPath }}\\${{ parameters.packageVersion}}\\${{ parameters.mavenPackageBaseName }}-sources.jar"
+      mavenJavadocPath: "${{ parameters.mavenArtifactPath }}\\${{ parameters.packageVersion}}\\${{ parameters.mavenPackageBaseName }}-javadoc.jar"
+    templateContext:
+      type: releaseJob
+      isProduction: true
+      inputs:
+        - input: pipelineArtifact
+          pipeline: "_rabbitmq-extensionofficial"
+          artifactName: "drop-java-library"
+          targetPath: "${{ parameters.mavenArtifactPath }}"
+    steps:
+      - task: PowerShell@2
+        displayName: Display artifacts
+        inputs:
+          targetType: inline
+          script: |-
+            Write-Host "##[debug]Listing files in the workspace folder:"
+            Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
+            Write-Host "##[debug]Listing files in the drop-java-library folder:"
+            Get-ChildItem -Path "${{ parameters.mavenArtifactPath }}"
+      - task: PowerShell@2
+        displayName: "Check Maven Files Exist"
+        inputs:
+          targetType: inline
+          script: |
+            Write-Host "##[debug]Checking for $(mavenJarPath)..."
+            if (-not (Test-Path -Path $(mavenJarPath))) {
+              Write-Host "[error]Maven JAR file '$(mavenJarPath)' is missing."
+              exit 1
+            } else {
+              Write-Host "Maven JAR file '$(mavenJarPath)' found."
+            }
+
+            Write-Host "##[debug]Checking for $(mavenPomPath)..."
+            if (-not (Test-Path -Path $(mavenPomPath))) {
+              Write-Host "[error]Maven POM file '$(mavenPomPath)' is missing."
+              exit 1
+            } else {
+              Write-Host "Maven POM file '$(mavenPomPath)' found."
+            }
+
+            Write-Host "##[debug]Checking for $(mavenSourcesPath)..."
+            if (-not (Test-Path -Path $(mavenSourcesPath))) {
+              Write-Host "##vso[task.logissue type=warning;]Maven sources file '$(mavenSourcesPath)' is missing."
+            } else {
+              Write-Host "Maven sources file '$(mavenSourcesPath)' found."
+            }
+
+            Write-Host "##[debug]Checking for $(mavenJavadocPath)..."
+            if (-not (Test-Path -Path $(mavenJavadocPath))) {
+              Write-Host "##vso[task.logissue type=warning;]Maven javadoc file '$(mavenJavadocPath)' is missing."
+            } else {
+              Write-Host "Maven javadoc file '$(mavenJavadocPath)' found."
+            }

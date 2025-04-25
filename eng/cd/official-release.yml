@@ -1,6 +1,19 @@
 trigger: none
-variables:
-  - template: /eng/cd/templates/release-variables.yml@self
+
+parameters:
+  - name: nugetPackageName
+    type: string
+    displayName: "Base name of the Nuget package"
+    default: "Microsoft.Azure.WebJobs.Extensions.RabbitMQ"
+  - name: mavenPackageName
+    type: string
+    displayName: "Base name of the Maven package"
+    default: "azure-functions-java-library-rabbitmq"
+  - name: packageVersion
+    displayName: "Release version"
+    type: string
+    default: ""
+
 resources:
   pipelines:
     - pipeline: "_rabbitmq-extensionofficial"
@@ -23,25 +36,26 @@ extends:
       - stage: ValidateAndApprove
         displayName: Validate and Approve Release
         jobs:
-          - template: /eng/cd/templates/predeployment/validate-release.yml@self
+          - template: /eng/cd/templates/predeployment/validate-nuget.yml@self
             parameters:
-              nugetPackageName: "$(nugetPackageName)"
-              javaPackageName: "$(javaPackageName)"
-              packageVersion: "$(packageVersion)"
-          - template: /eng/cd/templates/predeployment/approve-release.yml@self
+              nugetPackageBaseName: "${{ format('{0}.{1}', parameters.nugetPackageName, parameters.packageVersion) }}"
+              nugetArtifactPath: "$(Build.ArtifactStagingDirectory)\\drop-extension"
+              packageVersion: "${{ parameters.packageVersion }}"
+          - template: /eng/cd/templates/predeployment/validate-maven.yml@self
+            parameters:
+              mavenPackageBaseName: "${{ format('{0}-{1}', parameters.mavenPackageName, parameters.packageVersion) }}"
+              mavenArtifactPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library"
+              packageVersion: "${{ parameters.packageVersion }}"
+          - template: /eng/cd/templates/predeployment/approve.yml@self
       - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "NugetPublishStage"
           displayName: "Publish Nuget Package"
-          packageBaseName: "$(nugetPackageName)"
-          packageVersion: "$(packageVersion)"
-          relativeArtifactPath: "drop-extension/$(packageVersion)"
-          blobPath: "azure-functions-rabbitmq-extension/net/$(packageVersion)"
+          artifactPath: "$(Build.ArtifactStagingDirectory)\\drop-extension\\${{ parameters.packageVersion }}"
+          blobPath: "azure-functions-rabbitmq-extension/net/${{ parameters.packageVersion }}"
       - template: /eng/cd/templates/publish.yml@self
         parameters:
           stageName: "MavenPublishStage"
           displayName: "Publish Maven Package"
-          packageBaseName: "$(javaPackageName)"
-          packageVersion: "$(packageVersion)"
-          relativeArtifactPath: "drop-java-library/$(packageVersion)"
-          blobPath: "azure-functions-rabbitmq-extension/java/$(packageVersion)"
+          artifactPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library\\${{ parameters.packageVersion }}"
+          blobPath: "azure-functions-rabbitmq-extension/java/${{ parameters.packageVersion }}"
