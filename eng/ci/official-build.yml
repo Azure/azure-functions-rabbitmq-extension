@@ -68,4 +68,3 @@ extends:
             parameters:
               isTaggedBuild: ${{ variables.isTaggedBuild }}
               version: ${{ variables.version }}
-              fileVersion: ${{ variables.fileVersion }}
