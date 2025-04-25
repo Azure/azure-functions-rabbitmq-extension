@@ -49,8 +49,12 @@ extends:
         displayName: Build and Test Extension in Windows
         jobs:
           - template: /eng/ci/templates/public/build-test-extension.yml@self
+            parameters:
+              fileVersion: ${{ variables.fileVersion }}
 
       - stage: buildJavaLibraryWindows
         displayName: Build Java Library in Windows
         jobs:
           - template: /eng/ci/templates/public/build-java-library.yml@self
+            parameters:
+              version: ${{ variables.version }}

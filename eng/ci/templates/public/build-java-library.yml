@@ -1,6 +1,13 @@
+parameters:
+  - name: version
+    type: string
+    default: "" # The version of the library to be built. This is set by the build pipeline.
+
 jobs:
   - job: buildJavaLibrarylinux
     displayName: Build Linux Java Library
+    variables:
+      version: ${{ parameters.version }}
     steps:
       # A combination of --batch-mode and --define=org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
       # options prevents spurious logging about downloading of Maven packages.

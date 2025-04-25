@@ -1,6 +1,21 @@
+parameters:
+  - name: isTaggedBuild
+    type: boolean
+    default: false # Set to true if this is a tagged build
+  - name: version
+    type: string
+    default: "" # The version of the library to be built. This is set by the build pipeline.
+  - name: fileVersion
+    type: string
+    default: "" # The file version of the library to be built. This is set by the build pipeline.
+
 jobs:
   - job: buildRabbitMQExtension
     displayName: Build RabbitMQ Extension
+    variables:
+      isTaggedBuild: ${{ parameters.isTaggedBuild }}
+      version: ${{ parameters.version }}
+      fileVersion: ${{ parameters.fileVersion }}
     templateContext:
       outputs:
         - output: pipelineArtifact

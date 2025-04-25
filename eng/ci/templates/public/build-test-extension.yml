@@ -1,5 +1,12 @@
+parameters:
+  - name: fileVersion
+    type: string
+    default: "" # The file version of the extension to be built. This is set by the build pipeline.
+
 jobs:
   - job: BuildExtension
+    variables:
+      fileVersion: ${{ parameters.fileVersion }}
     steps:
       - task: UseDotNet@2
         displayName: Acquire .NET 8.0 SDK

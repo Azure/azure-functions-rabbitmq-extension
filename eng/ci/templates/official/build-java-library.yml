@@ -1,6 +1,17 @@
+parameters:
+  - name: isTaggedBuild
+    type: boolean
+    default: false # Set to true if this is a tagged build
+  - name: version
+    type: string
+    default: "" # The version of the library to be built. This is set by the build pipeline.
+
 jobs:
   - job: buildJavaLibrary
     displayName: Build Java Library
+    variables:
+      isTaggedBuild: ${{ parameters.isTaggedBuild }}
+      version: ${{ parameters.version }}
     templateContext:
       outputs:
         - output: pipelineArtifact

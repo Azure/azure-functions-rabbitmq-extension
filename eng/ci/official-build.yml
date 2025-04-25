@@ -60,4 +60,11 @@ extends:
         displayName: Build Extension
         jobs:
           - template: /eng/ci/templates/official/build-extension.yml@self
+            parameters:
+              isTaggedBuild: ${{ variables.isTaggedBuild }}
+              version: ${{ variables.version }}
+              fileVersion: ${{ variables.fileVersion }}
           - template: /eng/ci/templates/official/build-java-library.yml@self
+            parameters:
+              isTaggedBuild: ${{ variables.isTaggedBuild }}
+              version: ${{ variables.version }}

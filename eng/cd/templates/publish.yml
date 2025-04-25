@@ -1,19 +1,17 @@
 parameters:
   stageName: ""
   displayName: ""
-  packageBaseName: ""
-  packageVersion: ""
-  relativeArtifactPath: ""
+  artifactPath: "" # path from which package files are copied to the storage account
   blobPath: ""
 
 stages:
   - stage: ${{ parameters.stageName }}
-    displayName: ${ parameters.displayName }
+    displayName: ${{ parameters.displayName }}
     dependsOn: ValidateAndApprove
     condition: succeeded()
     jobs:
       - job: PublishJob
-        displayName: Publish Package to Storage Account
+        displayName: ${{ parameters.displayName }} to Storage Account
         templateContext:
           type: releaseJob
           isProduction: true
@@ -21,29 +19,18 @@ stages:
             - input: pipelineArtifact
               pipeline: "_rabbitmq-extensionofficial"
               artifactName: "drop-extension"
-              targetPath: "$(Pipeline.Workspace)/drop-extension"
+              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-extension" # default download path for nuget artifact folder
             - input: pipelineArtifact
               pipeline: "_rabbitmq-extensionofficial"
               artifactName: "drop-java-library"
-              targetPath: "$(Pipeline.Workspace)/drop-java-library"
-        variables:
-          - name: artifactPath
-            value: "$(System.DefaultWorkingDirectory)/$(Release.PrimaryArtifactSourceAlias)/${{ parameters.artifactPath }}"
-          - name: blobPath
-            value: "${{ parameters.blobPath }}"
+              targetPath: "$(Build.ArtifactStagingDirectory)\\drop-java-library" # default download path for maven artifact folder
         steps:
-          - task: PowerShell@2
-            displayName: Show initialized variables
-            inputs:
-              targetType: inline
-              script: |-
-                Get-ChildItem env:
           - task: AzureFileCopy@6
             displayName: Upload .NET artifacts
             inputs:
-              SourcePath: $(artifactPath)\*
+              SourcePath: "${{ parameters.artifactPath }}/*"
               ConnectedServiceNameARM: azure-sdk-partner-drops
               Destination: AzureBlob
               StorageAccountRM: azuresdkpartnerdrops
               ContainerName: drops
-              BlobPrefix: $(blobPath)
+              BlobPrefix: "${{ parameters.blobPath }}"
