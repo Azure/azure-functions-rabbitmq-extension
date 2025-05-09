@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Moq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Xunit;
@@ -23,6 +24,7 @@ public class RabbitMQTriggerBindingTests
             ["RoutingKey"] = typeof(string),
             ["BasicProperties"] = typeof(IBasicProperties),
             ["Body"] = typeof(ReadOnlyMemory<byte>),
+            ["RabbitMQMessageActions"] = typeof(RabbitMQMessageActions),
         };
 
         IReadOnlyDictionary<string, Type> actualContract = RabbitMQTriggerBinding.CreateBindingDataContract();
@@ -44,6 +46,7 @@ public class RabbitMQTriggerBindingTests
 
         ReadOnlyMemory<byte> body = buffer;
         var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IModel>());
 
         var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
@@ -54,13 +57,42 @@ public class RabbitMQTriggerBindingTests
             ["Body"] = body,
             ["Exchange"] = eventArgs.Exchange,
             ["BasicProperties"] = eventArgs.BasicProperties,
+            ["RabbitMQMessageActions"] = messageActions,
         };
 
-        IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs);
+        IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
 
         foreach (KeyValuePair<string, object> item in actualContract)
         {
             Assert.Equal(data[item.Key], item.Value);
         }
+    }
+
+    [Fact]
+    public void RabbitMQTriggerAttribute_ManualAck_DefaultsToFalse()
+    {
+        var attribute = new RabbitMQTriggerAttribute("test-queue");
+        bool manualAck = attribute.ManualAck;
+        Assert.False(manualAck, "ManualAck should default to false.");
+    }
+
+    [Fact]
+    public void RabbitMQTriggerBinding_CreateBindingData_IncludesRabbitMQMessageActions()
+    {
+        ulong deliveryTag = 1;
+
+        var rand = new Random();
+        byte[] buffer = new byte[10];
+        rand.NextBytes(buffer);
+
+        ReadOnlyMemory<byte> body = buffer;
+        var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IModel>());
+
+        IReadOnlyDictionary<string, object> bindingData = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
+
+        // Assert
+        Assert.True(bindingData.ContainsKey("RabbitMQMessageActions"), "Binding data should include RabbitMQMessageActions.");
+        Assert.Equal(messageActions, bindingData["RabbitMQMessageActions"]);
     }
 }

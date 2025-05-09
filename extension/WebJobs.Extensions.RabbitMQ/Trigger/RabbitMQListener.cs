@@ -33,6 +33,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     private readonly ILogger logger;
     private readonly string queueName;
     private readonly ushort prefetchCount;
+    private readonly bool manualAck;
     private readonly string logDetails;
     private readonly IDrainModeManager drainModeManager;
 
@@ -46,6 +47,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         ILogger logger,
         string functionId,
         string queueName,
+        bool manualAck,
         ushort prefetchCount,
         IDrainModeManager drainModeManager)
     {
@@ -53,6 +55,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
+        this.manualAck = manualAck;
         this.prefetchCount = prefetchCount;
         this.drainModeManager = drainModeManager;
         this.listenerCancellationTokenSource = new CancellationTokenSource();
@@ -133,10 +136,15 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
                 // We cannot call BasicReject() on the message with requeue = true since that would not enable a fixed
                 // number of retry attempts. See: https://stackoverflow.com/q/23158310.
                 this.channel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
-            }
 
-            // Acknowledge the existing message only after the message (in case of failure) is re-published.
-            this.channel.BasicAck(args.DeliveryTag, multiple: false);
+                // Acknowledge the existing message after the message is re-published.
+                this.channel.BasicAck(args.DeliveryTag, multiple: false);
+            }
+            else if (!this.manualAck)
+            {
+                // Acknowledge the existing message if manualAck is not set and function execution was successful.
+                this.channel.BasicAck(args.DeliveryTag, multiple: false);
+            }
         }
     }
 

@@ -210,6 +210,7 @@ public class RabbitMQListenerTests
             Mock.Of<ILogger>(),
             functionId,
             queueName,
+            false,
             7357,
             DrainModeManager);
     }
@@ -224,6 +225,7 @@ public class RabbitMQListenerTests
             mockLogger.Object,
             "testFunctionId",
             "testQueueName",
+            false,
             7357,
             DrainModeManager);
 
