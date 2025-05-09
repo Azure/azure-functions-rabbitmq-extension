@@ -65,6 +65,12 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         // Do not convert the scale-monitor ID to lower-case string since RabbitMQ queue names are case-sensitive.
         this.Descriptor = new ScaleMonitorDescriptor($"{functionId}-RabbitMQTrigger-{queueName}", functionId);
         this.logDetails = $"function: '{functionId}', queue: '{queueName}'";
+
+        // Add a handler to log any errors that occur on the channel.
+        channel.ModelShutdown += (sender, args) =>
+        {
+            logger.LogError($"[!] Channel closed due to error: {args.Exception?.Message}");
+        };
     }
 
     public ScaleMonitorDescriptor Descriptor { get; }

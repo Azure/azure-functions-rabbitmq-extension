@@ -24,7 +24,7 @@ public class RabbitMQTriggerBindingTests
             ["RoutingKey"] = typeof(string),
             ["BasicProperties"] = typeof(IBasicProperties),
             ["Body"] = typeof(ReadOnlyMemory<byte>),
-            ["RabbitMQMessageActions"] = typeof(RabbitMQMessageActions),
+            ["MessageActions"] = typeof(RabbitMQMessageActions),
         };
 
         IReadOnlyDictionary<string, Type> actualContract = RabbitMQTriggerBinding.CreateBindingDataContract();
@@ -57,7 +57,7 @@ public class RabbitMQTriggerBindingTests
             ["Body"] = body,
             ["Exchange"] = eventArgs.Exchange,
             ["BasicProperties"] = eventArgs.BasicProperties,
-            ["RabbitMQMessageActions"] = messageActions,
+            ["MessageActions"] = messageActions,
         };
 
         IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
@@ -92,7 +92,7 @@ public class RabbitMQTriggerBindingTests
         IReadOnlyDictionary<string, object> bindingData = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
 
         // Assert
-        Assert.True(bindingData.ContainsKey("RabbitMQMessageActions"), "Binding data should include RabbitMQMessageActions.");
-        Assert.Equal(messageActions, bindingData["RabbitMQMessageActions"]);
+        Assert.True(bindingData.ContainsKey("MessageActions"), "Binding data should include MessageActions.");
+        Assert.Equal(messageActions, bindingData["MessageActions"]);
     }
 }

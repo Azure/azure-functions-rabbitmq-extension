@@ -71,7 +71,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
             ["RoutingKey"] = typeof(string),
             ["BasicProperties"] = typeof(IBasicProperties),
             ["Body"] = typeof(ReadOnlyMemory<byte>),
-            ["RabbitMQMessageActions"] = typeof(RabbitMQMessageActions),
+            ["MessageActions"] = typeof(RabbitMQMessageActions),
         };
 
         return contract;
@@ -88,7 +88,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
         SafeAddValue(() => bindingData.Add(nameof(value.RoutingKey), value.RoutingKey));
         SafeAddValue(() => bindingData.Add(nameof(value.BasicProperties), value.BasicProperties));
         SafeAddValue(() => bindingData.Add(nameof(value.Body), value.Body));
-        SafeAddValue(() => bindingData.Add(nameof(RabbitMQMessageActions), messageActions));
+        SafeAddValue(() => bindingData.Add(nameof(messageActions), messageActions));
 
         return bindingData;
     }
