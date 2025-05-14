@@ -3,6 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.WebJobs.Host.Executors;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -94,5 +100,73 @@ public class RabbitMQTriggerBindingTests
         // Assert
         Assert.True(bindingData.ContainsKey("MessageActions"), "Binding data should include MessageActions.");
         Assert.Equal(messageActions, bindingData["MessageActions"]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RabbitMQTrigger_ManualAck_BasicAckBehavior(bool manualAck)
+    {
+        // Arrange
+        var mockChannel = new Mock<IModel>();
+        var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
+        var mockLogger = new Mock<ILogger>();
+        var mockDrainModeManager = new Mock<IDrainModeManager>();
+        var mockBasicProperties = new Mock<IBasicProperties>();
+
+        // Simulate successful function execution
+        mockExecutor
+            .Setup(executor => executor.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FunctionResult(true));
+
+        var listener = new RabbitMQListener(
+            mockChannel.Object,
+            mockExecutor.Object,
+            mockLogger.Object,
+            functionId: "test-function",
+            queueName: "test-queue",
+            manualAck: manualAck,
+            prefetchCount: 10,
+            drainModeManager: mockDrainModeManager.Object);
+
+        var eventArgs = new BasicDeliverEventArgs
+        {
+            DeliveryTag = 1,
+            Body = new ReadOnlyMemory<byte>([0x01, 0x02, 0x03]),
+            BasicProperties = mockBasicProperties.Object,
+        };
+
+        // Act
+        await listener.StartAsync(CancellationToken.None);
+
+        // Find the IBasicConsumer passed to BasicConsume
+        IInvocation basicConsumeInvocation = mockChannel.Invocations
+            .FirstOrDefault(invocation => invocation.Method.Name == "BasicConsume");
+
+        Assert.NotNull(basicConsumeInvocation);
+
+        // The third argument is the consumer
+        var consumer = basicConsumeInvocation.Arguments[6] as AsyncEventingBasicConsumer;
+        Assert.NotNull(consumer);
+
+        // Simulate message delivery
+        await consumer.HandleBasicDeliver(
+            consumerTag: "ctag",
+            deliveryTag: eventArgs.DeliveryTag,
+            redelivered: false,
+            exchange: string.Empty,
+            routingKey: string.Empty,
+            properties: eventArgs.BasicProperties,
+            body: eventArgs.Body.ToArray());
+
+        // Assert
+        if (manualAck)
+        {
+            mockChannel.Verify(channel => channel.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when ManualAck is true.");
+        }
+        else
+        {
+            mockChannel.Verify(channel => channel.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()), Times.AtLeastOnce, "BasicAck should be called when ManualAck is false.");
+        }
     }
 }
