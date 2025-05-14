@@ -145,7 +145,6 @@ public class RabbitMQTriggerBindingTests
 
         Assert.NotNull(basicConsumeInvocation);
 
-        // The third argument is the consumer
         var consumer = basicConsumeInvocation.Arguments[6] as AsyncEventingBasicConsumer;
         Assert.NotNull(consumer);
 
