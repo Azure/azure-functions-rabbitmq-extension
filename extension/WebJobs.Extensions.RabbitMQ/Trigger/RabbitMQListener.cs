@@ -149,7 +149,13 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
             else if (!this.manualAck)
             {
                 // Acknowledge the existing message if manualAck is not set and function execution was successful.
+                this.logger.LogDebug($"Acknowledging message for {this.logDetails} since manualAck is not set.");
                 this.channel.BasicAck(args.DeliveryTag, multiple: false);
+            }
+            else
+            {
+                // Do not acknowledge the message if manualAck is set and function execution was successful.
+                this.logger.LogDebug($"Not acknowledging message for {this.logDetails} since manualAck is set.");
             }
         }
     }

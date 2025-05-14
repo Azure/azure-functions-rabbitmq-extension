@@ -17,13 +17,13 @@ public class RabbitMQMessageActions
         this.channel = channel;
     }
 
-    public void BasicReject(ulong deliveryTag)
+    public void BasicReject(ulong deliveryTag, bool requeue = false)
     {
-        this.channel.BasicReject(deliveryTag, requeue: false);
+        this.channel.BasicReject(deliveryTag, requeue: requeue);
     }
 
-    public void BasicAck(ulong deliveryTag)
+    public void BasicAck(ulong deliveryTag, bool multiple = false)
     {
-        this.channel.BasicAck(deliveryTag, multiple: false);
+        this.channel.BasicAck(deliveryTag, multiple: multiple);
     }
 }
