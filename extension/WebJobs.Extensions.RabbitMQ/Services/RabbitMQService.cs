@@ -3,13 +3,16 @@
 
 using System;
 using System.Net.Security;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
 internal sealed class RabbitMQService : IRabbitMQService
 {
-    public RabbitMQService(string connectionString, bool disableCertificateValidation)
+    private readonly ILogger logger;
+
+    public RabbitMQService(string connectionString, bool disableCertificateValidation, ILogger logger)
     {
         var connectionFactory = new ConnectionFactory
         {
@@ -24,12 +27,13 @@ internal sealed class RabbitMQService : IRabbitMQService
             connectionFactory.Ssl.AcceptablePolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
         }
 
-        this.Model = connectionFactory.CreateConnection().CreateModel();
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.Model = this.AddShutdownHandler(connectionFactory.CreateConnection().CreateModel());
         this.PublishBatchLock = new object();
     }
 
-    public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation)
-        : this(connectionString, disableCertificateValidation)
+    public RabbitMQService(string connectionString, string queueName, bool disableCertificateValidation, ILogger logger)
+        : this(connectionString, disableCertificateValidation, logger)
     {
         _ = queueName ?? throw new ArgumentNullException(nameof(queueName));
 
@@ -47,5 +51,14 @@ internal sealed class RabbitMQService : IRabbitMQService
     public void ResetPublishBatch()
     {
         this.BasicPublishBatch = this.Model.CreateBasicPublishBatch();
+    }
+
+    private IModel AddShutdownHandler(IModel model)
+    {
+        model.ModelShutdown += (sender, args) =>
+        {
+            this.logger.LogError($"[!] Channel closed due to error: {args.Exception?.Message}");
+        };
+        return model;
     }
 }
