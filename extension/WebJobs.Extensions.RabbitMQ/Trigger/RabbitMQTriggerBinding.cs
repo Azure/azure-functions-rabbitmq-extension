@@ -24,7 +24,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
     private readonly bool disableAck = disableAck;
     private readonly ushort prefetchCount = prefetchCount;
     private readonly IDrainModeManager drainModeManager = drainModeManager;
-    private readonly RabbitMQMessageActions messageActions = new(service);
+    private readonly RabbitMQMessageActions messageActions = disableAck ? new(service) : null;
 
     public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
