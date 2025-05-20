@@ -24,7 +24,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
     private readonly bool manualAck = manualAck;
     private readonly ushort prefetchCount = prefetchCount;
     private readonly IDrainModeManager drainModeManager = drainModeManager;
-    private readonly RabbitMQMessageActions messageActions = new(service.Model);
+    private readonly RabbitMQMessageActions messageActions = new(service);
 
     public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
@@ -43,7 +43,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
         _ = context ?? throw new ArgumentNullException(nameof(context), "Missing listener context");
 
         return Task.FromResult<IListener>(new RabbitMQListener(
-            this.service.Model,
+            this.service,
             context.Executor,
             this.logger,
             context.Descriptor.Id,

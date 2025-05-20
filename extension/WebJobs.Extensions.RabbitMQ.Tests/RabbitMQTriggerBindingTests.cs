@@ -52,7 +52,7 @@ public class RabbitMQTriggerBindingTests
 
         ReadOnlyMemory<byte> body = buffer;
         var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
-        var messageActions = new RabbitMQMessageActions(Mock.Of<IModel>());
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>());
 
         var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
@@ -93,7 +93,7 @@ public class RabbitMQTriggerBindingTests
 
         ReadOnlyMemory<byte> body = buffer;
         var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
-        var messageActions = new RabbitMQMessageActions(Mock.Of<IModel>());
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>());
 
         IReadOnlyDictionary<string, object> bindingData = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
 
@@ -108,7 +108,10 @@ public class RabbitMQTriggerBindingTests
     public async Task RabbitMQTrigger_ManualAck_BasicAckBehavior(bool manualAck)
     {
         // Arrange
-        var mockChannel = new Mock<IModel>();
+        var mockservice = new Mock<IRabbitMQService>();
+        var mockModel = new Mock<IModel>();
+        mockservice.Setup(a => a.CreateConsumer()).Returns(new AsyncEventingBasicConsumer(mockModel.Object));
+
         var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
         var mockLogger = new Mock<ILogger>();
         var mockDrainModeManager = new Mock<IDrainModeManager>();
@@ -120,7 +123,7 @@ public class RabbitMQTriggerBindingTests
             .ReturnsAsync(new FunctionResult(true));
 
         var listener = new RabbitMQListener(
-            mockChannel.Object,
+            mockservice.Object,
             mockExecutor.Object,
             mockLogger.Object,
             functionId: "test-function",
@@ -139,13 +142,13 @@ public class RabbitMQTriggerBindingTests
         // Act
         await listener.StartAsync(CancellationToken.None);
 
-        // Find the IBasicConsumer passed to BasicConsume
-        IInvocation basicConsumeInvocation = mockChannel.Invocations
-            .FirstOrDefault(invocation => invocation.Method.Name == "BasicConsume");
+        // Find the Consumer instance passed to RabbitMQService.Consume method
+        IInvocation basicConsumeInvocation = mockservice.Invocations
+            .FirstOrDefault(invocation => invocation.Method.Name == "Consume");
 
         Assert.NotNull(basicConsumeInvocation);
 
-        var consumer = basicConsumeInvocation.Arguments[6] as AsyncEventingBasicConsumer;
+        var consumer = basicConsumeInvocation.Arguments[2] as AsyncEventingBasicConsumer;
         Assert.NotNull(consumer);
 
         // Simulate message delivery
@@ -161,11 +164,11 @@ public class RabbitMQTriggerBindingTests
         // Assert
         if (manualAck)
         {
-            mockChannel.Verify(channel => channel.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when ManualAck is true.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when ManualAck is true.");
         }
         else
         {
-            mockChannel.Verify(channel => channel.BasicAck(It.IsAny<ulong>(), It.IsAny<bool>()), Times.AtLeastOnce, "BasicAck should be called when ManualAck is false.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once, "BasicAck should be called when ManualAck is false.");
         }
     }
 }
