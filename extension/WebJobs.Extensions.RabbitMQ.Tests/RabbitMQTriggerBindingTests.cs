@@ -115,12 +115,12 @@ public class RabbitMQTriggerBindingTests
         await listener.StartAsync(CancellationToken.None);
 
         // Find the Consumer instance passed to RabbitMQService.Consume method
-        IInvocation basicConsumeInvocation = mockservice.Invocations
+        IInvocation consumeInvocation = mockservice.Invocations
             .FirstOrDefault(invocation => invocation.Method.Name == "Consume");
 
-        Assert.NotNull(basicConsumeInvocation);
+        Assert.NotNull(consumeInvocation);
 
-        var consumer = basicConsumeInvocation.Arguments[2] as AsyncEventingBasicConsumer;
+        var consumer = consumeInvocation.Arguments[2] as AsyncEventingBasicConsumer;
         Assert.NotNull(consumer);
 
         // Simulate message delivery
