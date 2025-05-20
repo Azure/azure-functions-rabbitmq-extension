@@ -75,14 +75,6 @@ public class RabbitMQTriggerBindingTests
     }
 
     [Fact]
-    public void RabbitMQTriggerAttribute_ManualAck_DefaultsToFalse()
-    {
-        var attribute = new RabbitMQTriggerAttribute("test-queue");
-        bool manualAck = attribute.ManualAck;
-        Assert.False(manualAck, "ManualAck should default to false.");
-    }
-
-    [Fact]
     public void RabbitMQTriggerBinding_CreateBindingData_IncludesRabbitMQMessageActions()
     {
         ulong deliveryTag = 1;
@@ -105,7 +97,7 @@ public class RabbitMQTriggerBindingTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task RabbitMQTrigger_ManualAck_BasicAckBehavior(bool manualAck)
+    public async Task RabbitMQTrigger_ManualAck_BasicAckBehavior(bool disableAck)
     {
         // Arrange
         var mockservice = new Mock<IRabbitMQService>();
@@ -128,7 +120,7 @@ public class RabbitMQTriggerBindingTests
             mockLogger.Object,
             functionId: "test-function",
             queueName: "test-queue",
-            manualAck: manualAck,
+            disableAck: disableAck,
             prefetchCount: 10,
             drainModeManager: mockDrainModeManager.Object);
 
@@ -162,13 +154,13 @@ public class RabbitMQTriggerBindingTests
             body: eventArgs.Body.ToArray());
 
         // Assert
-        if (manualAck)
+        if (disableAck)
         {
-            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when ManualAck is true.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when DisableAck is true.");
         }
         else
         {
-            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once, "BasicAck should be called when ManualAck is false.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once, "BasicAck should be called when DisableAck is false.");
         }
     }
 }

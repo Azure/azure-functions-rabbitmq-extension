@@ -15,13 +15,13 @@ using RabbitMQ.Client.Events;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
 
-internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName, bool manualAck, ILogger logger, Type parameterType, ushort prefetchCount, IDrainModeManager drainModeManager) : ITriggerBinding
+internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName, bool disableAck, ILogger logger, Type parameterType, ushort prefetchCount, IDrainModeManager drainModeManager) : ITriggerBinding
 {
     private readonly IRabbitMQService service = service;
     private readonly ILogger logger = logger;
     private readonly Type parameterType = parameterType;
     private readonly string queueName = queueName;
-    private readonly bool manualAck = manualAck;
+    private readonly bool disableAck = disableAck;
     private readonly ushort prefetchCount = prefetchCount;
     private readonly IDrainModeManager drainModeManager = drainModeManager;
     private readonly RabbitMQMessageActions messageActions = new(service);
@@ -48,7 +48,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
             this.logger,
             context.Descriptor.Id,
             this.queueName,
-            this.manualAck,
+            this.disableAck,
             this.prefetchCount,
             this.drainModeManager));
     }

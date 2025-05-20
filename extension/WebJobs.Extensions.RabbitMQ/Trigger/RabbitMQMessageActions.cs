@@ -2,9 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using Microsoft.Azure.WebJobs.Host.Scale;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 
 namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ;
@@ -18,23 +16,35 @@ public class RabbitMQMessageActions
         this.service = service;
     }
 
-    public void BasicReject(ulong deliveryTag, bool requeue = false)
+    public async Task BasicReject(ulong deliveryTag, bool requeue = false)
     {
-        this.service.Reject(deliveryTag, requeue, logDetails: string.Empty, throwOnMissing: true);
+        await Task.Run(() =>
+        {
+            this.service.Reject(deliveryTag, requeue, logDetails: string.Empty, throwOnMissing: true);
+        });
     }
 
-    public void BasicAck(ulong deliveryTag, bool multiple = false)
+    public async Task BasicAck(ulong deliveryTag, bool multiple = false)
     {
-        this.service.Acknowledge(deliveryTag, multiple, logDetails: string.Empty, throwOnMissing: true);
+        await Task.Run(() =>
+        {
+            this.service.Acknowledge(deliveryTag, multiple, logDetails: string.Empty, throwOnMissing: true);
+        });
     }
 
-    public void BasicPublish(string exchange, string routingKey, IBasicProperties basicProperties, ReadOnlyMemory<byte> body)
+    public async Task BasicPublish(string exchange, string routingKey, IBasicProperties basicProperties, ReadOnlyMemory<byte> body)
     {
-        this.service.Publish(exchange, routingKey, basicProperties, body);
+        await Task.Run(() =>
+        {
+            this.service.Publish(exchange, routingKey, basicProperties, body);
+        });
     }
 
-    public BasicGetResult BasicGet(string queue, bool autoAck)
+    public async Task<BasicGetResult> BasicGet(string queue, bool autoAck)
     {
-        return this.service.Get(queue, autoAck);
+        return await Task.Run(() =>
+        {
+            return this.service.Get(queue, autoAck);
+        });
     }
 }

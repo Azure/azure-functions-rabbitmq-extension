@@ -35,7 +35,7 @@ public sealed class RabbitMQTriggerAttribute(string queueName) : Attribute
     public bool DisableCertificateValidation { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether message acknowledgements would be done manually.
+    /// Gets or sets a value indicating whether message acknowledgements from service would be disabled and needs to be done manually.
     /// </summary>
-    public bool ManualAck { get; set; }
+    public bool DisableAck { get; set; }
 }

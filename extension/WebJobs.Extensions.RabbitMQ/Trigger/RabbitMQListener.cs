@@ -33,7 +33,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     private readonly ILogger logger;
     private readonly string queueName;
     private readonly ushort prefetchCount;
-    private readonly bool manualAck;
+    private readonly bool disableAck;
     private readonly string logDetails;
     private readonly IDrainModeManager drainModeManager;
 
@@ -47,7 +47,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         ILogger logger,
         string functionId,
         string queueName,
-        bool manualAck,
+        bool disableAck,
         ushort prefetchCount,
         IDrainModeManager drainModeManager)
     {
@@ -55,7 +55,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
-        this.manualAck = manualAck;
+        this.disableAck = disableAck;
         this.prefetchCount = prefetchCount;
         this.drainModeManager = drainModeManager;
         this.listenerCancellationTokenSource = new CancellationTokenSource();
@@ -144,7 +144,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
                 // Acknowledge the existing message after the message is re-published.
                 this.service.Acknowledge(args.DeliveryTag, multiple: false, logDetails: this.logDetails);
             }
-            else if (!this.manualAck)
+            else if (!this.disableAck)
             {
                 // Acknowledge the existing message if manualAck is not set and function execution was successful.
                 this.service.Acknowledge(args.DeliveryTag, multiple: false, logDetails: this.logDetails);
