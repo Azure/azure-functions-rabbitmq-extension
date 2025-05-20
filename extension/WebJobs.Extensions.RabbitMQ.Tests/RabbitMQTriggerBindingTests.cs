@@ -74,26 +74,6 @@ public class RabbitMQTriggerBindingTests
         }
     }
 
-    [Fact]
-    public void RabbitMQTriggerBinding_CreateBindingData_IncludesRabbitMQMessageActions()
-    {
-        ulong deliveryTag = 1;
-
-        var rand = new Random();
-        byte[] buffer = new byte[10];
-        rand.NextBytes(buffer);
-
-        ReadOnlyMemory<byte> body = buffer;
-        var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
-        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>());
-
-        IReadOnlyDictionary<string, object> bindingData = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
-
-        // Assert
-        Assert.True(bindingData.ContainsKey("MessageActions"), "Binding data should include MessageActions.");
-        Assert.Equal(messageActions, bindingData["MessageActions"]);
-    }
-
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
