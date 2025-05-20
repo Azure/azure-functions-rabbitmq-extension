@@ -42,9 +42,14 @@
       <email>vijilla@microsoft.com</email>
     </developer>
     <developer>
-      <id>jainharsh98</id>
-      <name>Harsh Jain</name>
-      <email>jainh@microsoft.com</email>
+      <id>aloiva</id>
+      <name>Pranava Vedagnya Gaddam</name>
+      <email>prgaddam@microsoft.com</email>
+    </developer>
+    <developer>
+      <id>manikantanallagatla</id>
+      <name>Manikanta Nallagatla</name>
+      <email>mnallagatla@microsoft.com</email>
     </developer>
   </developers>
 
