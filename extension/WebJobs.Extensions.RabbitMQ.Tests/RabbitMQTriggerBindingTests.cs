@@ -52,7 +52,7 @@ public class RabbitMQTriggerBindingTests
 
         ReadOnlyMemory<byte> body = buffer;
         var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
-        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>());
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>(), eventArgs);
 
         var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
@@ -136,11 +136,11 @@ public class RabbitMQTriggerBindingTests
         // Assert
         if (disableAck)
         {
-            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never, "BasicAck should not be called when DisableAck is true.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never, "BasicAck should not be called when DisableAck is true.");
         }
         else
         {
-            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Once, "BasicAck should be called when DisableAck is false.");
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Once, "BasicAck should be called when DisableAck is false.");
         }
     }
 }

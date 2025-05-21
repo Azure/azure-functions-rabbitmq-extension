@@ -25,11 +25,9 @@ public interface IRabbitMQService
 
     void OnMessageConsumed(string consumerTag, ulong deliveryTag);
 
-    void Acknowledge(ulong deliveryTag, bool multiple, string logDetails, bool throwOnMissing = false);
+    void Acknowledge(ulong deliveryTag, bool multiple, string logDetails);
 
-    void Reject(ulong deliveryTag, bool requeue, string logDetails, bool throwOnMissing = false);
-
-    BasicGetResult Get(string queue, bool autoAck);
+    void Reject(ulong deliveryTag, bool requeue, string logDetails);
 
     void Publish(string exchange, string routingKey, IBasicProperties basicProperties, ReadOnlyMemory<byte> body);
 

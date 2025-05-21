@@ -80,7 +80,7 @@ internal sealed class RabbitMQService : IRabbitMQService
         this.deliveredTags.TryAdd(deliveryTag, 0);
     }
 
-    public void Acknowledge(ulong deliveryTag, bool multiple, string logDetails, bool throwOnMissing = false)
+    public void Acknowledge(ulong deliveryTag, bool multiple, string logDetails)
     {
         if (this.deliveredTags.TryRemove(deliveryTag, out _))
         {
@@ -88,19 +88,11 @@ internal sealed class RabbitMQService : IRabbitMQService
         }
         else
         {
-            string message = $"Failed to acknowledge the message. deliveryTag ({deliveryTag}) not found.";
-            if (throwOnMissing)
-            {
-                throw new InvalidOperationException(message);
-            }
-            else
-            {
-                this.logger.LogError($"{message} for {logDetails}");
-            }
+            this.logger.LogError($"Failed to acknowledge the message. DeliveryTag ({deliveryTag}) not found for {logDetails}");
         }
     }
 
-    public void Reject(ulong deliveryTag, bool requeue, string logDetails, bool throwOnMissing = false)
+    public void Reject(ulong deliveryTag, bool requeue, string logDetails)
     {
         if (this.deliveredTags.TryRemove(deliveryTag, out _))
         {
@@ -108,21 +100,8 @@ internal sealed class RabbitMQService : IRabbitMQService
         }
         else
         {
-            string message = $"Failed to acknowledge the message. deliveryTag ({deliveryTag}) not found.";
-            if (throwOnMissing)
-            {
-                throw new InvalidOperationException(message);
-            }
-            else
-            {
-                this.logger.LogError(message);
-            }
+            this.logger.LogError($"Failed to reject the message. DeliveryTag ({deliveryTag}) not found for {logDetails}");
         }
-    }
-
-    public BasicGetResult Get(string queue, bool autoAck)
-    {
-        return this.model.BasicGet(queue, autoAck);
     }
 
     public void Publish(string exchange, string routingKey, IBasicProperties basicProperties, ReadOnlyMemory<byte> body)

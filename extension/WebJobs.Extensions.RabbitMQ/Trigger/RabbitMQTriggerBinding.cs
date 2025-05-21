@@ -24,7 +24,6 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
     private readonly bool disableAck = disableAck;
     private readonly ushort prefetchCount = prefetchCount;
     private readonly IDrainModeManager drainModeManager = drainModeManager;
-    private readonly RabbitMQMessageActions messageActions = disableAck ? new(service) : null;
 
     public Type TriggerValueType => typeof(BasicDeliverEventArgs);
 
@@ -33,7 +32,7 @@ internal class RabbitMQTriggerBinding(IRabbitMQService service, string queueName
     public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
     {
         var message = (BasicDeliverEventArgs)value;
-        IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message, this.messageActions);
+        IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message, this.disableAck ? new RabbitMQMessageActions(this.service, message) : null);
 
         return Task.FromResult<ITriggerData>(new TriggerData(new BasicDeliverEventArgsValueProvider(message, this.parameterType), bindingData));
     }
