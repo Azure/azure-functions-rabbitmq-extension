@@ -23,15 +23,15 @@ public class RabbitMQMessageActions
     {
         await Task.Run(() =>
         {
-            this.service.Reject(this.message.DeliveryTag, requeue, logDetails: $"ConsumerTag: {this.message.ConsumerTag}");
+            this.service.Reject(deliveryTag: this.message.DeliveryTag, requeue, logDetails: $"ConsumerTag: {this.message.ConsumerTag}");
         });
     }
 
-    public async Task Acknowledge(bool multiple = false)
+    public async Task Acknowledge()
     {
         await Task.Run(() =>
         {
-            this.service.Acknowledge(this.message.DeliveryTag, multiple, logDetails: $"ConsumerTag: {this.message.ConsumerTag}");
+            this.service.Acknowledge(deliveryTag: this.message.DeliveryTag, multiple: false, logDetails: $"ConsumerTag: {this.message.ConsumerTag}");
         });
     }
 }
