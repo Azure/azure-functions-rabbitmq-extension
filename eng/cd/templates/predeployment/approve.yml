@@ -11,3 +11,4 @@ jobs:
             [TEAM FOUNDATION]\Azure Functions IDC
           approvers: |-
             [TEAM FOUNDATION]\Azure Functions IDC
+          allowApproversToApproveTheirOwnRuns: false
