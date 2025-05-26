@@ -205,11 +205,12 @@ public class RabbitMQListenerTests
     private static RabbitMQListener GetScaleMonitor(string functionId, string queueName)
     {
         return new RabbitMQListener(
-            Mock.Of<IModel>(),
+            Mock.Of<IRabbitMQService>(),
             Mock.Of<ITriggeredFunctionExecutor>(),
             Mock.Of<ILogger>(),
             functionId,
             queueName,
+            false,
             7357,
             DrainModeManager);
     }
@@ -219,11 +220,12 @@ public class RabbitMQListenerTests
         (Mock<ILogger> mockLogger, List<string> logMessages) = CreateMockLogger();
 
         IScaleMonitor<RabbitMQTriggerMetrics> monitor = new RabbitMQListener(
-            Mock.Of<IModel>(),
+            Mock.Of<IRabbitMQService>(),
             Mock.Of<ITriggeredFunctionExecutor>(),
             mockLogger.Object,
             "testFunctionId",
             "testQueueName",
+            false,
             7357,
             DrainModeManager);
 

@@ -28,11 +28,12 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
     private const string RequeueCountHeaderName = "x-ms-rabbitmq-requeuecount";
 
-    private readonly IModel channel;
+    private readonly IRabbitMQService service;
     private readonly ITriggeredFunctionExecutor executor;
     private readonly ILogger logger;
     private readonly string queueName;
     private readonly ushort prefetchCount;
+    private readonly bool disableAck;
     private readonly string logDetails;
     private readonly IDrainModeManager drainModeManager;
 
@@ -41,18 +42,20 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
     private string consumerTag;
 
     public RabbitMQListener(
-        IModel channel,
+        IRabbitMQService service,
         ITriggeredFunctionExecutor executor,
         ILogger logger,
         string functionId,
         string queueName,
+        bool disableAck,
         ushort prefetchCount,
         IDrainModeManager drainModeManager)
     {
-        this.channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.queueName = !string.IsNullOrWhiteSpace(queueName) ? queueName : throw new ArgumentNullException(nameof(queueName));
+        this.disableAck = disableAck;
         this.prefetchCount = prefetchCount;
         this.drainModeManager = drainModeManager;
         this.listenerCancellationTokenSource = new CancellationTokenSource();
@@ -90,14 +93,16 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         // The RabbitMQ server (v3.11.2 as of latest) only has support for prefetch size of zero (no specific limit).
         // See: https://github.com/rabbitmq/rabbitmq-server/blob/v3.11.2/deps/rabbit/src/rabbit_channel.erl#L1543.
         // See: https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.prefetch-size for protocol specification.
-        this.channel.BasicQos(prefetchSize: 0, this.prefetchCount, global: false);
+        this.service.ConfigureQos(prefetchSize: 0, this.prefetchCount, global: false);
 
         // We should use AsyncEventingBasicConsumer to create the consumer since our handler method is async. Using
         // EventingBasicConsumer led to issue: https://github.com/Azure/azure-functions-rabbitmq-extension/issues/211).
-        var consumer = new AsyncEventingBasicConsumer(this.channel);
+        AsyncEventingBasicConsumer consumer = this.service.CreateConsumer();
+
         consumer.Received += ReceivedHandler;
 
-        this.consumerTag = this.channel.BasicConsume(this.queueName, autoAck: false, consumer);
+        this.consumerTag = this.service.Consume(this.queueName, autoAck: false, consumer);
+        this.logger.LogDebug($"Started consuming with consumerTag: {this.consumerTag} for {this.logDetails}.");
 
         this.listenerState = ListenerStarted;
         this.logger.LogDebug($"Started RabbitMQ trigger listener for {this.logDetails}.");
@@ -106,6 +111,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
         async Task ReceivedHandler(object model, BasicDeliverEventArgs args)
         {
+            this.service.OnMessageConsumed(args.ConsumerTag, args.DeliveryTag);
+
             using Activity activity = RabbitMQActivitySource.StartActivity(args.BasicProperties);
 
             var input = new TriggeredFunctionData() { TriggerValue = args };
@@ -123,7 +130,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
                 {
                     // Discard or 'dead-letter' the message. See: https://www.rabbitmq.com/dlx.html.
                     this.logger.LogDebug($"Rejecting message since the requeue count exceeded for {this.logDetails}.");
-                    this.channel.BasicReject(args.DeliveryTag, requeue: false);
+                    this.service.Reject(args.DeliveryTag, requeue: false, logDetails: this.logDetails);
                     return;
                 }
 
@@ -132,11 +139,21 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
                 // We cannot call BasicReject() on the message with requeue = true since that would not enable a fixed
                 // number of retry attempts. See: https://stackoverflow.com/q/23158310.
-                this.channel.BasicPublish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
-            }
+                this.service.Publish(exchange: string.Empty, routingKey: this.queueName, args.BasicProperties, args.Body);
 
-            // Acknowledge the existing message only after the message (in case of failure) is re-published.
-            this.channel.BasicAck(args.DeliveryTag, multiple: false);
+                // Acknowledge the existing message after the message is re-published.
+                this.service.Acknowledge(args.DeliveryTag, multiple: false, logDetails: this.logDetails);
+            }
+            else if (!this.disableAck)
+            {
+                // Acknowledge the existing message if manualAck is not set and function execution was successful.
+                this.service.Acknowledge(args.DeliveryTag, multiple: false, logDetails: this.logDetails);
+            }
+            else
+            {
+                // Do not acknowledge the message if manualAck is set and function execution was successful.
+                this.logger.LogDebug($"Not acknowledging message for {this.logDetails} since manualAck is set.");
+            }
         }
     }
 
@@ -147,8 +164,8 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
         if (previousState == ListenerStarted)
         {
             // TODO: Close RabbitMQ connection along with the channel.
-            this.channel.BasicCancel(this.consumerTag);
-            this.channel.Close();
+            this.service.Cancel(this.consumerTag);
+            this.service.Close();
 
             if (!this.drainModeManager.IsDrainModeEnabled)
             {
@@ -169,7 +186,7 @@ internal sealed class RabbitMQListener : IListener, IScaleMonitor<RabbitMQTrigge
 
     public Task<RabbitMQTriggerMetrics> GetMetricsAsync()
     {
-        QueueDeclareOk queueInfo = this.channel.QueueDeclarePassive(this.queueName);
+        QueueDeclareOk queueInfo = this.service.GetQueueInfo(this.queueName);
 
         var metrics = new RabbitMQTriggerMetrics
         {

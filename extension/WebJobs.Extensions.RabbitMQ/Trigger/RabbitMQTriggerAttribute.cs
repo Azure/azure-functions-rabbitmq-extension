@@ -33,4 +33,9 @@ public sealed class RabbitMQTriggerAttribute(string queueName) : Attribute
     /// production. Does not apply when SSL is disabled.
     /// </summary>
     public bool DisableCertificateValidation { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether message acknowledgements from service would be disabled and needs to be done manually.
+    /// </summary>
+    public bool DisableAck { get; set; }
 }

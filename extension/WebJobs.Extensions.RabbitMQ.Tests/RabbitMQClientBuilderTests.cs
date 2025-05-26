@@ -22,13 +22,13 @@ public class RabbitMQClientBuilderTests
         var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
         var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig, DrainModeManager);
-        mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false)).Returns(new Mock<IRabbitMQService>().Object);
+        mockServiceFactory.Setup(m => m.CreateService(It.IsAny<string>(), false, It.IsAny<ILogger>())).Returns(new Mock<IRabbitMQService>().Object);
         RabbitMQAttribute attr = GetTestAttribute();
 
         var clientBuilder = new RabbitMQClientBuilder(config, options);
-        IModel model = clientBuilder.Convert(attr);
+        IRabbitMQService service = clientBuilder.Convert(attr);
 
-        mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), false), Times.Exactly(1));
+        mockServiceFactory.Verify(m => m.CreateService(It.IsAny<string>(), false, It.IsAny<ILogger>()), Times.Exactly(1));
     }
 
     [Fact]
@@ -36,17 +36,17 @@ public class RabbitMQClientBuilderTests
     {
         var options = new OptionsWrapper<RabbitMQOptions>(new RabbitMQOptions());
         var mockServiceFactory = new Mock<IRabbitMQServiceFactory>();
-        mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), false))
+        mockServiceFactory.SetupSequence(m => m.CreateService(It.IsAny<string>(), false, It.IsAny<ILogger>()))
             .Returns(GetRabbitMQService());
         var config = new RabbitMQExtensionConfigProvider(options, new Mock<INameResolver>().Object, mockServiceFactory.Object, new LoggerFactory(), EmptyConfig, DrainModeManager);
         RabbitMQAttribute attr = GetTestAttribute();
 
         var clientBuilder = new RabbitMQClientBuilder(config, options);
 
-        IModel model = clientBuilder.Convert(attr);
-        IModel model2 = clientBuilder.Convert(attr);
+        IRabbitMQService service = clientBuilder.Convert(attr);
+        IRabbitMQService service2 = clientBuilder.Convert(attr);
 
-        Assert.Equal(model, model2);
+        Assert.Equal(service, service2);
     }
 
     private static RabbitMQAttribute GetTestAttribute()
@@ -60,7 +60,6 @@ public class RabbitMQClientBuilderTests
     private static IRabbitMQService GetRabbitMQService()
     {
         var mockService = new Mock<IRabbitMQService>();
-        mockService.Setup(a => a.Model).Returns(new Mock<IModel>().Object);
         return mockService.Object;
     }
 }

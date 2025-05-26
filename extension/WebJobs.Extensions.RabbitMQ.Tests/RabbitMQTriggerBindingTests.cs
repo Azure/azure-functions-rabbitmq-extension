@@ -3,6 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.WebJobs.Host.Executors;
+using Microsoft.Extensions.Logging;
+using Moq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Xunit;
@@ -23,6 +30,7 @@ public class RabbitMQTriggerBindingTests
             ["RoutingKey"] = typeof(string),
             ["BasicProperties"] = typeof(IBasicProperties),
             ["Body"] = typeof(ReadOnlyMemory<byte>),
+            ["MessageActions"] = typeof(RabbitMQMessageActions),
         };
 
         IReadOnlyDictionary<string, Type> actualContract = RabbitMQTriggerBinding.CreateBindingDataContract();
@@ -44,6 +52,7 @@ public class RabbitMQTriggerBindingTests
 
         ReadOnlyMemory<byte> body = buffer;
         var eventArgs = new BasicDeliverEventArgs("ConsumerName", deliveryTag, false, "n/a", "QueueName", null, body);
+        var messageActions = new RabbitMQMessageActions(Mock.Of<IRabbitMQService>(), eventArgs);
 
         var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
@@ -54,13 +63,84 @@ public class RabbitMQTriggerBindingTests
             ["Body"] = body,
             ["Exchange"] = eventArgs.Exchange,
             ["BasicProperties"] = eventArgs.BasicProperties,
+            ["MessageActions"] = messageActions,
         };
 
-        IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs);
+        IReadOnlyDictionary<string, object> actualContract = RabbitMQTriggerBinding.CreateBindingData(eventArgs, messageActions);
 
         foreach (KeyValuePair<string, object> item in actualContract)
         {
             Assert.Equal(data[item.Key], item.Value);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RabbitMQTrigger_ManualAck_BasicAckBehavior(bool disableAck)
+    {
+        // Arrange
+        var mockservice = new Mock<IRabbitMQService>();
+        var mockModel = new Mock<IModel>();
+        mockservice.Setup(a => a.CreateConsumer()).Returns(new AsyncEventingBasicConsumer(mockModel.Object));
+
+        var mockExecutor = new Mock<ITriggeredFunctionExecutor>();
+        var mockLogger = new Mock<ILogger>();
+        var mockDrainModeManager = new Mock<IDrainModeManager>();
+        var mockBasicProperties = new Mock<IBasicProperties>();
+
+        // Simulate successful function execution
+        mockExecutor
+            .Setup(executor => executor.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FunctionResult(true));
+
+        var listener = new RabbitMQListener(
+            mockservice.Object,
+            mockExecutor.Object,
+            mockLogger.Object,
+            functionId: "test-function",
+            queueName: "test-queue",
+            disableAck: disableAck,
+            prefetchCount: 10,
+            drainModeManager: mockDrainModeManager.Object);
+
+        var eventArgs = new BasicDeliverEventArgs
+        {
+            DeliveryTag = 1,
+            Body = new ReadOnlyMemory<byte>([0x01, 0x02, 0x03]),
+            BasicProperties = mockBasicProperties.Object,
+        };
+
+        // Act
+        await listener.StartAsync(CancellationToken.None);
+
+        // Find the Consumer instance passed to RabbitMQService.Consume method
+        IInvocation consumeInvocation = mockservice.Invocations
+            .FirstOrDefault(invocation => invocation.Method.Name == "Consume");
+
+        Assert.NotNull(consumeInvocation);
+
+        var consumer = consumeInvocation.Arguments[2] as AsyncEventingBasicConsumer;
+        Assert.NotNull(consumer);
+
+        // Simulate message delivery
+        await consumer.HandleBasicDeliver(
+            consumerTag: "ctag",
+            deliveryTag: eventArgs.DeliveryTag,
+            redelivered: false,
+            exchange: string.Empty,
+            routingKey: string.Empty,
+            properties: eventArgs.BasicProperties,
+            body: eventArgs.Body.ToArray());
+
+        // Assert
+        if (disableAck)
+        {
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never, "BasicAck should not be called when DisableAck is true.");
+        }
+        else
+        {
+            mockservice.Verify(channel => channel.Acknowledge(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Once, "BasicAck should be called when DisableAck is false.");
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
@@ -84,7 +84,7 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
         string[] keyArray =
             [connectionString, queueName, disableCertificateValidation.ToString()];
         string key = string.Join(",", keyArray);
-        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation));
+        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation, this.logger));
     }
 
     // Overloaded method used only for getting the RabbitMQ client.
@@ -93,6 +93,6 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
         string[] keyArray =
             [connectionString, disableCertificateValidation.ToString()];
         string key = string.Join(",", keyArray);
-        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation));
+        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation, this.logger));
     }
 }
