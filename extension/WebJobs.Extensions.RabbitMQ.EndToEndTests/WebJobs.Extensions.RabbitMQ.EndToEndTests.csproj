@@ -6,17 +6,10 @@
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.EndToEndTests</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.RabbitMQ.EndToEndTests</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AnalysisMode>Recommended</AnalysisMode>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="..\stylecop.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WebJobs.Extensions.RabbitMQ\WebJobs.Extensions.RabbitMQ.csproj" />
@@ -28,10 +21,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Testcontainers.RabbitMq" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">

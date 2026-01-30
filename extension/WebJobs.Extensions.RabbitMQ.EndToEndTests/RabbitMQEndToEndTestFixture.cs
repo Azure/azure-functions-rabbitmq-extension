@@ -3,7 +3,6 @@
 
 using System.Text;
 using DotNet.Testcontainers.Builders;
-using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,9 +19,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.EndToEndTests;
 public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
 {
     private readonly RabbitMqContainer _rabbitMqContainer;
-    private IHost? _host;
-    private IConnection? _connection;
-    private IModel? _channel;
+    private IHost _host;
+    private IConnection _connection;
+    private IModel _channel;
 
     public RabbitMQEndToEndTestFixture()
     {
@@ -55,7 +54,7 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
     /// <summary>
     /// Gets the received messages from the trigger test functions.
     /// </summary>
-    public List<string> ReceivedMessages { get; } = new();
+    public List<string> ReceivedMessages { get; } = new List<string>();
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
@@ -71,6 +70,15 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
+        // Pre-create all queues used by trigger functions before starting the host
+        // This is required because the RabbitMQ extension validates queue existence on startup
+        _channel.QueueDeclare(queue: TriggerFunctions.StringTriggerQueueName, durable: false, exclusive: false, autoDelete: false);
+        _channel.QueueDeclare(queue: TriggerFunctions.ByteArrayTriggerQueueName, durable: false, exclusive: false, autoDelete: false);
+        _channel.QueueDeclare(queue: TriggerFunctions.PocoTriggerQueueName, durable: false, exclusive: false, autoDelete: false);
+        _channel.QueueDeclare(queue: TriggerFunctions.BasicDeliverEventArgsTriggerQueueName, durable: false, exclusive: false, autoDelete: false);
+        _channel.QueueDeclare(queue: OutputFunctions.TriggerOutputQueueName, durable: false, exclusive: false, autoDelete: false);
+        _channel.QueueDeclare(queue: OutputFunctions.OutputResultQueueName, durable: false, exclusive: false, autoDelete: false);
+
         // Build and start the WebJobs host
         var builder = new HostBuilder()
             .ConfigureWebJobs(webJobsBuilder =>
@@ -79,7 +87,7 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
             })
             .ConfigureAppConfiguration(config =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
+                config.AddInMemoryCollection(new Dictionary<string, string>
                 {
                     ["RabbitMQConnection"] = ConnectionString,
                 });
@@ -101,7 +109,7 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
     /// <inheritdoc/>
     public async Task DisposeAsync()
     {
-        if (_host is not null)
+        if (_host != null)
         {
             await _host.StopAsync();
             _host.Dispose();
@@ -194,8 +202,8 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
 /// <summary>
 /// Collection definition for RabbitMQ E2E tests.
 /// </summary>
-[CollectionDefinition(Name)]
-public class RabbitMQTestCollection : ICollectionFixture<RabbitMQEndToEndTestFixture>
+[CollectionDefinition(RabbitMQE2ETestFixtureDefinition.Name)]
+public class RabbitMQE2ETestFixtureDefinition : ICollectionFixture<RabbitMQEndToEndTestFixture>
 {
     public const string Name = "RabbitMQ E2E Tests";
 }

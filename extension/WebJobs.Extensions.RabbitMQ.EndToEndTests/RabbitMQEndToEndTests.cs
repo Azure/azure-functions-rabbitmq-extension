@@ -9,7 +9,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.EndToEndTests;
 /// <summary>
 /// End-to-end tests for RabbitMQ trigger and output bindings.
 /// </summary>
-[Collection(RabbitMQTestCollection.Name)]
+[Collection(RabbitMQE2ETestFixtureDefinition.Name)]
 public class RabbitMQEndToEndTests
 {
     private readonly RabbitMQEndToEndTestFixture _fixture;
@@ -21,7 +21,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task StringValue_SingleTrigger_ReceivesMessage()
+    public async Task StringValueSingleTriggerReceivesMessage()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
@@ -40,7 +40,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task ByteArray_Trigger_ReceivesMessage()
+    public async Task ByteArrayTriggerReceivesMessage()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
@@ -59,7 +59,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task POCO_Trigger_DeserializesMessage()
+    public async Task PocoTriggerDeserializesMessage()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
@@ -83,7 +83,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task BasicDeliverEventArgs_Trigger_ReceivesRawMessage()
+    public async Task BasicDeliverEventArgsTriggerReceivesRawMessage()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
@@ -102,7 +102,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task Trigger_With_Output_Binding_ProcessesMessage()
+    public async Task TriggerWithOutputBindingProcessesMessage()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
@@ -123,7 +123,7 @@ public class RabbitMQEndToEndTests
     }
 
     [Fact]
-    public async Task Multiple_Messages_ProcessedInOrder()
+    public async Task MultipleMessagesProcessedInOrder()
     {
         // Arrange
         _fixture.ClearReceivedMessages();
