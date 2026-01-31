@@ -1,0 +1,17 @@
+version: '3.8'
+
+# Override file for local development and debugging
+# Use: docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+
+services:
+  rabbitmq:
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  azurite:
+    volumes:
+      - azurite-data:/data
+
+volumes:
+  rabbitmq-data:
+  azurite-data:

@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-e2e
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - rabbitmq-e2e-network
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: azurite-e2e
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --skipApiVersionCheck"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10001"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - rabbitmq-e2e-network
+
+  java-app:
+    build:
+      context: ../..
+      dockerfile: extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/FunctionApps/java/Dockerfile
+    container_name: java-rabbitmq-e2e
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      - RabbitMQConnectionString=amqp://guest:guest@rabbitmq:5672
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+    ports:
+      - "7071:7071"
+    networks:
+      - rabbitmq-e2e-network
+
+  python-app:
+    build:
+      context: ../..
+      dockerfile: extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/FunctionApps/python/Dockerfile
+    container_name: python-rabbitmq-e2e
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      - RabbitMQConnectionString=amqp://guest:guest@rabbitmq:5672
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+    ports:
+      - "7072:7071"
+    networks:
+      - rabbitmq-e2e-network
+
+networks:
+  rabbitmq-e2e-network:
+    driver: bridge
