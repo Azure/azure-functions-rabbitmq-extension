@@ -22,10 +22,19 @@ steps:
     displayName: Verify Docker availability
 
   - task: DotNetCoreCLI@2
-    displayName: Run E2E Tests
+    displayName: Run C# E2E Tests
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj'
+      arguments: '--configuration Release --logger trx --results-directory $(Agent.TempDirectory)/TestResults ${{ parameters.testFilter }}'
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+  - task: DotNetCoreCLI@2
+    displayName: Run Multi-Language E2E Tests (Java/Python)
+    inputs:
+      command: test
+      projects: 'extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj'
       arguments: '--configuration Release --logger trx --results-directory $(Agent.TempDirectory)/TestResults ${{ parameters.testFilter }}'
     env:
       DOCKER_HOST: unix:///var/run/docker.sock
