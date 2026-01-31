@@ -68,3 +68,16 @@ extends:
             parameters:
               isTaggedBuild: ${{ variables.isTaggedBuild }}
               version: ${{ variables.version }}
+
+      - stage: e2eTestLinux
+        displayName: E2E Test Extension (Linux)
+        dependsOn: stage1
+        pool:
+          name: 1es-pool-azfunc
+          image: 1es-ubuntu-22.04
+          os: linux
+        jobs:
+          - job: RunE2ETests
+            displayName: Run E2E Tests with Docker
+            steps:
+              - template: /eng/ci/templates/shared/run-e2e-tests.yml@self

@@ -1,0 +1,40 @@
+# E2E Test Template for RabbitMQ Extension
+# This template runs end-to-end tests using Testcontainers with Docker
+# Requires Linux agent with Docker support
+
+parameters:
+  - name: testFilter
+    type: string
+    default: ''
+    displayName: 'Optional test filter expression'
+
+steps:
+  - task: UseDotNet@2
+    displayName: Acquire .NET 8.0 SDK
+    inputs:
+      packageType: sdk
+      version: 8.0.x
+      performMultiLevelLookup: true
+
+  - script: |
+      docker --version
+      docker info
+    displayName: Verify Docker availability
+
+  - task: DotNetCoreCLI@2
+    displayName: Run E2E Tests
+    inputs:
+      command: test
+      projects: 'extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj'
+      arguments: '--configuration Release --logger trx --results-directory $(Agent.TempDirectory)/TestResults ${{ parameters.testFilter }}'
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+  - task: PublishTestResults@2
+    displayName: Publish E2E Test Results
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
+      testRunTitle: 'RabbitMQ Extension E2E Tests'
+      mergeTestResults: true
