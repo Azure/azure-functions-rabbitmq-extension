@@ -15,7 +15,8 @@ public class JavaAppTest : BaseE2E
     {
     }
 
-    [Fact(Skip = "Requires Docker Compose environment")]
+    [Fact]
+    [Trait("Category", "DockerCompose")]
     public async Task Java_HttpTriggerRabbitMQOutput_SendsMessage()
     {
         // Arrange
@@ -40,7 +41,8 @@ public class JavaAppTest : BaseE2E
         Assert.Contains(testMessage, receivedMessage);
     }
 
-    [Fact(Skip = "Requires Docker Compose environment")]
+    [Fact]
+    [Trait("Category", "DockerCompose")]
     public async Task Java_RabbitMQTrigger_ProcessesMultipleMessages()
     {
         // Arrange

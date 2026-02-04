@@ -15,7 +15,8 @@ public class PythonAppTest : BaseE2E
     {
     }
 
-    [Fact(Skip = "Requires Docker Compose environment")]
+    [Fact]
+    [Trait("Category", "DockerCompose")]
     public async Task Python_HttpTriggerRabbitMQOutput_SendsMessage()
     {
         // Arrange
@@ -40,7 +41,8 @@ public class PythonAppTest : BaseE2E
         Assert.Contains(testMessage, receivedMessage);
     }
 
-    [Fact(Skip = "Requires Docker Compose environment")]
+    [Fact]
+    [Trait("Category", "DockerCompose")]
     public async Task Python_RabbitMQTrigger_ProcessesMultipleMessages()
     {
         // Arrange
