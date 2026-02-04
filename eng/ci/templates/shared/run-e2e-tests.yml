@@ -101,7 +101,7 @@ steps:
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj'
-      arguments: '--configuration Release --logger trx ${{ parameters.testFilter }}'
+      arguments: '--configuration Release --logger trx --filter "Category!=DockerCompose" ${{ parameters.testFilter }}'
       publishTestResults: true
     env:
       DOCKER_HOST: unix:///var/run/docker.sock

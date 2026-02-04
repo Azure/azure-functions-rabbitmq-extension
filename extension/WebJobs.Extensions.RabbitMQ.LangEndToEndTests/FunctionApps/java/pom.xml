@@ -12,9 +12,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
-        <azure.functions.maven.plugin.version>1.36.0</azure.functions.maven.plugin.version>
-        <azure.functions.java.library.version>3.1.0</azure.functions.java.library.version>
-        <azure.functions.java.library.rabbitmq.version>2.0.0</azure.functions.java.library.rabbitmq.version>
+        <azure.functions.maven.plugin.version>1.40.0</azure.functions.maven.plugin.version>
+        <azure.functions.java.library.version>3.2.3</azure.functions.java.library.version>
+        <azure.functions.java.library.rabbitmq.version>2.1.0</azure.functions.java.library.rabbitmq.version>
         <functionAppName>RabbitMQE2E</functionAppName>
     </properties>
 
