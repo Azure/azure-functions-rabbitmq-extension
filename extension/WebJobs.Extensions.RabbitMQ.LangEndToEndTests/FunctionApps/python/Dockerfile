@@ -1,9 +1,9 @@
 # Use .NET 8 SDK as base with Node.js for npm install of Core Tools
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
 
-# Install Node.js and Python 3.10
+# Install Node.js and Python 3.11
 RUN apt-get update && \
-    apt-get install -y curl gnupg python3 python3-pip python3-venv && \
+    apt-get install -y curl gnupg python3.11 python3-pip python3-venv && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*

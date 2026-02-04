@@ -11,12 +11,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.LangEndToEndTests.Tests;
 /// <summary>
 /// Infrastructure tests to verify RabbitMQ and Azurite connectivity.
 /// </summary>
+[Collection("RabbitMQ Lang E2E")]
 public class InfrastructureTest
 {
     private readonly ITestOutputHelper _output;
+    private readonly RabbitMQE2EFixture _fixture;
 
-    public InfrastructureTest(ITestOutputHelper output)
+    public InfrastructureTest(RabbitMQE2EFixture fixture, ITestOutputHelper output)
     {
+        _fixture = fixture;
         _output = output;
     }
 

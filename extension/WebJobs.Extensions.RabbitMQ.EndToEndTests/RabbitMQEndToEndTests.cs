@@ -35,8 +35,9 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(1, _defaultTimeout);
         Assert.True(received, "Timed out waiting for message");
-        Assert.Single(_fixture.ReceivedMessages);
-        Assert.Equal(testMessage, _fixture.ReceivedMessages[0]);
+        var messages = _fixture.ReceivedMessages.ToArray();
+        Assert.Single(messages);
+        Assert.Equal(testMessage, messages[0]);
     }
 
     [Fact]
@@ -54,8 +55,9 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(1, _defaultTimeout);
         Assert.True(received, "Timed out waiting for message");
-        Assert.Single(_fixture.ReceivedMessages);
-        Assert.Equal(testMessage, _fixture.ReceivedMessages[0]);
+        var messages = _fixture.ReceivedMessages.ToArray();
+        Assert.Single(messages);
+        Assert.Equal(testMessage, messages[0]);
     }
 
     [Fact]
@@ -78,8 +80,9 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(1, _defaultTimeout);
         Assert.True(received, "Timed out waiting for message");
-        Assert.Single(_fixture.ReceivedMessages);
-        Assert.Equal($"{testPoco.Id}:{testPoco.Content}", _fixture.ReceivedMessages[0]);
+        var messages = _fixture.ReceivedMessages.ToArray();
+        Assert.Single(messages);
+        Assert.Equal($"{testPoco.Id}:{testPoco.Content}", messages[0]);
     }
 
     [Fact]
@@ -97,8 +100,9 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(1, _defaultTimeout);
         Assert.True(received, "Timed out waiting for message");
-        Assert.Single(_fixture.ReceivedMessages);
-        Assert.Equal(testMessage, _fixture.ReceivedMessages[0]);
+        var receivedMessages = _fixture.ReceivedMessages.ToArray();
+        Assert.Single(receivedMessages);
+        Assert.Equal(testMessage, receivedMessages[0]);
     }
 
     [Fact]
@@ -118,8 +122,9 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(1, _defaultTimeout);
         Assert.True(received, "Timed out waiting for processed message");
-        Assert.Single(_fixture.ReceivedMessages);
-        Assert.Equal(expectedProcessedMessage, _fixture.ReceivedMessages[0]);
+        var messages = _fixture.ReceivedMessages.ToArray();
+        Assert.Single(messages);
+        Assert.Equal(expectedProcessedMessage, messages[0]);
     }
 
     [Fact]
@@ -145,12 +150,13 @@ public class RabbitMQEndToEndTests
         // Assert
         var received = await _fixture.WaitForMessagesAsync(messages.Count, _defaultTimeout);
         Assert.True(received, "Timed out waiting for messages");
-        Assert.Equal(messages.Count, _fixture.ReceivedMessages.Count);
+        var receivedMessages = _fixture.ReceivedMessages.ToArray();
+        Assert.Equal(messages.Count, receivedMessages.Length);
 
         // Verify all messages were received (order may vary due to concurrent processing)
         foreach (var message in messages)
         {
-            Assert.Contains(message, _fixture.ReceivedMessages);
+            Assert.Contains(message, receivedMessages);
         }
     }
 }

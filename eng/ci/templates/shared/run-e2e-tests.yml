@@ -1,6 +1,7 @@
 # E2E Test Template for RabbitMQ Extension
 # This template runs end-to-end tests using Testcontainers with Docker
 # Requires Linux agent with Docker support
+# NOTE: 1ES pools with Network Isolation may not have Docker available
 
 parameters:
   - name: testFilter
@@ -17,33 +18,41 @@ steps:
       performMultiLevelLookup: true
 
   - script: |
-      docker --version
-      docker info
-    displayName: Verify Docker availability
+      if command -v docker &> /dev/null && docker info &> /dev/null; then
+        echo "##vso[task.setvariable variable=dockerAvailable]true"
+        docker --version
+        docker info
+      else
+        echo "##vso[task.setvariable variable=dockerAvailable]false"
+        echo "Docker is not available on this agent. Skipping E2E tests."
+      fi
+    displayName: Check Docker availability
+    name: dockerCheck
 
   - task: DotNetCoreCLI@2
     displayName: Run C# E2E Tests
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj'
-      arguments: '--configuration Release --logger trx --results-directory $(Agent.TempDirectory)/TestResults ${{ parameters.testFilter }}'
+      arguments: '--configuration Release --logger trx ${{ parameters.testFilter }}'
+      publishTestResults: true
     env:
       DOCKER_HOST: unix:///var/run/docker.sock
 
   - task: DotNetCoreCLI@2
     displayName: Run Multi-Language E2E Tests (Java/Python)
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj'
-      arguments: '--configuration Release --logger trx --results-directory $(Agent.TempDirectory)/TestResults ${{ parameters.testFilter }}'
+      arguments: '--configuration Release --logger trx ${{ parameters.testFilter }}'
+      publishTestResults: true
     env:
       DOCKER_HOST: unix:///var/run/docker.sock
 
-  - task: PublishTestResults@2
-    displayName: Publish E2E Test Results
-    condition: succeededOrFailed()
-    inputs:
-      testResultsFormat: 'VSTest'
-      testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
-      testRunTitle: 'RabbitMQ Extension E2E Tests'
-      mergeTestResults: true
+  - script: |
+      echo "E2E tests were skipped because Docker is not available on this agent."
+      echo "To run E2E tests locally, ensure Docker Desktop is running."
+    displayName: E2E Tests Skipped Notice
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'false'))

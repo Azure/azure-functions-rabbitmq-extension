@@ -1,6 +1,7 @@
-// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System.Collections.Concurrent;
 using System.Text;
 using DotNet.Testcontainers.Builders;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,7 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
             .WithPortBinding(5672, true)
             .WithPortBinding(15672, true)
             .WithWaitStrategy(Wait.ForUnixContainer()
-                .UntilPortIsAvailable(5672))
+                .UntilMessageIsLogged("Server startup complete"))
             .Build();
     }
 
@@ -53,8 +54,10 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
 
     /// <summary>
     /// Gets the received messages from the trigger test functions.
+    /// This is a thread-safe collection as messages are written from WebJobs host threads
+    /// and read from test threads.
     /// </summary>
-    public List<string> ReceivedMessages { get; } = new List<string>();
+    public ConcurrentQueue<string> ReceivedMessages { get; } = new ConcurrentQueue<string>();
 
     /// <inheritdoc/>
     public async Task InitializeAsync()

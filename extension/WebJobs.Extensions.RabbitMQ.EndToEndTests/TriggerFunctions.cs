@@ -34,7 +34,7 @@ public class TriggerFunctions
         [RabbitMQTrigger(StringTriggerQueueName, ConnectionStringSetting = "RabbitMQConnection")] string message)
     {
         _logger.LogInformation("StringTriggerFunction received: {Message}", message);
-        _fixture.ReceivedMessages.Add(message);
+        _fixture.ReceivedMessages.Enqueue(message);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class TriggerFunctions
     {
         var messageString = Encoding.UTF8.GetString(message);
         _logger.LogInformation("ByteArrayTriggerFunction received: {Message}", messageString);
-        _fixture.ReceivedMessages.Add(messageString);
+        _fixture.ReceivedMessages.Enqueue(messageString);
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public class TriggerFunctions
         [RabbitMQTrigger(PocoTriggerQueueName, ConnectionStringSetting = "RabbitMQConnection")] TestMessage message)
     {
         _logger.LogInformation("PocoTriggerFunction received: Id={Id}, Content={Content}", message.Id, message.Content);
-        _fixture.ReceivedMessages.Add($"{message.Id}:{message.Content}");
+        _fixture.ReceivedMessages.Enqueue($"{message.Id}:{message.Content}");
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class TriggerFunctions
     {
         var messageString = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
         _logger.LogInformation("BasicDeliverEventArgsTriggerFunction received: {Message}", messageString);
-        _fixture.ReceivedMessages.Add(messageString);
+        _fixture.ReceivedMessages.Enqueue(messageString);
     }
 }
 

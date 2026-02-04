@@ -44,6 +44,6 @@ public class OutputFunctions
         [RabbitMQTrigger(OutputResultQueueName, ConnectionStringSetting = "RabbitMQConnection")] string message)
     {
         _logger.LogInformation("OutputResultCollector received: {Message}", message);
-        _fixture.ReceivedMessages.Add(message);
+        _fixture.ReceivedMessages.Enqueue(message);
     }
 }

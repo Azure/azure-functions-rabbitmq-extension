@@ -29,7 +29,7 @@ public abstract class BaseE2E
     /// </summary>
     protected async Task<HttpResponseMessage> SendMessageViaHttpAsync(string endpoint, string message)
     {
-        var content = new StringContent(message, Encoding.UTF8, "application/json");
+        using var content = new StringContent(message, Encoding.UTF8, "application/json");
         return await HttpClient.PostAsync(endpoint, content);
     }
 

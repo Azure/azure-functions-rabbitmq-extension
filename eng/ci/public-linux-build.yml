@@ -34,6 +34,9 @@ variables:
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
   parameters:
+    settings:
+      # PR's from forks do not have sufficient permissions to set tags.
+      skipBuildTagsForGitHubPullRequests: ${{ variables['System.PullRequest.IsFork'] }}
     pool:
       name: 1es-pool-azfunc-public
       image: 1es-ubuntu-22.04
