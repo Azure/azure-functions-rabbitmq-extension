@@ -81,18 +81,64 @@ public class RabbitMQE2EFixture : IAsyncLifetime
         return null;
     }
 
+    /// <summary>
+    /// Gets the docker compose command. Tries "docker compose" (V2) first, then falls back to "docker-compose" (V1).
+    /// </summary>
+    private static (string FileName, string CommandPrefix) GetDockerComposeCommand()
+    {
+        // Try docker compose V2 first (docker compose as a subcommand)
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "docker",
+                Arguments = "compose version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            if (process is not null)
+            {
+                process.WaitForExit();
+                if (process.ExitCode == 0)
+                {
+                    Console.WriteLine("Using docker compose V2");
+                    return ("docker", "compose");
+                }
+            }
+        }
+        catch
+        {
+            // Ignore and try V1
+        }
+
+        // Fall back to docker-compose V1
+        Console.WriteLine("Using docker-compose V1");
+        return ("docker-compose", "");
+    }
+
     private async Task StartDockerComposeAsync()
     {
+        var (fileName, commandPrefix) = GetDockerComposeCommand();
+        var arguments = string.IsNullOrEmpty(commandPrefix) 
+            ? "up -d --build" 
+            : $"{commandPrefix} up -d --build";
+
         var psi = new ProcessStartInfo
         {
-            FileName = "docker-compose",
-            Arguments = "up -d --build",
+            FileName = fileName,
+            Arguments = arguments,
             WorkingDirectory = _dockerComposeDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        Console.WriteLine($"Running: {fileName} {arguments} in {_dockerComposeDirectory}");
 
         _dockerComposeProcess = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start docker-compose");
@@ -112,10 +158,15 @@ public class RabbitMQE2EFixture : IAsyncLifetime
 
     private async Task StopDockerComposeAsync()
     {
+        var (fileName, commandPrefix) = GetDockerComposeCommand();
+        var arguments = string.IsNullOrEmpty(commandPrefix) 
+            ? "down --remove-orphans" 
+            : $"{commandPrefix} down --remove-orphans";
+
         var psi = new ProcessStartInfo
         {
-            FileName = "docker-compose",
-            Arguments = "down --remove-orphans",
+            FileName = fileName,
+            Arguments = arguments,
             WorkingDirectory = _dockerComposeDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
