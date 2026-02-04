@@ -29,6 +29,37 @@ steps:
     displayName: Check Docker availability
     name: dockerCheck
 
+  # Pre-pull Docker images with retry to avoid Docker Hub rate limit issues
+  # This helps when running on shared CI agents where rate limits may be exhausted
+  - script: |
+      echo "Pre-pulling Docker images with retry logic..."
+      MAX_RETRIES=3
+      RETRY_DELAY=30
+      
+      for image in "rabbitmq:3-management-alpine" "mcr.microsoft.com/azure-storage/azurite"; do
+        echo "Pulling $image..."
+        for i in $(seq 1 $MAX_RETRIES); do
+          if docker pull "$image"; then
+            echo "Successfully pulled $image"
+            break
+          fi
+          if [ $i -lt $MAX_RETRIES ]; then
+            echo "Pull failed for $image. Retry $i/$MAX_RETRIES in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          else
+            echo "##[warning]Failed to pull $image after $MAX_RETRIES attempts. Tests may fail."
+          fi
+        done
+      done
+      
+      echo "Docker images available:"
+      docker images
+    displayName: Pre-pull Docker images with retry
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+    continueOnError: true
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
   - task: DotNetCoreCLI@2
     displayName: Run C# E2E Tests
     condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
