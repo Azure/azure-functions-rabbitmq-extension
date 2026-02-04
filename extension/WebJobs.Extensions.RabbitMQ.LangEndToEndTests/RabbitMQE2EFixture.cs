@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System.Diagnostics;
@@ -66,13 +66,39 @@ public class RabbitMQE2EFixture : IAsyncLifetime
 
     private static string? FindDockerComposeDirectory(string startDir)
     {
+        // First, try to find the source directory by looking for the .git folder
+        // This ensures we use the original docker-compose.yml with correct relative paths
         var dir = startDir;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            var gitPath = Path.Combine(dir, ".git");
+            if (Directory.Exists(gitPath))
+            {
+                // Found repo root, look for docker-compose.yml in LangEndToEndTests
+                var dockerComposePath = Path.Combine(dir, "extension", "WebJobs.Extensions.RabbitMQ.LangEndToEndTests", "docker-compose.yml");
+                if (File.Exists(dockerComposePath))
+                {
+                    return Path.GetDirectoryName(dockerComposePath);
+                }
+            }
+
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        // Fallback: search from current directory upward (for local development)
+        dir = startDir;
         while (!string.IsNullOrEmpty(dir))
         {
             var dockerComposePath = Path.Combine(dir, "docker-compose.yml");
             if (File.Exists(dockerComposePath))
             {
-                return dir;
+                // Make sure this is the source directory, not the bin output directory
+                // by checking if FunctionApps/java/Dockerfile exists
+                var javaDockerfile = Path.Combine(dir, "FunctionApps", "java", "Dockerfile");
+                if (File.Exists(javaDockerfile))
+                {
+                    return dir;
+                }
             }
 
             dir = Path.GetDirectoryName(dir);

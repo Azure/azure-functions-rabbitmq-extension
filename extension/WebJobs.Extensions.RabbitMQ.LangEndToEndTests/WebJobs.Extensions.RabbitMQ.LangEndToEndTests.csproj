@@ -27,9 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="docker-compose.yml" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="docker-compose.override.yml" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="FunctionApps\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Note: docker-compose files are NOT copied to output directory -->
+    <!-- Tests use the source directory docker-compose.yml to preserve relative paths -->
+    <None Include="docker-compose.yml" />
+    <None Include="docker-compose.override.yml" />
+    <!-- FunctionApps are also kept in source only, not copied to bin -->
+    <!-- Docker build context uses the repository root -->
+    <None Include="FunctionApps\**\*" />
   </ItemGroup>
 
 </Project>
