@@ -26,5 +26,6 @@ jobs:
         displayName: Test extension
         inputs:
           command: test
-          workingDirectory: extension
+          projects: |
+            extension/WebJobs.Extensions.RabbitMQ.Tests/WebJobs.Extensions.RabbitMQ.Tests.csproj
           arguments: --configuration Debug

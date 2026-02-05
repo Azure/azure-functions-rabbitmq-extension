@@ -34,6 +34,9 @@ variables:
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1es
   parameters:
+    settings:
+      # PR's from forks do not have sufficient permissions to set tags.
+      skipBuildTagsForGitHubPullRequests: ${{ variables['System.PullRequest.IsFork'] }}
     pool:
       name: 1es-pool-azfunc-public
       image: 1es-ubuntu-22.04
@@ -55,6 +58,15 @@ extends:
           - template: /eng/ci/templates/public/build-test-extension.yml@self
             parameters:
               fileVersion: ${{ variables.fileVersion }}
+
+      - stage: e2eTestExtensionLinux
+        displayName: E2E Test Extension in Linux
+        dependsOn: buildAndTestExtensionLinux
+        jobs:
+          - job: RunE2ETests
+            displayName: Run E2E Tests with Docker
+            steps:
+              - template: /eng/ci/templates/shared/run-e2e-tests.yml@self
 
       - stage: buildJavaLibraryLinux
         displayName: Build Java Library in Linux

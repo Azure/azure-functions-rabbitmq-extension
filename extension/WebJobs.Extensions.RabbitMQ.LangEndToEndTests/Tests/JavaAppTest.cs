@@ -1,0 +1,74 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using Xunit;
+
+namespace Microsoft.Azure.WebJobs.Extensions.RabbitMQ.LangEndToEndTests.Tests;
+
+/// <summary>
+/// E2E tests for Java Function App with RabbitMQ bindings.
+/// </summary>
+[Collection("RabbitMQ Lang E2E")]
+public class JavaAppTest : BaseE2E
+{
+    public JavaAppTest(RabbitMQE2EFixture fixture) : base(fixture)
+    {
+    }
+
+    [Fact]
+    [Trait("Category", "DockerCompose")]
+    public async Task Java_HttpTriggerRabbitMQOutput_SendsMessage()
+    {
+        // Arrange
+        var testMessage = GenerateTestMessage("java-http");
+        await ClearQueueAsync(Constants.Queues.ResultQueue);
+
+        // Act - Send message via HTTP trigger
+        var response = await SendMessageViaHttpAsync(
+            Constants.FunctionApps.Java.HttpTriggerRabbitMQOutput,
+            testMessage);
+
+        // Assert - HTTP response should be OK
+        Assert.True(response.IsSuccessStatusCode, $"HTTP request failed: {response.StatusCode}");
+
+        // Assert - Message should be received by RabbitMQ trigger and forwarded to Storage Queue
+        var receivedMessage = await WaitForQueueMessageAsync(
+            Constants.Queues.ResultQueue,
+            testMessage,
+            Constants.Timeouts.MessageWait);
+
+        Assert.NotNull(receivedMessage);
+        Assert.Contains(testMessage, receivedMessage);
+    }
+
+    [Fact]
+    [Trait("Category", "DockerCompose")]
+    public async Task Java_RabbitMQTrigger_ProcessesMultipleMessages()
+    {
+        // Arrange
+        var messages = Enumerable.Range(1, 5)
+            .Select(i => GenerateTestMessage($"java-multi-{i}"))
+            .ToList();
+        await ClearQueueAsync(Constants.Queues.ResultQueue);
+
+        // Act - Send multiple messages
+        foreach (var message in messages)
+        {
+            var response = await SendMessageViaHttpAsync(
+                Constants.FunctionApps.Java.HttpTriggerRabbitMQOutput,
+                message);
+            Assert.True(response.IsSuccessStatusCode);
+        }
+
+        // Assert - All messages should be processed
+        foreach (var expectedMessage in messages)
+        {
+            var receivedMessage = await WaitForQueueMessageAsync(
+                Constants.Queues.ResultQueue,
+                expectedMessage,
+                Constants.Timeouts.MessageWait);
+
+            Assert.NotNull(receivedMessage);
+        }
+    }
+}

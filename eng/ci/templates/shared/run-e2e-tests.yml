@@ -1,0 +1,113 @@
+# E2E Test Template for RabbitMQ Extension
+# This template runs end-to-end tests using Testcontainers with Docker
+# Requires Linux agent with Docker support
+# NOTE: 1ES pools with Network Isolation may not have Docker available
+
+parameters:
+  - name: testFilter
+    type: string
+    default: ''
+    displayName: 'Optional test filter expression'
+
+steps:
+  - task: UseDotNet@2
+    displayName: Acquire .NET 8.0 SDK
+    inputs:
+      packageType: sdk
+      version: 8.0.x
+      performMultiLevelLookup: true
+
+  # Build the extension and create NuGet package for LangEndToEndTests
+  # The Docker containers need a local NuGet source with the extension package
+  - task: DotNetCoreCLI@2
+    displayName: Build Extension for E2E Tests
+    inputs:
+      command: build
+      projects: 'extension/WebJobs.Extensions.RabbitMQ/WebJobs.Extensions.RabbitMQ.csproj'
+      arguments: '--configuration Release'
+
+  - task: DotNetCoreCLI@2
+    displayName: Pack Extension for E2E Tests
+    inputs:
+      command: pack
+      packagesToPack: 'extension/WebJobs.Extensions.RabbitMQ/WebJobs.Extensions.RabbitMQ.csproj'
+      configuration: Release
+      packDirectory: '$(Build.SourcesDirectory)/temp'
+      nobuild: true
+      buildProperties: 'Version=100.100.100-pre'
+
+  - script: |
+      echo "Listing temp directory contents:"
+      ls -la $(Build.SourcesDirectory)/temp || echo "temp directory not found"
+    displayName: Verify NuGet Package
+
+  - script: |
+      if command -v docker &> /dev/null && docker info &> /dev/null; then
+        echo "##vso[task.setvariable variable=dockerAvailable]true"
+        docker --version
+        docker info
+      else
+        echo "##vso[task.setvariable variable=dockerAvailable]false"
+        echo "Docker is not available on this agent. Skipping E2E tests."
+      fi
+    displayName: Check Docker availability
+    name: dockerCheck
+
+  # Pre-pull Docker images with retry to avoid Docker Hub rate limit issues
+  # This helps when running on shared CI agents where rate limits may be exhausted
+  - script: |
+      echo "Pre-pulling Docker images with retry logic..."
+      MAX_RETRIES=3
+      RETRY_DELAY=30
+      
+      for image in "rabbitmq:3-management-alpine" "mcr.microsoft.com/azure-storage/azurite"; do
+        echo "Pulling $image..."
+        for i in $(seq 1 $MAX_RETRIES); do
+          if docker pull "$image"; then
+            echo "Successfully pulled $image"
+            break
+          fi
+          if [ $i -lt $MAX_RETRIES ]; then
+            echo "Pull failed for $image. Retry $i/$MAX_RETRIES in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          else
+            echo "##[warning]Failed to pull $image after $MAX_RETRIES attempts. Tests may fail."
+          fi
+        done
+      done
+      
+      echo "Docker images available:"
+      docker images
+    displayName: Pre-pull Docker images with retry
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+    continueOnError: true
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+  - task: DotNetCoreCLI@2
+    displayName: Run C# E2E Tests
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+    inputs:
+      command: test
+      projects: 'extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj'
+      arguments: '--configuration Release --logger trx ${{ parameters.testFilter }}'
+      publishTestResults: true
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+  - task: DotNetCoreCLI@2
+    displayName: Run Multi-Language E2E Tests (Java/Python)
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+    inputs:
+      command: test
+      projects: 'extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj'
+      arguments: '--configuration Release --logger trx --filter "Category!=DockerCompose" ${{ parameters.testFilter }}'
+      publishTestResults: true
+    env:
+      DOCKER_HOST: unix:///var/run/docker.sock
+
+  - script: |
+      echo "E2E tests were skipped because Docker is not available on this agent."
+      echo "To run E2E tests locally, ensure Docker Desktop is running."
+    displayName: E2E Tests Skipped Notice
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'false'))
