@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   rabbitmq:
-    image: rabbitmq:3-management
+    image: funcacrcache.azurecr.io/cache/library/rabbitmq:3-management
     container_name: rabbitmq-e2e
     ports:
       - "5672:5672"
