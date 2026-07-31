@@ -49,19 +49,30 @@ jobs:
           version: 8.0.x
           performMultiLevelLookup: true
 
+      - task: NuGetAuthenticate@1
+        displayName: Authenticate to CFS NuGet feed
+
+      - task: DotNetCoreCLI@2
+        displayName: Restore solution from CFS
+        inputs:
+          command: restore
+          projects: extension/WebJobs.Extensions.RabbitMQ.sln
+          feedsToUse: config
+          nugetConfigPath: NuGet.config
+
       - task: DotNetCoreCLI@2
         displayName: Build solution
         inputs:
           command: build
           workingDirectory: extension
-          arguments: --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
+          arguments: --no-restore --configuration Release -property:Version=$(fileVersion) -property:CommitHash=$(Build.SourceVersion)
 
       - task: DotNetCoreCLI@2
         displayName: Test extension
         inputs:
           command: test
           workingDirectory: extension
-          arguments: --configuration Debug
+          arguments: --no-restore --configuration Debug
 
       - template: ci/sign-files.yml@eng
         parameters:

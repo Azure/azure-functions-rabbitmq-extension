@@ -10,12 +10,48 @@ parameters:
     displayName: 'Optional test filter expression'
 
 steps:
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate to CFS NuGet feed
+
+  - task: PowerShell@2
+    displayName: Initialize temporary CFS Docker configuration
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/eng/ci/scripts/prepare-cfs-docker-build.ps1" `
+          -Phase Initialize `
+          -RepositoryRoot "$(Build.SourcesDirectory)" `
+          -OutputDirectory "$(Agent.TempDirectory)/rabbitmq cfs e2e"
+
+  - task: npmAuthenticate@0
+    displayName: Authenticate to CFS npm feed
+    inputs:
+      workingFile: $(cfsNpmConfig)
+
+  - task: PipAuthenticate@1
+    displayName: Authenticate to CFS PyPI feed
+    inputs:
+      artifactFeeds: public/upstream-public
+      onlyAddExtraIndex: false
+
   - task: UseDotNet@2
     displayName: Acquire .NET 8.0 SDK
     inputs:
       packageType: sdk
       version: 8.0.x
       performMultiLevelLookup: true
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore E2E projects from CFS
+    inputs:
+      command: restore
+      projects: |
+        extension/WebJobs.Extensions.RabbitMQ/WebJobs.Extensions.RabbitMQ.csproj
+        extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj
+        extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
 
   # Build the extension and create NuGet package for LangEndToEndTests
   # The Docker containers need a local NuGet source with the extension package
@@ -24,7 +60,7 @@ steps:
     inputs:
       command: build
       projects: 'extension/WebJobs.Extensions.RabbitMQ/WebJobs.Extensions.RabbitMQ.csproj'
-      arguments: '--configuration Release'
+      arguments: '--no-restore --configuration Release'
 
   - task: DotNetCoreCLI@2
     displayName: Pack Extension for E2E Tests
@@ -52,6 +88,18 @@ steps:
       fi
     displayName: Check Docker availability
     name: dockerCheck
+
+  - task: PowerShell@2
+    displayName: Prepare authenticated CFS Docker build
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/eng/ci/scripts/prepare-cfs-docker-build.ps1" `
+          -Phase Finalize `
+          -RepositoryRoot "$(Build.SourcesDirectory)" `
+          -OutputDirectory "$(cfsTempDirectory)"
 
   # Pre-pull Docker images with retry to avoid Docker Hub rate limit issues
   # This helps when running on shared CI agents where rate limits may be exhausted
@@ -90,7 +138,7 @@ steps:
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.EndToEndTests/WebJobs.Extensions.RabbitMQ.EndToEndTests.csproj'
-      arguments: '--configuration Release --logger trx ${{ parameters.testFilter }}'
+      arguments: '--no-restore --configuration Release --logger trx ${{ parameters.testFilter }}'
       publishTestResults: true
     env:
       DOCKER_HOST: unix:///var/run/docker.sock
@@ -101,9 +149,11 @@ steps:
     inputs:
       command: test
       projects: 'extension/WebJobs.Extensions.RabbitMQ.LangEndToEndTests/WebJobs.Extensions.RabbitMQ.LangEndToEndTests.csproj'
-      arguments: '--configuration Release --logger trx --filter "Category!=DockerCompose" ${{ parameters.testFilter }}'
+      arguments: '--no-restore --configuration Release --logger trx --filter "Category!=DockerCompose" ${{ parameters.testFilter }}'
       publishTestResults: true
     env:
+      CFS_DOCKER_COMPOSE_OVERRIDE: $(cfsDockerComposeOverride)
+      DOCKER_BUILDKIT: 1
       DOCKER_HOST: unix:///var/run/docker.sock
 
   - script: |
@@ -111,3 +161,15 @@ steps:
       echo "To run E2E tests locally, ensure Docker Desktop is running."
     displayName: E2E Tests Skipped Notice
     condition: and(succeeded(), eq(variables['dockerAvailable'], 'false'))
+
+  - task: PowerShell@2
+    displayName: Remove temporary CFS Docker configuration
+    condition: always()
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/eng/ci/scripts/prepare-cfs-docker-build.ps1" `
+          -Phase Cleanup `
+          -RepositoryRoot "$(Build.SourcesDirectory)" `
+          -OutputDirectory "$(cfsTempDirectory)"

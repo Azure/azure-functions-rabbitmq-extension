@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using Azure.Storage.Queues;
 using RabbitMQ.Client;
@@ -72,7 +73,7 @@ public class RabbitMQE2EFixture : IAsyncLifetime
         while (!string.IsNullOrEmpty(dir))
         {
             var gitPath = Path.Combine(dir, ".git");
-            if (Directory.Exists(gitPath))
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
             {
                 // Found repo root, look for docker-compose.yml in LangEndToEndTests
                 var dockerComposePath = Path.Combine(dir, "extension", "WebJobs.Extensions.RabbitMQ.LangEndToEndTests", "docker-compose.yml");
@@ -110,20 +111,12 @@ public class RabbitMQE2EFixture : IAsyncLifetime
     /// <summary>
     /// Gets the docker compose command. Tries "docker compose" (V2) first, then falls back to "docker-compose" (V1).
     /// </summary>
-    private static (string FileName, string CommandPrefix) GetDockerComposeCommand()
+    private static (string FileName, IReadOnlyList<string> CommandPrefix) GetDockerComposeCommand()
     {
         // Try docker compose V2 first (docker compose as a subcommand)
         try
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "docker",
-                Arguments = "compose version",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            var psi = CreateProcessStartInfo("docker", ["compose", "version"]);
 
             using var process = Process.Start(psi);
             if (process is not null)
@@ -132,47 +125,41 @@ public class RabbitMQE2EFixture : IAsyncLifetime
                 if (process.ExitCode == 0)
                 {
                     Console.WriteLine("Using docker compose V2");
-                    return ("docker", "compose");
+                    return ("docker", ["compose"]);
                 }
             }
         }
-        catch
+        catch (Win32Exception)
         {
             // Ignore and try V1
         }
 
         // Fall back to docker-compose V1
         Console.WriteLine("Using docker-compose V1");
-        return ("docker-compose", "");
+        return ("docker-compose", []);
     }
 
     private async Task StartDockerComposeAsync()
     {
         var (fileName, commandPrefix) = GetDockerComposeCommand();
-        var arguments = string.IsNullOrEmpty(commandPrefix) 
-            ? "up -d --build" 
-            : $"{commandPrefix} up -d --build";
+        var arguments = new List<string>(commandPrefix);
+        AddComposeFiles(arguments);
+        arguments.Add("up");
+        arguments.Add("-d");
+        arguments.Add("--build");
 
-        var psi = new ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = arguments,
-            WorkingDirectory = _dockerComposeDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
+        var psi = CreateProcessStartInfo(fileName, arguments, _dockerComposeDirectory);
 
-        Console.WriteLine($"Running: {fileName} {arguments} in {_dockerComposeDirectory}");
+        Console.WriteLine($"Running: {fileName} {string.Join(' ', arguments)} in {_dockerComposeDirectory}");
 
         _dockerComposeProcess = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start docker-compose");
 
-        var output = await _dockerComposeProcess.StandardOutput.ReadToEndAsync();
-        var error = await _dockerComposeProcess.StandardError.ReadToEndAsync();
-
+        var outputTask = _dockerComposeProcess.StandardOutput.ReadToEndAsync();
+        var errorTask = _dockerComposeProcess.StandardError.ReadToEndAsync();
         await _dockerComposeProcess.WaitForExitAsync();
+        var output = await outputTask;
+        var error = await errorTask;
 
         if (_dockerComposeProcess.ExitCode != 0)
         {
@@ -185,26 +172,69 @@ public class RabbitMQE2EFixture : IAsyncLifetime
     private async Task StopDockerComposeAsync()
     {
         var (fileName, commandPrefix) = GetDockerComposeCommand();
-        var arguments = string.IsNullOrEmpty(commandPrefix) 
-            ? "down --remove-orphans" 
-            : $"{commandPrefix} down --remove-orphans";
+        var arguments = new List<string>(commandPrefix);
+        AddComposeFiles(arguments);
+        arguments.Add("down");
+        arguments.Add("--remove-orphans");
 
-        var psi = new ProcessStartInfo
+        var psi = CreateProcessStartInfo(fileName, arguments, _dockerComposeDirectory);
+
+        using var process = Process.Start(psi);
+        if (process is not null)
+        {
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            await Task.WhenAll(outputTask, errorTask);
+        }
+    }
+
+    private void AddComposeFiles(List<string> arguments)
+    {
+        var cfsOverride = Environment.GetEnvironmentVariable("CFS_DOCKER_COMPOSE_OVERRIDE");
+        if (string.IsNullOrWhiteSpace(cfsOverride))
+        {
+            return;
+        }
+
+        if (!File.Exists(cfsOverride))
+        {
+            throw new FileNotFoundException("The CFS Docker Compose override file does not exist.", cfsOverride);
+        }
+
+        arguments.Add("--file");
+        arguments.Add(Path.Combine(_dockerComposeDirectory, "docker-compose.yml"));
+
+        var localOverride = Path.Combine(_dockerComposeDirectory, "docker-compose.override.yml");
+        if (File.Exists(localOverride))
+        {
+            arguments.Add("--file");
+            arguments.Add(localOverride);
+        }
+
+        arguments.Add("--file");
+        arguments.Add(cfsOverride);
+    }
+
+    private static ProcessStartInfo CreateProcessStartInfo(
+        string fileName, IEnumerable<string> arguments, string? workingDirectory = null)
+    {
+        var processStartInfo = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
-            WorkingDirectory = _dockerComposeDirectory,
+            WorkingDirectory = workingDirectory ?? string.Empty,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
 
-        using var process = Process.Start(psi);
-        if (process is not null)
+        foreach (var argument in arguments)
         {
-            await process.WaitForExitAsync();
+            processStartInfo.ArgumentList.Add(argument);
         }
+
+        return processStartInfo;
     }
 
     private async Task WaitForRabbitMQAsync()
