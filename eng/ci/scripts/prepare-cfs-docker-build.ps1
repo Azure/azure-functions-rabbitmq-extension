@@ -16,6 +16,8 @@ $ErrorActionPreference = 'Stop'
 
 $npmRegistry = 'https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/npm/registry/'
 $nugetRegistry = 'https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/nuget/v3/index.json'
+$canonicalPipIndexPath = '/azfunc/public/_packaging/upstream-public/pypi/simple/'
+$legacyPipIndexPath = '/public/_packaging/upstream-public/pypi/simple/'
 $repositoryRootPath = [System.IO.Path]::GetFullPath($RepositoryRoot)
 $outputDirectoryPath = [System.IO.Path]::GetFullPath($OutputDirectory)
 
@@ -48,6 +50,34 @@ function ConvertTo-YamlSingleQuotedString([string] $Value) {
 
 function Write-Utf8File([string] $Path, [string] $Content) {
     [System.IO.File]::WriteAllText($Path, $Content, [System.Text.UTF8Encoding]::new($false))
+}
+
+function ConvertTo-CfsPipIndexUrl([string] $PipIndexUrl) {
+    $uri = [System.Uri] $PipIndexUrl
+    $isCanonicalUrl = $uri.Host -eq 'pkgs.dev.azure.com' -and $uri.AbsolutePath -eq $canonicalPipIndexPath
+    $isLegacyTaskUrl = $uri.Host -eq 'azfunc.pkgs.visualstudio.com' -and $uri.AbsolutePath -eq $legacyPipIndexPath
+
+    if ($uri.Scheme -ne 'https' -or
+        -not $uri.IsDefaultPort -or
+        -not [string]::IsNullOrEmpty($uri.Query) -or
+        -not [string]::IsNullOrEmpty($uri.Fragment) -or
+        (-not $isCanonicalUrl -and -not $isLegacyTaskUrl)) {
+        throw 'PIP_INDEX_URL does not target the azfunc/public/upstream-public feed.'
+    }
+
+    if ($isCanonicalUrl) {
+        return $PipIndexUrl
+    }
+
+    $userInfo = $uri.GetComponents([System.UriComponents]::UserInfo, [System.UriFormat]::UriEscaped)
+    $authority = if ([string]::IsNullOrEmpty($userInfo)) {
+        'pkgs.dev.azure.com'
+    }
+    else {
+        "$userInfo@pkgs.dev.azure.com"
+    }
+
+    return "https://$authority$canonicalPipIndexPath"
 }
 
 function New-NuGetConfig([string] $Path, [string] $AccessToken) {
@@ -210,11 +240,7 @@ registry=$npmRegistry
             throw 'PipAuthenticate@1 did not set PIP_INDEX_URL.'
         }
 
-        $pipIndexUri = [System.Uri] $pipIndexUrl
-        if ($pipIndexUri.Host -ne 'pkgs.dev.azure.com' -or
-            -not $pipIndexUri.AbsolutePath.Contains('/azfunc/public/_packaging/upstream-public/pypi/simple/')) {
-            throw 'PIP_INDEX_URL does not target the azfunc/public/upstream-public feed.'
-        }
+        $pipIndexUrl = ConvertTo-CfsPipIndexUrl $pipIndexUrl
 
         $nugetAccessToken = $env:VSS_NUGET_ACCESSTOKEN
         if ([string]::IsNullOrWhiteSpace($nugetAccessToken)) {
