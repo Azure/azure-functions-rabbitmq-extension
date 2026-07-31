@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $npmRegistry = 'https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/npm/registry/'
 $nugetRegistry = 'https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/nuget/v3/index.json'
 $canonicalPipIndexPath = '/azfunc/public/_packaging/upstream-public/pypi/simple/'
-$legacyPipIndexPath = '/public/_packaging/upstream-public/pypi/simple/'
+$legacyPipIndexPath = '/public/_packaging/upstream-public/pypi/simple'
 $repositoryRootPath = [System.IO.Path]::GetFullPath($RepositoryRoot)
 $outputDirectoryPath = [System.IO.Path]::GetFullPath($OutputDirectory)
 
@@ -54,8 +54,10 @@ function Write-Utf8File([string] $Path, [string] $Content) {
 
 function ConvertTo-CfsPipIndexUrl([string] $PipIndexUrl) {
     $uri = [System.Uri] $PipIndexUrl
-    $isCanonicalUrl = $uri.Host -eq 'pkgs.dev.azure.com' -and $uri.AbsolutePath -eq $canonicalPipIndexPath
-    $isLegacyTaskUrl = $uri.Host -eq 'azfunc.pkgs.visualstudio.com' -and $uri.AbsolutePath -eq $legacyPipIndexPath
+    $isCanonicalUrl = $uri.Host -eq 'pkgs.dev.azure.com' -and
+        $uri.AbsolutePath -in @($canonicalPipIndexPath, $canonicalPipIndexPath.TrimEnd('/'))
+    $isLegacyTaskUrl = $uri.Host -eq 'azfunc.pkgs.visualstudio.com' -and
+        $uri.AbsolutePath -in @($legacyPipIndexPath, "$legacyPipIndexPath/")
 
     if ($uri.Scheme -ne 'https' -or
         -not $uri.IsDefaultPort -or
@@ -65,7 +67,7 @@ function ConvertTo-CfsPipIndexUrl([string] $PipIndexUrl) {
         throw 'PIP_INDEX_URL does not target the azfunc/public/upstream-public feed.'
     }
 
-    if ($isCanonicalUrl) {
+    if ($uri.Host -eq 'pkgs.dev.azure.com' -and $uri.AbsolutePath -eq $canonicalPipIndexPath) {
         return $PipIndexUrl
     }
 
