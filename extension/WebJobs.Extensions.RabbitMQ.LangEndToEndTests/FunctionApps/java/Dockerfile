@@ -1,17 +1,19 @@
-# Use .NET 8 SDK as base with Node.js for npm install of Core Tools
-FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
+# The isolated CI agents cannot reach Docker Hub, NodeSource, Adoptium, or the
+# Debian apt repos. The Microsoft Java dev container image is built on the
+# Microsoft Build of OpenJDK 21 and bundles Maven and Node.js on Debian bookworm,
+# so use it as the base and copy in only the .NET SDK (to build the extension).
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS dotnet
 
-# Install Node.js and Java 21 (Temurin)
-RUN apt-get update && \
-    apt-get install -y curl gnupg maven && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    # Add Adoptium repository for Temurin JDK
-    curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(. /etc/os-release && echo $VERSION_CODENAME) main" | tee /etc/apt/sources.list.d/adoptium.list && \
-    apt-get update && \
-    apt-get install -y temurin-21-jdk && \
-    rm -rf /var/lib/apt/lists/*
+FROM mcr.microsoft.com/devcontainers/java:dev-21-bookworm
+
+# The dev container image defaults to a non-root user; the build steps below
+# write to system locations, so run them as root.
+USER root
+
+# Bring in the .NET 8 SDK
+COPY --from=dotnet /usr/share/dotnet /usr/share/dotnet
+RUN ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
+ENV DOTNET_ROOT=/usr/share/dotnet
 
 # Install Azure Functions Core Tools via npm (uses .NET 8)
 RUN npm install -g azure-functions-core-tools@4 --unsafe-perm true
@@ -30,10 +32,6 @@ RUN dotnet nuget add source /workspace/temp --name Local && dotnet nuget list so
 # Build the Java function app (this will also build extensions)
 RUN mvn clean package -DskipTests
 
-# Set environment
-ENV JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
-
 WORKDIR ${WORK_DIR}
 
-ENTRYPOINT [ "/usr/bin/mvn", "azure-functions:run" ]
+ENTRYPOINT [ "mvn", "azure-functions:run" ]
