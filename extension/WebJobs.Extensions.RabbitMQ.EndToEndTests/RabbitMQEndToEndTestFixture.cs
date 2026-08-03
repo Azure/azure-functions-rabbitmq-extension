@@ -26,8 +26,15 @@ public sealed class RabbitMQEndToEndTestFixture : IAsyncLifetime
 
     public RabbitMQEndToEndTestFixture()
     {
+        // Allow CI to override the image so it can be pulled from a mirror (e.g. the MCR
+        // Docker Hub mirror) on network-isolated agents that cannot reach Docker Hub
+        // directly. Defaults to Docker Hub for local runs.
+        var rabbitMqImage = Environment.GetEnvironmentVariable("RABBITMQ_TEST_IMAGE") is { Length: > 0 } image
+            ? image
+            : "rabbitmq:3-management-alpine";
+
         _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management-alpine")
+            .WithImage(rabbitMqImage)
             .WithUsername("guest")
             .WithPassword("guest")
             .WithPortBinding(5672, true)

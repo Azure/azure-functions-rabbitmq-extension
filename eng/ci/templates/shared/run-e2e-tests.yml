@@ -108,7 +108,7 @@ steps:
       MAX_RETRIES=3
       RETRY_DELAY=30
       
-      for image in "rabbitmq:3-management-alpine" "mcr.microsoft.com/azure-storage/azurite"; do
+      for image in "mcr.microsoft.com/mirror/docker/library/rabbitmq:3-management-alpine" "mcr.microsoft.com/azure-storage/azurite"; do
         echo "Pulling $image..."
         for i in $(seq 1 $MAX_RETRIES); do
           if docker pull "$image"; then
@@ -142,6 +142,12 @@ steps:
       publishTestResults: true
     env:
       DOCKER_HOST: unix:///var/run/docker.sock
+      # Isolated agents cannot reach Docker Hub (registry-1.docker.io); pull the
+      # RabbitMQ image from the anonymous MCR Docker Hub mirror instead.
+      RABBITMQ_TEST_IMAGE: mcr.microsoft.com/mirror/docker/library/rabbitmq:3-management-alpine
+      # Ryuk pulls testcontainers/ryuk from Docker Hub, which is unreachable here.
+      # Disable it; CI agents are ephemeral, so container cleanup is not needed.
+      TESTCONTAINERS_RYUK_DISABLED: 'true'
 
   - task: DotNetCoreCLI@2
     displayName: Run Multi-Language E2E Tests (Java/Python)
