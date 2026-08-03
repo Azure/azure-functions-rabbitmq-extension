@@ -1,7 +1,9 @@
 # The isolated CI agents cannot reach Docker Hub, NodeSource, Adoptium, or the
 # Debian apt repos. The Microsoft Java dev container image is built on the
-# Microsoft Build of OpenJDK 21 and bundles Maven and Node.js on Debian bookworm,
-# so use it as the base and copy in only the .NET SDK (to build the extension).
+# Microsoft Build of OpenJDK 21 and bundles Maven on Debian bookworm, so use it
+# as the base and copy in the .NET SDK and Node.js from MCR images.
+FROM mcr.microsoft.com/mirror/docker/library/node:20-bookworm-slim AS node
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS dotnet
 
 FROM mcr.microsoft.com/devcontainers/java:dev-21-bookworm
@@ -9,6 +11,14 @@ FROM mcr.microsoft.com/devcontainers/java:dev-21-bookworm
 # The dev container image defaults to a non-root user; the build steps below
 # write to system locations, so run them as root.
 USER root
+
+# Bring in Node.js from the mirror stage. The dev container's node is managed by
+# nvm and is not on PATH in a non-interactive build step, so provide a system one.
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Bring in the .NET 8 SDK
 COPY --from=dotnet /usr/share/dotnet /usr/share/dotnet
