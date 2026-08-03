@@ -1,7 +1,7 @@
 # The isolated CI agents cannot reach Docker Hub, NodeSource, Adoptium, or the
-# Debian apt repos. The Microsoft Java dev container image is built on the
-# Microsoft Build of OpenJDK 21 and bundles Maven on Debian bookworm, so use it
-# as the base and copy in the .NET SDK and Node.js from MCR images.
+# Debian apt repos. The Microsoft Java dev container provides the Microsoft Build
+# of OpenJDK 21 on Debian bookworm; use it as the base, copy the .NET SDK and
+# Node.js from MCR images, and install Maven from Maven Central.
 FROM mcr.microsoft.com/mirror/docker/library/node:20-bookworm-slim AS node
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS dotnet
@@ -25,10 +25,12 @@ COPY --from=dotnet /usr/share/dotnet /usr/share/dotnet
 RUN ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
 ENV DOTNET_ROOT=/usr/share/dotnet
 
-# The dev container installs Maven via SDKMAN, which only wires it onto PATH in an
-# interactive shell. Symlink the mvn binary onto the system PATH for the build
-# (Java is located via JAVA_HOME, which the base image already sets).
-RUN ln -sf "$(ls -d /usr/local/sdkman/candidates/maven/*/bin/mvn | grep -v /current/ | head -1)" /usr/local/bin/mvn \
+# The dev container ships the Microsoft Build of OpenJDK but not Maven. Install
+# Maven from Maven Central (which the build needs anyway) and put it on PATH.
+# Java is located via JAVA_HOME, which the base image already sets.
+RUN curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/3.9.9/apache-maven-3.9.9-bin.tar.gz \
+    | tar -xz -C /opt \
+    && ln -sf /opt/apache-maven-3.9.9/bin/mvn /usr/local/bin/mvn \
     && mvn -version
 
 # Install Azure Functions Core Tools via npm (uses .NET 8)
