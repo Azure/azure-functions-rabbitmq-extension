@@ -25,6 +25,12 @@ COPY --from=dotnet /usr/share/dotnet /usr/share/dotnet
 RUN ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
 ENV DOTNET_ROOT=/usr/share/dotnet
 
+# The dev container installs Maven via SDKMAN, which only wires it onto PATH in an
+# interactive shell. Symlink the mvn binary onto the system PATH for the build
+# (Java is located via JAVA_HOME, which the base image already sets).
+RUN ln -sf "$(ls -d /usr/local/sdkman/candidates/maven/*/bin/mvn | grep -v /current/ | head -1)" /usr/local/bin/mvn \
+    && mvn -version
+
 # Install Azure Functions Core Tools via npm (uses .NET 8)
 RUN npm install -g azure-functions-core-tools@4 --unsafe-perm true
 
