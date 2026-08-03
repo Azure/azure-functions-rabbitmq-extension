@@ -89,6 +89,19 @@ steps:
     displayName: Check Docker availability
     name: dockerCheck
 
+  # The minimal agent image ships Docker Engine but not Compose. The Lang E2E
+  # fixture shells out to `docker compose`, so install the v2 plugin from the
+  # Ubuntu archive (reachable on the isolated agents).
+  - script: |
+      if ! docker compose version >/dev/null 2>&1; then
+        echo "Docker Compose not found; installing docker-compose-v2..."
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends docker-compose-v2
+      fi
+      docker compose version
+    displayName: Ensure Docker Compose is available
+    condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
+
   - task: PowerShell@2
     displayName: Prepare authenticated CFS Docker build
     condition: and(succeeded(), eq(variables['dockerAvailable'], 'true'))
