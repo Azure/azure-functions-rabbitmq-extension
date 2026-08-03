@@ -161,6 +161,8 @@ steps:
       CFS_DOCKER_COMPOSE_OVERRIDE: $(cfsDockerComposeOverride)
       DOCKER_BUILDKIT: 1
       DOCKER_HOST: unix:///var/run/docker.sock
+      # Surface the full docker build output so image build failures are diagnosable.
+      BUILDKIT_PROGRESS: plain
 
   - script: |
       echo "E2E tests were skipped because Docker is not available on this agent."
