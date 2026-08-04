@@ -65,6 +65,12 @@ extends:
         jobs:
           - job: RunE2ETests
             displayName: Run E2E Tests with Docker
+            # The E2E docker image builds need more free disk than the default
+            # image has, so run this job on the minimal image.
+            pool:
+              name: 1es-pool-azfunc-public
+              image: 1es-ubuntu-24.04-min
+              os: linux
             steps:
               - template: /eng/ci/templates/shared/run-e2e-tests.yml@self
 

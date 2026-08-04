@@ -1,12 +1,26 @@
-# Use .NET 8 SDK as base with Node.js for npm install of Core Tools
-FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
+# The isolated CI agents cannot reach Docker Hub, NodeSource, or the Debian apt
+# repos, so Node.js and the .NET SDK are copied in from MCR images instead of
+# being installed with apt/NodeSource.
 
-# Install Node.js and Python 3.11
-RUN apt-get update && \
-    apt-get install -y curl gnupg python3.11 python3-pip python3-venv && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
+# Node.js (for the Core Tools npm install) from the MCR Docker Hub mirror
+FROM mcr.microsoft.com/mirror/docker/library/node:20-bookworm-slim AS node
+
+# .NET 8 SDK to build the extension bundle
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS dotnet
+
+# Python 3.11 base already bundles Python + pip (from the MCR Docker Hub mirror)
+FROM mcr.microsoft.com/mirror/docker/library/python:3.11-bookworm
+
+# Bring in Node.js from the mirror stage
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+# Bring in the .NET 8 SDK
+COPY --from=dotnet /usr/share/dotnet /usr/share/dotnet
+RUN ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
+ENV DOTNET_ROOT=/usr/share/dotnet
 
 # Install Azure Functions Core Tools via npm (uses .NET 8)
 RUN npm install -g azure-functions-core-tools@4 --unsafe-perm true
