@@ -72,9 +72,11 @@ The repository root also has a [`settings.xml`](settings.xml) that mirrors every
 - `java-library/pom.xml` inherits `java-8-parent`, which contributes a Sonatype snapshot plugin
   repository this repository does not own. Only the mirror can keep that traffic on the feed.
 
-CI installs this file to `~/.m2/settings.xml`, and the end-to-end test image installs the same file
-so container builds resolve through the feed too. Locally you only need it when pulling a package or
+CI installs this file to `~/.m2/settings.xml`. Locally you only need it when pulling a package or
 version the feed has not cached yet, in which case pass it explicitly with `mvn -s settings.xml`.
+
+The end-to-end test image does not need it. Its `pom.xml` declares the feed as `central`, which
+covers dependency and plugin resolution inside the container.
 
 ### Anonymous restore (default)
 

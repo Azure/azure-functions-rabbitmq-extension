@@ -44,9 +44,6 @@ RUN mkdir /workspace
 COPY . /workspace
 WORKDIR ${WORK_DIR}
 
-# Route Maven restores in this image through the same CFS feed the pipelines use.
-RUN mkdir -p /root/.m2 && cp /workspace/settings.xml /root/.m2/settings.xml
-
 # Add local NuGet source for development packages
 RUN dotnet nuget add source /workspace/temp --name Local && dotnet nuget list source
 
