@@ -71,7 +71,11 @@ jobs:
         displayName: Test extension
         inputs:
           command: test
-          workingDirectory: extension
+          # Unit tests only, matching the public template. The container based end-to-end suites
+          # need a Docker daemon that can run Linux images, which this Windows pool does not have.
+          # They run in the Linux public pipeline, which sets RABBITMQ_TEST_IMAGE to an MCR mirror.
+          projects: |
+            extension/WebJobs.Extensions.RabbitMQ.Tests/WebJobs.Extensions.RabbitMQ.Tests.csproj
           arguments: --no-restore --configuration Debug
 
       - template: ci/sign-files.yml@eng
