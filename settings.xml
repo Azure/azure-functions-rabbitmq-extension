@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven settings for Central Feed Service (CFS).
+
+  Each pom.xml overrides the `central` repository so packages are served by the Azure Artifacts
+  feed below. The mirror covers what a pom cannot: plugins and extensions resolved before pom
+  repositories are honored, and repositories inherited from parent poms this repository does not
+  own. Its id matches the feed name used by MavenAuthenticate@0.
+
+  `external:*` is used instead of `central` so a repository stays on the feed no matter which id
+  its pom gives it.
+
+  CI installs this file to ~/.m2/settings.xml. For a local authenticated restore, install the
+  credential provider and pass this file when needed:
+
+      mvn -s settings.xml <goals>
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>upstream-public</id>
+      <name>Azure Functions public upstream feed</name>
+      <url>https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/maven/v1</url>
+      <mirrorOf>external:*</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>

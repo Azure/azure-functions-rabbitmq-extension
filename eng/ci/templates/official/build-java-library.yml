@@ -18,6 +18,19 @@ jobs:
           targetPath: $(Build.ArtifactStagingDirectory)
           artifactName: drop-java-library
     steps:
+      # Maven resolves plugins and extensions before a pom's repositories are honored. Install the
+      # mirror before MavenAuthenticate@0, which adds credentials to the same settings file.
+      - pwsh: |
+          $m2 = Join-Path $HOME '.m2'
+          New-Item -ItemType Directory -Path $m2 -Force | Out-Null
+          Copy-Item '$(Build.SourcesDirectory)/settings.xml' (Join-Path $m2 'settings.xml') -Force
+        displayName: Install Maven settings.xml
+
+      - task: MavenAuthenticate@0
+        displayName: Authenticate Maven to CFS
+        inputs:
+          artifactsFeeds: upstream-public
+
       - ${{ if eq(variables.isTaggedBuild, 'True') }}:
           - powershell: | # Allow tags matching v1.2.3 and v1.2.3-xyz1
               $found = '$(Build.SourceBranchName)' | Select-String -Pattern '^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-\w+)?)$'

@@ -63,11 +63,22 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <!-- Package sources must be routed through an Azure Artifacts feed (CFS). -->
   <repositories>
+    <repository>
+      <id>central</id>
+      <url>https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/maven/v1</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>maven.snapshots</id>
       <name>Maven Central Snapshot Repository</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <url>https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/maven/v1</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -76,6 +87,30 @@
       </snapshots>
     </repository>
   </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>central</id>
+      <url>https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/maven/v1</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+    <!-- Override the snapshot plugin repository inherited from java-8-parent. -->
+    <pluginRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <url>https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/maven/v1</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
   <dependencies>
     <dependency>
