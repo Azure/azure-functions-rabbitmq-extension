@@ -1,0 +1,2 @@
+# Shell scripts must keep LF terminators so they stay executable on Linux agents.
+*.sh text eol=lf
