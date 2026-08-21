@@ -109,10 +109,3 @@ jobs:
         inputs:
           sourceFolder: $(Build.ArtifactStagingDirectory)/$(version)
           contents: CodeSignSummary-*.md
-
-      - task: ManifestGeneratorTask@0
-        displayName: Generate SBOM manifest
-        inputs:
-          buildDropPath: $(Build.ArtifactStagingDirectory)/$(version)
-          packageName: Azure Functions RabbitMQ Extension
-          packageVersion: $(version)
