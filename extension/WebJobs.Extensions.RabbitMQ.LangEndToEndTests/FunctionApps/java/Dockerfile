@@ -33,6 +33,11 @@ RUN curl -fsSL https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-publ
     && ln -sf /opt/apache-maven-3.9.9/bin/mvn /usr/local/bin/mvn \
     && mvn -version
 
+# Route every Maven restore in this image through the CFS feed. The pom's `central` override
+# does not reach plugin dependency resolution, which runs against the plugin's own model and
+# would otherwise resolve imported BOMs from Maven Central. Only a mirror covers both.
+COPY settings.xml /root/.m2/settings.xml
+
 # Install Azure Functions Core Tools via npm (uses .NET 8)
 RUN npm install -g azure-functions-core-tools@4 --unsafe-perm true
 
