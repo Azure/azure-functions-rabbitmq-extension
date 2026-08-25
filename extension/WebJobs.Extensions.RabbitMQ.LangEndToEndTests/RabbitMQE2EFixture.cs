@@ -161,12 +161,31 @@ public class RabbitMQE2EFixture : IAsyncLifetime
         var output = await outputTask;
         var error = await errorTask;
 
+        // The function app images are built here, so this is the only record of why a build
+        // step failed. Emit it before throwing, since the exception message alone is liable to
+        // be truncated by test reporters. Successful runs stay quiet.
         if (_dockerComposeProcess.ExitCode != 0)
         {
-            throw new InvalidOperationException($"docker-compose up failed: {error}");
+            WriteComposeOutput(output, error);
+
+            throw new InvalidOperationException(
+                $"docker-compose up failed with exit code {_dockerComposeProcess.ExitCode}."
+                + $"{Environment.NewLine}--- stdout ---{Environment.NewLine}{output}"
+                + $"{Environment.NewLine}--- stderr ---{Environment.NewLine}{error}");
+        }
+    }
+
+    private static void WriteComposeOutput(string output, string error)
+    {
+        if (!string.IsNullOrWhiteSpace(output))
+        {
+            Console.WriteLine($"docker compose stdout:{Environment.NewLine}{output}");
         }
 
-        Console.WriteLine($"Docker Compose output: {output}");
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            Console.WriteLine($"docker compose stderr:{Environment.NewLine}{error}");
+        }
     }
 
     private async Task StopDockerComposeAsync()
@@ -232,6 +251,14 @@ public class RabbitMQE2EFixture : IAsyncLifetime
         foreach (var argument in arguments)
         {
             processStartInfo.ArgumentList.Add(argument);
+        }
+
+        // BuildKit's default progress collapses each step's output, so a failing build step
+        // reports only its exit code. Plain progress keeps the step logs. This is captured
+        // into a buffer rather than streamed, so it costs nothing on a successful run.
+        if (!processStartInfo.Environment.ContainsKey("BUILDKIT_PROGRESS"))
+        {
+            processStartInfo.Environment["BUILDKIT_PROGRESS"] = "plain";
         }
 
         return processStartInfo;
