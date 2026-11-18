@@ -23,7 +23,7 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
     private readonly IRabbitMQServiceFactory rabbitMQServiceFactory = rabbitMQServiceFactory;
     private readonly ILogger logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("RabbitMQ"));
     private readonly IConfiguration configuration = configuration;
-    private readonly ConcurrentDictionary<string, IRabbitMQService> connectionParametersToService = new();
+    private readonly ConcurrentDictionary<(string ConnectionString, string QueueName, bool DisableCertificateValidation, bool IsQueueService), IRabbitMQService> connectionParametersToService = new();
     private readonly IDrainModeManager drainModeManager = drainModeManager;
 
     public void Initialize(ExtensionConfigContext context)
@@ -81,18 +81,16 @@ internal class RabbitMQExtensionConfigProvider(IOptions<RabbitMQOptions> options
 
     internal IRabbitMQService GetService(string connectionString, string queueName, bool disableCertificateValidation)
     {
-        string[] keyArray =
-            [connectionString, queueName, disableCertificateValidation.ToString()];
-        string key = string.Join(",", keyArray);
-        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation, this.logger));
+        return this.connectionParametersToService.GetOrAdd(
+            (connectionString, queueName, disableCertificateValidation, true),
+            _ => this.rabbitMQServiceFactory.CreateService(connectionString, queueName, disableCertificateValidation, this.logger));
     }
 
     // Overloaded method used only for getting the RabbitMQ client.
     internal IRabbitMQService GetService(string connectionString, bool disableCertificateValidation)
     {
-        string[] keyArray =
-            [connectionString, disableCertificateValidation.ToString()];
-        string key = string.Join(",", keyArray);
-        return this.connectionParametersToService.GetOrAdd(key, _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation, this.logger));
+        return this.connectionParametersToService.GetOrAdd(
+            (connectionString, null, disableCertificateValidation, false),
+            _ => this.rabbitMQServiceFactory.CreateService(connectionString, disableCertificateValidation, this.logger));
     }
 }
